@@ -1,0 +1,59 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { CATEGORIES, SITE_URL } from "@/lib/content";
+
+export function generateStaticParams() {
+  return CATEGORIES.map((c) => ({ slug: c.slug }));
+}
+
+type Params = Promise<{ slug: string }>;
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { slug } = await params;
+  const category = CATEGORIES.find((c) => c.slug === slug);
+  if (!category) return {};
+  const description = `${category.name} businesses and services in Swansea Bay: ${category.subcategories.join(", ")}.`;
+  return {
+    title: category.name,
+    description,
+    alternates: { canonical: `/categories/${category.slug}` },
+    openGraph: { title: category.name, description, url: `${SITE_URL}/categories/${category.slug}` },
+  };
+}
+
+export default async function CategoryDetailPage({ params }: { params: Params }) {
+  const { slug } = await params;
+  const category = CATEGORIES.find((c) => c.slug === slug);
+  if (!category) notFound();
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
+      <Link href="/categories" className="text-sm font-medium text-teal hover:underline">
+        ← All Categories
+      </Link>
+      <h1 className="mt-4 flex items-center gap-3 text-3xl font-bold text-slate-900">
+        <span aria-hidden="true">{category.icon}</span>
+        {category.name}
+      </h1>
+
+      <div className="mt-6 flex flex-wrap gap-2">
+        {category.subcategories.map((sub) => (
+          <span key={sub} className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600">
+            {sub}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-12 rounded-lg border border-dashed border-slate-300 p-8 text-center text-slate-500">
+        Listings in this category will appear here once businesses are submitted and approved.
+      </div>
+
+      <div className="mt-8 text-center">
+        <Link href="/submit" className="inline-block rounded-md bg-accent px-6 py-3 font-semibold text-white hover:bg-orange-700">
+          Submit Your Business
+        </Link>
+      </div>
+    </div>
+  );
+}

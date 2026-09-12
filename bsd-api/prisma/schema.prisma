@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ListingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REMOVED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+}
+
+enum ContactType {
+  GENERAL
+  COMMUNITY
+  PARTNERSHIP
+  URGENT
+}
+
+model AdminUser {
+  id               String     @id @default(cuid())
+  name             String
+  email            String     @unique
+  passwordHash     String
+  role             AdminRole  @default(MODERATOR)
+  createdAt        DateTime   @default(now())
+  reviewedListings Business[] @relation("ReviewedBy")
+  auditLogs        AuditLog[]
+}
+
+model Category {
+  id                String        @id @default(cuid())
+  name              String        @unique
+  slug              String        @unique
+  description       String?
+  icon              String?
+  sortOrder         Int           @default(0)
+  requiresOwnerName Boolean       @default(false)
+  subcategories     Subcategory[]
+  businesses        Business[]
+}
+
+model Subcategory {
+  id         String     @id @default(cuid())
+  name       String
+  slug       String     @unique
+  categoryId String
+  category   Category   @relation(fields: [categoryId], references: [id])
+  businesses Business[]
+
+  @@unique([categoryId, name])
+}
+
+model CoverageArea {
+  id         String                 @id @default(cuid())
+  name       String                 @unique
+  businesses BusinessCoverageArea[]
+}
+
+model Business {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  name            String
+  categoryId      String
+  category        Category      @relation(fields: [categoryId], references: [id])
+  subcategoryId   String?
+  subcategory     Subcategory?  @relation(fields: [subcategoryId], references: [id])
+  description     String
+  servicesOffered String[]
+  ownerName       String?
+  phone           String
+  email           String?
+  websiteOrSocial String?
+  address         String?
+  coverageAreas   BusinessCoverageArea[]
+  otherAreaText   String?
+  openingHours    String?
+  specialNotes    String?
+  status          ListingStatus @default(PENDING)
+
+  consentAccurateInfo      Boolean @default(false)
+  consentPublishPermission Boolean @default(false)
+  consentNoLiability       Boolean @default(false)
+  consentDataStorage       Boolean @default(false)
+  gdprConsentStorage       Boolean @default(false)
+  gdprConsentRights        Boolean @default(false)
+
+  submittedAt     DateTime  @default(now())
+  reviewedAt      DateTime?
+  reviewedById    String?
+  reviewedBy      AdminUser? @relation("ReviewedBy", fields: [reviewedById], references: [id])
+  rejectionReason String?
+
+  photos          BusinessPhoto[]
+  updateRequests  ListingUpdateRequest[]
+  removalRequests ListingRemovalRequest[]
+}
+
+model BusinessCoverageArea {
+  businessId     String
+  business       Business     @relation(fields: [businessId], references: [id])
+  coverageAreaId String
+  coverageArea   CoverageArea @relation(fields: [coverageAreaId], references: [id])
+
+  @@id([businessId, coverageAreaId])
+}
+
+model BusinessPhoto {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+  url        String
+  mimeType   String
+  sizeBytes  Int
+  isLogo     Boolean  @default(false)
+  uploadedAt DateTime @default(now())
+}
+
+model ListingUpdateRequest {
+  id               String   @id @default(cuid())
+  businessId       String
+  business         Business @relation(fields: [businessId], references: [id])
+  requestedChanges Json
+  status           String   @default("PENDING")
+  requestedAt      DateTime @default(now())
+}
+
+model ListingRemovalRequest {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  reason      String?
+  isEmergency Boolean  @default(false)
+  status      String   @default("PENDING")
+  requestedAt DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String      @id @default(cuid())
+  type      ContactType
+  name      String
+  email     String
+  message   String
+  createdAt DateTime    @default(now())
+  status    String      @default("OPEN")
+}
+
+model AuditLog {
+  id         String    @id @default(cuid())
+  adminId    String
+  admin      AdminUser @relation(fields: [adminId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  details    Json?
+  createdAt  DateTime  @default(now())
+}

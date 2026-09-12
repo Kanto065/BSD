@@ -6,6 +6,8 @@ const LINKS = [
   { href: "/submit", label: "Submit Listing" },
   { href: "/transparency", label: "Transparency" },
   { href: "/legal", label: "Legal" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];
 

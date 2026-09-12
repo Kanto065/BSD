@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -90,6 +91,11 @@ export default function LegalPage() {
             ))}
           </section>
         ))}
+      </div>
+      <div className="mt-12 text-center">
+        <Link href="/privacy" className="font-semibold text-teal hover:underline">
+          Read the Privacy Policy →
+        </Link>
       </div>
     </div>
   );

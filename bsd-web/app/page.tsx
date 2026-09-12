@@ -19,7 +19,10 @@ export default function HomePage() {
             Free Access • Community Initiative • Powered by BayConnect
           </span>
           <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-            BSD — Bangladeshi Business & Service Directory
+            BSD
+            <span className="mt-1 block text-2xl font-semibold text-slate-700 sm:text-3xl">
+              Bangladeshi Business & Service Directory
+            </span>
           </h1>
           <p className="mt-2 text-xl text-slate-500">Swansea Bay Edition</p>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600">
@@ -114,10 +117,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl font-bold text-slate-900">About BSD</h2>
           <p className="mt-4 text-slate-600">
-            BSD – Bangladeshi Business & Service Directory (Swansea Bay Edition) is a free community initiative
-            designed to connect local Bangladeshi businesses, service providers and independent professionals under
-            one trusted platform — free access, community-driven, no listing fee, no sponsorship, no advertisements,
-            free until 30 June 2027.
+            BSD is a free community initiative connecting local Bangladeshi businesses, service providers and
+            independent professionals under one trusted platform. Free access, community-driven, no listing fee, no
+            sponsorship, no advertisements, until 30 June 2027.
           </p>
           <Link href="/about" className="mt-6 inline-block font-semibold text-teal hover:underline">
             Read Full Introduction →

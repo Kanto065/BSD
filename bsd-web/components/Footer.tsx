@@ -10,6 +10,7 @@ const LINKS = [
 ];
 
 export default function Footer() {
+  const year = new Date().getFullYear();
   return (
     <footer className="border-t border-slate-200 bg-slate-50">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -24,7 +25,7 @@ export default function Footer() {
           Powered by BayConnect — Connect. Celebrate. Empower.
         </p>
         <p className="mt-2 text-xs text-slate-500">
-          © 2026 BSD — Bangladeshi Business & Service Directory. All Rights Reserved.
+          © {year} BSD – Bangladeshi Business & Service Directory. All Rights Reserved.
         </p>
       </div>
     </footer>

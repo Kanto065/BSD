@@ -19,7 +19,7 @@ export default function TransparencyPage() {
       </p>
 
       <ul className="mt-6 list-disc space-y-1 pl-5 text-slate-600">
-        <li>Free period — no cost to be listed until 30 June 2027</li>
+        <li>Free period: no cost to be listed until 30 June 2027</li>
         <li>No sponsorship</li>
         <li>No advertisements</li>
         <li>No listing fee</li>

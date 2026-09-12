@@ -31,7 +31,7 @@ const SECTIONS = [
   {
     title: "4. Legal Basis for Processing (GDPR)",
     body: [
-      "BSD processes your data under the following GDPR principles: Consent — you voluntarily submit your information and agree to its publication; Legitimate Interest — BSD aims to support community access to local Bangladeshi businesses and services; Transparency — you are informed about how your data is used and stored.",
+      "BSD processes your data under three GDPR principles. You give consent by voluntarily submitting your information and agreeing to its publication. BSD relies on legitimate interest in supporting community access to local Bangladeshi businesses and services. And BSD maintains transparency by keeping you informed about how your data is used and stored.",
     ],
   },
   {

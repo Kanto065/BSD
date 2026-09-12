@@ -3,7 +3,7 @@ import { FAQ_ITEMS } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
-  description: "Answers to common questions about BSD — is it free, how to submit a listing, coverage area, data privacy and more.",
+  description: "Answers to common questions about whether BSD is free, how to submit a listing, coverage area, and data privacy.",
   alternates: { canonical: "/faq" },
 };
 

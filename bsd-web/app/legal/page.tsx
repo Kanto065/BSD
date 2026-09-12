@@ -58,7 +58,7 @@ const SECTIONS = [
   {
     title: "8. Right to Modify or Remove Listings",
     body: [
-      "BSD reserves the right to: edit formatting for consistency, remove duplicate or inappropriate listings, decline submissions that do not meet community guidelines — without prior notice.",
+      "BSD reserves the right to edit formatting for consistency, remove duplicate or inappropriate listings, and decline submissions that do not meet community guidelines, all without prior notice.",
     ],
   },
   {

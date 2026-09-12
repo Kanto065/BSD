@@ -165,7 +165,7 @@ export const CONTACT_CHANNELS = [
     email: "partnership@bsd.wales",
     response: undefined,
     description:
-      "BSD does not accept sponsorships or advertisements, but community organisations may collaborate for non-commercial purposes — community events, cultural programmes, student support initiatives, welfare projects.",
+      "BSD does not accept sponsorships or advertisements, but community organisations may collaborate for non-commercial purposes such as community events, cultural programmes, student support initiatives, and welfare projects.",
   },
   {
     title: "Emergency Corrections",

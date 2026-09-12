@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { ArrowLink } from "@/components/ArrowLink";
 import { CATEGORIES, SITE_URL } from "@/lib/content";
 
 export function generateStaticParams() {
@@ -29,9 +30,9 @@ export default async function CategoryDetailPage({ params }: { params: Params })
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
-      <Link href="/categories" className="text-sm font-medium text-teal hover:underline">
-        ← All Categories
-      </Link>
+      <ArrowLink href="/categories" direction="left" className="text-sm">
+        All Categories
+      </ArrowLink>
       <h1 className="mt-4 flex items-center gap-3 text-3xl font-bold text-slate-900">
         <category.icon className="h-8 w-8 text-teal" aria-hidden="true" />
         {category.name}

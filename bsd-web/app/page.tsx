@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowLink } from "@/components/ArrowLink";
 import { CATEGORIES, COVERAGE_AREAS, FEATURED_CATEGORY_SLUGS, SITE_DESCRIPTION } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -98,9 +99,9 @@ export default function HomePage() {
           ))}
         </div>
         <div className="mt-8 text-center">
-          <Link href="/categories" className="font-semibold text-teal hover:underline">
-            View All Categories →
-          </Link>
+          <ArrowLink href="/categories" className="justify-center">
+            View All Categories
+          </ArrowLink>
         </div>
       </section>
 
@@ -119,9 +120,9 @@ export default function HomePage() {
             independent professionals under one trusted platform. Free access, community-driven, no listing fee, no
             sponsorship, no advertisements, until 30 June 2027.
           </p>
-          <Link href="/about" className="mt-6 inline-block font-semibold text-teal hover:underline">
-            Read Full Introduction →
-          </Link>
+          <ArrowLink href="/about" className="mt-6 justify-center">
+            Read Full Introduction
+          </ArrowLink>
         </div>
       </section>
 
@@ -135,9 +136,9 @@ export default function HomePage() {
             </span>
           ))}
         </div>
-        <Link href="/coverage-area" className="mt-6 inline-block font-semibold text-teal hover:underline">
-          View Full Coverage →
-        </Link>
+        <ArrowLink href="/coverage-area" className="mt-6 justify-center">
+          View Full Coverage
+        </ArrowLink>
       </section>
 
       <section className="bg-slate-50 px-4 py-16 text-center sm:px-6">
@@ -148,9 +149,9 @@ export default function HomePage() {
             fee, sponsorship or advertisement is accepted. Future premium services may be introduced after essential
             preparations and formalities.
           </p>
-          <Link href="/transparency" className="mt-6 inline-block font-semibold text-teal hover:underline">
-            Full Transparency Statement →
-          </Link>
+          <ArrowLink href="/transparency" className="mt-6 justify-center">
+            Full Transparency Statement
+          </ArrowLink>
         </div>
       </section>
 
@@ -161,9 +162,9 @@ export default function HomePage() {
             BSD does not verify or guarantee the accuracy of business information. All transactions are strictly
             between the business and the customer.
           </p>
-          <Link href="/legal" className="mt-6 inline-block font-semibold text-teal hover:underline">
-            Full Legal Disclaimer →
-          </Link>
+          <ArrowLink href="/legal" className="mt-6 justify-center">
+            Full Legal Disclaimer
+          </ArrowLink>
         </div>
       </section>
 

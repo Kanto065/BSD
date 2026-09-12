@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowLink } from "@/components/ArrowLink";
 import { COVERAGE_AREAS } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -96,9 +96,9 @@ export default function AboutPage() {
       </section>
 
       <div className="mt-12 text-center">
-        <Link href="/transparency" className="font-semibold text-teal hover:underline">
-          Read the Transparency Statement →
-        </Link>
+        <ArrowLink href="/transparency" className="justify-center">
+          Read the Transparency Statement
+        </ArrowLink>
       </div>
     </div>
   );

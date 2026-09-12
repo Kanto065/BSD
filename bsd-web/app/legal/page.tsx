@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowLink } from "@/components/ArrowLink";
 
 export const metadata: Metadata = {
   title: "Legal Disclaimer",
@@ -93,9 +93,9 @@ export default function LegalPage() {
         ))}
       </div>
       <div className="mt-12 text-center">
-        <Link href="/privacy" className="font-semibold text-teal hover:underline">
-          Read the Privacy Policy →
-        </Link>
+        <ArrowLink href="/privacy" className="justify-center">
+          Read the Privacy Policy
+        </ArrowLink>
       </div>
     </div>
   );

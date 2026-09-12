@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowLink } from "@/components/ArrowLink";
 
 export const metadata: Metadata = {
   title: "Community Transparency",
@@ -27,9 +27,7 @@ export default function TransparencyPage() {
       </ul>
 
       <div className="mt-10">
-        <Link href="/legal" className="font-semibold text-teal hover:underline">
-          Full Legal Disclaimer →
-        </Link>
+        <ArrowLink href="/legal">Full Legal Disclaimer</ArrowLink>
       </div>
     </div>
   );

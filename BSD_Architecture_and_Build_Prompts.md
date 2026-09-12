@@ -8,6 +8,87 @@ directly from those documents — nothing invented.
 
 ---
 
+## 0. Current Progress (updated 2026-09-12)
+
+**Live**: https://bsd.wales (site) and https://api.bsd.wales (API health check) —
+deployed on a shared VPS (169.58.119.208) alongside two unrelated client projects,
+isolated in its own Docker network/containers, behind the same shared Caddy reverse
+proxy (config lives at `/opt/platform/deploy/caddy/Caddyfile`, BSD's blocks appended
+at the end).
+
+**Repo**: https://github.com/Kanto065/BSD (public, monorepo) — `bsd-api/` and
+`bsd-web/` live together in one repo instead of the three separate repos
+Section 1 originally called for; simpler for a solo build. `bsd-mobile` doesn't exist
+yet (still scoped for M5).
+
+**Deploy pipeline**: push to `main` → GitHub Actions (`.github/workflows/deploy.yml`)
+→ SSHes into the VPS using a restricted deploy key (GitHub secret `VPS_SSH_KEY`,
+forced to run only `/opt/bsd/deploy.sh`, no shell) → that script does
+`git pull` in `/opt/bsd-src` on the VPS, then `docker compose build api web && docker
+compose up -d` from `/opt/bsd/docker-compose.yml` (build contexts point at
+`../bsd-src/bsd-api` and `../bsd-src/bsd-web`). Postgres runs as its own container
+(`bsd-postgres`) on an internal-only network; only `api` and `web` join the shared
+`platform_internal` network so Caddy can reach them.
+
+**What's actually built, milestone by milestone**:
+- **M0 (Foundation)**: done. Fastify + Prisma schema (with the subcategory/
+  requiresOwnerName/otherAreaText/upload-validation fixes from the design review
+  folded in — see Section 5 below), seeded with the *real* full category/subcategory
+  list and all 8 coverage areas (pulled from the client's actual `BSD_Merged.docx`,
+  not the placeholder examples originally in this doc), a super-admin user, and a
+  Vitest + `.inject()` test harness. NestJS-style module folders
+  (`src/modules/<domain>/{routes,service,schema}.ts`) exist for health, categories,
+  businesses, admin, contact — only `health` has real logic; the rest are stubs
+  pending their milestones.
+- **M1 (Public browsing)**: partially done, ahead of schedule but not wired to real
+  data yet. `/categories` and `/categories/[slug]` exist and render for real from the
+  full category/subcategory list, but as static content (no live business listings —
+  the API's `/categories` and `/businesses/*` endpoints are still stubs). Homepage
+  matches the client's Homepage Layout doc section-by-section, including the two
+  sections the first draft missed (the "Featured Listings (Future Premium)"
+  placeholder and the dedicated "Powered By BayConnect" section with its own CTA).
+- **M2 (Submission flow)**: not built. `/submit` is a placeholder page with a mailto
+  fallback to info@bsd.wales — no form, no API endpoint yet.
+- **M3 (Admin panel)**: not built at all — no `/admin` routes or pages exist yet.
+- **M4 (Static content pages)**: done, plus one page the original milestone list
+  missed entirely — **FAQ** (`/faq`) exists as its own page with FAQPage JSON-LD,
+  even though Section 3's M4 milestone never listed it (the client's doc has a full
+  "BSD – Frequently Asked Questions" page). About/Coverage Area/Transparency/Legal/
+  Privacy/Contact/Branding are all live with verbatim copy from the client's doc.
+  `/branding` is a "coming soon" shell, matching the doc's stated scope.
+- **M5, M6, M7**: not started.
+
+**SEO/perf choices made along the way**: every page is fully static (SSG) —
+`output: "standalone"` in `next.config.ts`, per-page `metadata`/canonical/OpenGraph,
+Organization + FAQPage JSON-LD, `sitemap.ts`/`robots.ts`. Category icons are
+`lucide-react` components (not emoji), and the favicon/apple-icon are generated at
+build time via `next/og` (`app/icon.tsx`, `app/apple-icon.tsx`) rather than a static
+asset. Marketing copy was deliberately written to avoid em-dash/colon-heavy "AI-sounding"
+phrasing wherever it wasn't a verbatim client quote (client's own dashes/wording were
+left untouched).
+
+**Known gaps / next things to pick up**:
+- Wire `/categories`, `/categories/[slug]`, and a search page to the real API once
+  M1's endpoints exist (`GET /categories`, `GET /categories/:slug`, `GET
+  /businesses/search`), instead of the static `lib/content.ts` data.
+- Build M2 (the real submission form + `POST /businesses/submit`) — this is the
+  biggest missing piece; `/submit` currently can't actually create a listing.
+  Sanitization helper (`src/common/sanitize.ts`) and upload validation rules are
+  already written per Section 5's M2 prompt but not wired into a real route yet.
+  Fastify is on v5 (not the v4 originally written in the M0 prompt below — bumped
+  during deploy debugging to match `@fastify/cors`/`@fastify/rate-limit` v10).
+- No `prisma migrate` history exists yet — the API container runs `prisma db push`
+  on boot instead of `migrate deploy` (see the Dockerfile comment), since there's
+  never been a local/dev Postgres available to generate a first migration against.
+  Switch to real migrations once one exists.
+- `api.bsd.wales` DNS was only just added — reconfirm it resolves and serves
+  `/health` before relying on it publicly.
+- No automated tests exist yet beyond the M0 health-check smoke test — M1's
+  "pending/rejected listings must never leak on public routes" integration test
+  (called for in Section 4 below) still needs writing once those endpoints are real.
+
+---
+
 ## 1. Confirmed Tech Stack
 
 | Layer | Choice | Why |

@@ -33,7 +33,7 @@ export default async function CategoryDetailPage({ params }: { params: Params })
         ← All Categories
       </Link>
       <h1 className="mt-4 flex items-center gap-3 text-3xl font-bold text-slate-900">
-        <span aria-hidden="true">{category.icon}</span>
+        <category.icon className="h-8 w-8 text-teal" aria-hidden="true" />
         {category.name}
       </h1>
 

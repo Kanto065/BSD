@@ -92,9 +92,7 @@ export default function HomePage() {
               href={`/categories/${c.slug}`}
               className="rounded-lg border border-slate-200 p-5 text-center font-medium text-slate-700 transition hover:border-teal hover:text-teal hover:shadow-sm"
             >
-              <span className="block text-2xl" aria-hidden="true">
-                {c.icon}
-              </span>
+              <c.icon className="mx-auto h-7 w-7 text-teal" aria-hidden="true" />
               <span className="mt-2 block">{c.name}</span>
             </Link>
           ))}

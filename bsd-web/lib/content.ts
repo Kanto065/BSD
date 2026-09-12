@@ -1,3 +1,24 @@
+import {
+  ShoppingCart,
+  UtensilsCrossed,
+  Cookie,
+  Shirt,
+  Smartphone,
+  CarFront,
+  Wrench,
+  Hammer,
+  GraduationCap,
+  Stethoscope,
+  Home,
+  Sparkles,
+  ChefHat,
+  Briefcase,
+  Scale,
+  Landmark,
+  Package,
+  type LucideIcon,
+} from "lucide-react";
+
 // Verbatim copy and structured data pulled from the client's source doc (BSD_Merged.docx).
 // Do not paraphrase legal/privacy text — see BSD_Architecture_and_Build_Prompts.md M4 notes.
 
@@ -18,89 +39,89 @@ export const COVERAGE_AREAS = [
   "Uplands",
 ];
 
-export const CATEGORIES: { name: string; slug: string; icon: string; subcategories: string[] }[] = [
+export const CATEGORIES: { name: string; slug: string; icon: LucideIcon; subcategories: string[] }[] = [
   {
     name: "Grocery & Cash & Carry",
     slug: "grocery-and-cash-and-carry",
-    icon: "🛒",
+    icon: ShoppingCart,
     subcategories: ["Asian Grocery", "Halal Meat Shops", "Bangladeshi Spices & Essentials", "Cash & Carry Stores"],
   },
   {
     name: "Restaurants & Takeaways",
     slug: "restaurants-and-takeaways",
-    icon: "🍛",
+    icon: UtensilsCrossed,
     subcategories: ["Bangladeshi Restaurants", "Curry Houses", "Bengali/Indian Takeaways", "Sweet Shops & Dessert Places"],
   },
   {
     name: "Sweet Shops & Bakeries",
     slug: "sweet-shops-and-bakeries",
-    icon: "🍰",
+    icon: Cookie,
     subcategories: ["Bangladeshi Sweets", "Cakes & Bakery Items", "Event Sweets & Catering"],
   },
   {
     name: "Clothing & Cultural Shops",
     slug: "clothing-and-cultural-shops",
-    icon: "🥻",
+    icon: Shirt,
     subcategories: ["Asian Clothing", "Saree & Panjabi Stores", "Wedding Outfits", "Cultural Accessories"],
   },
   {
     name: "Mobile & Tech Repair",
     slug: "mobile-and-tech-repair",
-    icon: "📱",
+    icon: Smartphone,
     subcategories: ["Mobile Repair", "Laptop Repair", "Accessories Shops", "Tech Support Services"],
   },
   {
     name: "Taxi & Private Hire",
     slug: "taxi-and-private-hire",
-    icon: "🚕",
+    icon: CarFront,
     subcategories: ["Private Hire Drivers", "Taxi Companies", "Airport Transfer Services"],
   },
   {
     name: "Car Services",
     slug: "car-services",
-    icon: "🚗",
+    icon: Wrench,
     subcategories: ["Car Repair", "MOT Centres", "Car Wash", "Tyre Shops"],
   },
   {
     name: "Electrician/Plumber/Handyman",
     slug: "electrician-plumber-handyman",
-    icon: "🔧",
+    icon: Hammer,
     subcategories: ["Electricians", "Plumbers", "Handyman Services", "Home Maintenance"],
   },
   {
     name: "Tutors & Education",
     slug: "tutors-and-education",
-    icon: "📚",
+    icon: GraduationCap,
     subcategories: ["Private Tutors", "Academic Coaching", "Quran/Arabic Teachers", "Language Classes"],
   },
   {
     name: "Health & Wellbeing",
     slug: "health-and-wellbeing",
-    icon: "🩺",
+    icon: Stethoscope,
     subcategories: ["Physiotherapists", "Massage Therapists", "Fitness Trainers", "Mental Wellbeing Support"],
   },
   {
     name: "Property & Housing Services",
     slug: "property-and-housing-services",
-    icon: "🏠",
+    icon: Home,
     subcategories: ["Estate Agents", "Letting Services", "Mortgage Advisors", "Housing Support"],
   },
   {
     name: "Beauty & Henna Services",
     slug: "beauty-and-henna-services",
-    icon: "💄",
+    icon: Sparkles,
     subcategories: ["Makeup Artists", "Henna Artists", "Bridal Services", "Beauty Consultants"],
   },
   {
     name: "Home-Based Food Services",
     slug: "home-based-food-services",
-    icon: "🍱",
+    icon: ChefHat,
     subcategories: ["Home Chefs", "Catering Services", "Tiffin Services", "Event Food Supply"],
   },
   {
     name: "Independent Professionals",
     slug: "independent-professionals",
-    icon: "🧰",
+    icon: Briefcase,
     subcategories: [
       "Freelance Electricians",
       "Freelance Plumbers",
@@ -117,19 +138,19 @@ export const CATEGORIES: { name: string; slug: string; icon: string; subcategori
   {
     name: "Professional Services",
     slug: "professional-services",
-    icon: "💼",
+    icon: Scale,
     subcategories: ["Accountants", "Immigration Advisors", "Business Consultants", "Legal Support"],
   },
   {
     name: "Community & Religious Services",
     slug: "community-and-religious-services",
-    icon: "🕌",
+    icon: Landmark,
     subcategories: ["Mosques", "Community Groups", "Cultural Organisations"],
   },
   {
     name: "Others/Miscellaneous",
     slug: "others-miscellaneous",
-    icon: "✨",
+    icon: Package,
     subcategories: ["Any service not listed above"],
   },
 ];

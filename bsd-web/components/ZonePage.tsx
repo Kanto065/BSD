@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { MapPin, Plus } from "lucide-react";
 import { ArrowLink } from "@/components/ArrowLink";
+import { ListingGrid } from "@/components/BusinessCard";
+import type { ApiResult, Page, PublicListItem } from "@/lib/api";
 import { ZONES, type Zone } from "@/lib/content";
 
 export function zoneMetadata(zone: Zone): Metadata {
@@ -15,8 +17,16 @@ export function zoneMetadata(zone: Zone): Metadata {
 
 // CLIENT-REVIEW: the client supplied only the postcode districts and locality names for each zone. The
 // short introduction and the empty listing state are our own neutral wording.
-export default function ZonePage({ zone }: { zone: Zone }) {
+export default function ZonePage({
+  zone,
+  listings,
+}: {
+  zone: Zone;
+  listings: ApiResult<{ businesses: Page<PublicListItem> }>;
+}) {
   const others = ZONES.filter((z) => z.slug !== zone.slug);
+  const page = listings.ok ? listings.data.businesses : null;
+  const result: ApiResult<Page<PublicListItem>> = page ? { ok: true, data: page } : (listings as ApiResult<Page<PublicListItem>>);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
@@ -55,9 +65,19 @@ export default function ZonePage({ zone }: { zone: Zone }) {
 
       <section className="mt-12">
         <h2 className="text-lg font-semibold text-brand-navy">Businesses in this zone</h2>
-        <div className="mt-4 rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
-          Listings in {zone.name} will appear here once businesses are submitted and approved.
+        <div className="mt-4">
+          <ListingGrid
+            result={result}
+            empty={<>Listings in {zone.name} will appear here once businesses are submitted and approved.</>}
+          />
         </div>
+        {page && page.total > page.items.length && (
+          <div className="mt-6 text-center">
+            <ArrowLink href={`/search?zone=${zone.slug}`} className="justify-center">
+              View all {page.total} listings in this zone
+            </ArrowLink>
+          </div>
+        )}
         <div className="mt-6 text-center">
           <Link
             href="/submit"

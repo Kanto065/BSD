@@ -54,15 +54,14 @@ for T in Business ContactMessage BusinessPhoto; do
   if [ "$N" != "0" ]; then echo "Refusing: \"$T\" has $N rows. The v2 migration needs a backfill first."; exit 1; fi
 done
 cd /opt/bsd-src
+# Always put the source tree back where the normal deploy expects it, even if a step below fails.
+trap 'cd /opt/bsd-src && git checkout --quiet --detach origin/main || true' EXIT
 git fetch --quiet origin
 git checkout --quiet --detach "$REF"
 test -f bsd-api/prisma/migrations/0_init/migration.sql || { echo "0_init not found in $REF"; exit 1; }
 cd /opt/bsd
 docker compose build api
 docker compose run --rm --no-deps api npx prisma migrate resolve --applied 0_init
-# Put the source tree back where the normal deploy expects it. deploy.sh resets it to origin/main anyway.
-cd /opt/bsd-src
-git checkout --quiet --detach origin/main
 echo "Baseline done. The running containers were not restarted."
 REMOTE
     ;;

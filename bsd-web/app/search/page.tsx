@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MapPin, Plus, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Plus, Search } from "lucide-react";
+import { ListingGrid } from "@/components/BusinessCard";
+import { searchListings } from "@/lib/api";
 import { ALL_ZONES_LABEL, CATEGORIES, ZONES, findCategory, findZone, zoneLabel } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -12,18 +14,32 @@ export const metadata: Metadata = {
 };
 
 type Param = string | string[] | undefined;
-type SearchParams = Promise<{ q?: Param; zone?: Param; category?: Param }>;
+type SearchParams = Promise<{ q?: Param; zone?: Param; category?: Param; page?: Param }>;
 
 const one = (v: Param) => (Array.isArray(v) ? v[0] : v)?.trim().slice(0, 100) ?? "";
 
-// Phase 1 search runs against the static category list only. There is no listings data yet, so the listings
-// section is an honest empty state. The API-backed version replaces this in the public browsing milestone.
+// Keyword, zone and category filter the real listings through the public API. The matching categories below are
+// a quick way in and come from the static category list. Search text is never stored: the API call is not cached
+// and the API strips query strings from its request logs.
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
   const q = one(sp.q);
   const zone = findZone(one(sp.zone));
   const category = findCategory(one(sp.category));
+  const pageNumber = Math.min(1000, Math.max(1, Number.parseInt(one(sp.page), 10) || 1));
   const needle = q.toLowerCase();
+
+  const listings = await searchListings({ q, zone: zone?.slug, category: category?.slug, page: pageNumber });
+  const pageData = listings.ok ? listings.data : null;
+  const pageHref = (n: number) => {
+    const qs = new URLSearchParams();
+    if (q) qs.set("q", q);
+    if (zone) qs.set("zone", zone.slug);
+    if (category) qs.set("category", category.slug);
+    if (n > 1) qs.set("page", String(n));
+    const s = qs.toString();
+    return s ? `/search?${s}` : "/search";
+  };
 
   const pool = category ? [category] : CATEGORIES;
   const matches = needle
@@ -42,8 +58,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">Search the Directory</h1>
 
-      <form action="/search" method="GET" role="search" className="mt-6 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_auto_auto_auto]">
-        <div>
+      <form action="/search" method="GET" role="search" className="mt-6 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+        <div className="md:col-span-3">
           <label htmlFor="q" className="sr-only">
             What service are you looking for?
           </label>
@@ -116,20 +132,54 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
       )}
 
       <section className="mt-10">
-        <h2 className="text-lg font-semibold text-brand-navy">Businesses</h2>
+        <h2 className="text-lg font-semibold text-brand-navy">
+          Businesses{pageData && pageData.total > 0 ? ` (${pageData.total})` : ""}
+        </h2>
         {/* CLIENT-REVIEW: no copy was supplied for the search results page. */}
-        <div className="mt-3 rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
-          No business listings are available yet. Listings appear here once businesses have been submitted and approved.
-          <div className="mt-4">
-            <Link
-              href="/submit"
-              className="inline-flex items-center gap-2 rounded-md bg-green-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-800"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Add Business Free
-            </Link>
-          </div>
+        <div className="mt-3">
+          <ListingGrid
+            result={listings}
+            empty={
+              <>
+                {hasFilter
+                  ? "No business listings match your search yet. Try a broader word or a different zone."
+                  : "No business listings are available yet. Listings appear here once businesses have been submitted and approved."}
+                <div className="mt-4">
+                  <Link
+                    href="/submit"
+                    className="inline-flex items-center gap-2 rounded-md bg-green-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-800"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    Add Business Free
+                  </Link>
+                </div>
+              </>
+            }
+          />
         </div>
+        {pageData && pageData.totalPages > 1 && (
+          <nav aria-label="Pagination" className="mt-6 flex items-center justify-between text-sm">
+            {pageData.page > 1 ? (
+              <Link href={pageHref(pageData.page - 1)} className="inline-flex items-center gap-1 font-semibold text-brand-teal-dark hover:underline">
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                Previous
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className="text-slate-500">
+              Page {pageData.page} of {pageData.totalPages}
+            </span>
+            {pageData.page < pageData.totalPages ? (
+              <Link href={pageHref(pageData.page + 1)} className="inline-flex items-center gap-1 font-semibold text-brand-teal-dark hover:underline">
+                Next
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        )}
       </section>
 
       <section className="mt-10">

@@ -8,9 +8,11 @@ import categoriesRoutes from "./modules/categories/categories.routes.js";
 import businessesRoutes from "./modules/businesses/businesses.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import contactRoutes from "./modules/contact/contact.routes.js";
+import zonesRoutes from "./modules/zones/zones.routes.js";
+import { loggerOptions } from "./common/logging.js";
 
 export function buildApp() {
-  const app = Fastify({ logger: true });
+  const app = Fastify({ logger: loggerOptions() });
 
   app.register(cors, { origin: process.env.CORS_ORIGIN?.split(",") ?? true });
   app.register(rateLimit, { max: 100, timeWindow: "1 minute" });
@@ -20,6 +22,7 @@ export function buildApp() {
   app.register(healthRoutes);
   app.register(categoriesRoutes, { prefix: "/categories" });
   app.register(businessesRoutes, { prefix: "/businesses" });
+  app.register(zonesRoutes, { prefix: "/zones" });
   app.register(adminRoutes, { prefix: "/admin" });
   app.register(contactRoutes, { prefix: "/contact" });
 

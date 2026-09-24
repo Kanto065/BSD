@@ -99,10 +99,13 @@ describe("bsd-web copy stays in sync", () => {
   it.skipIf(!web)("lists every category, subcategory, zone, district range and locality", () => {
     for (const c of CATEGORIES) {
       expect(web).toContain(`name: "${c.name}"`);
+      // The web links filter the API by this slug, so it must be the slug the seed generates.
+      expect(web, `slug for ${c.name}`).toContain(`slug: "${categorySlug(c.name)}"`);
       for (const s of c.subcategories) expect(web, `subcategory ${s}`).toContain(`"${s}"`);
     }
     for (const z of ZONES) {
       expect(web).toContain(`name: "${z.name}"`);
+      expect(web, `slug for ${z.name}`).toContain(`slug: "${z.slug}"`);
       for (const l of z.localities) expect(web, `locality ${l}`).toContain(`"${l}"`);
     }
   });

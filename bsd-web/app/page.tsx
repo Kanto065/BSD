@@ -3,7 +3,13 @@ import type { Metadata } from "next";
 import { ChevronDown, Check, MapPin, Plus, Search, ShieldCheck, Smartphone, Target } from "lucide-react";
 import VerificationBadge from "@/components/VerificationBadge";
 import { ArrowLink } from "@/components/ArrowLink";
+import BusinessCard from "@/components/BusinessCard";
+import { featured } from "@/lib/api";
 import { ALL_ZONES_LABEL, HOME_FAQ, POPULAR_CATEGORIES, SITE_DESCRIPTION, ZONES, zoneLabel } from "@/lib/content";
+
+// The page is prerendered, then refreshed from the API at most once a minute. The API is never called while the
+// site is being built (see lib/api.ts).
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "BSD – Bangladeshi Business & Service Directory | Swansea Bay & South West Wales",
@@ -59,7 +65,10 @@ function StepList({ title, steps }: { title: string; steps: Step[] }) {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const featuredResult = await featured(8);
+  const featuredItems = featuredResult.ok ? featuredResult.data.items : [];
+
   return (
     <>
       {/* Hero: exact copy per "Exact Copy & Field Specifications" in the Homepage Header doc */}
@@ -220,15 +229,29 @@ export default function HomePage() {
               sits close to what the Legal Disclaimer disclaims. */}
           <p className="mt-2 text-slate-600">Hand-verified for operational quality & accuracy</p>
         </div>
-        <div className="mx-auto mt-8 max-w-2xl rounded-xl border border-dashed border-slate-300 p-8 text-center">
-          <VerificationBadge status="COMMUNITY_VERIFIED" />
-          <p className="mt-4 text-slate-600">
-            Businesses appear here once our field volunteers have completed their checks.
-          </p>
-          <ArrowLink href="/verification-policy" className="mt-4 justify-center text-sm">
-            How verification works
-          </ArrowLink>
-        </div>
+        {featuredItems.length > 0 ? (
+          <>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {featuredItems.map((b) => (
+                <BusinessCard key={b.slug} business={b} />
+              ))}
+            </div>
+            <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-2">
+              <ArrowLink href="/search">Browse all listings</ArrowLink>
+              <ArrowLink href="/verification-policy">How verification works</ArrowLink>
+            </div>
+          </>
+        ) : (
+          <div className="mx-auto mt-8 max-w-2xl rounded-xl border border-dashed border-slate-300 p-8 text-center">
+            <VerificationBadge status="COMMUNITY_VERIFIED" />
+            <p className="mt-4 text-slate-600">
+              Businesses appear here once our field volunteers have completed their checks.
+            </p>
+            <ArrowLink href="/verification-policy" className="mt-4 justify-center text-sm">
+              How verification works
+            </ArrowLink>
+          </div>
+        )}
       </section>
 
       {/* 4. Business owner */}

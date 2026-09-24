@@ -2,7 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLink } from "@/components/ArrowLink";
+import { ListingGrid } from "@/components/BusinessCard";
+import { listingsForCategory, type ApiResult, type Page, type PublicListItem } from "@/lib/api";
 import { CATEGORIES, SITE_URL } from "@/lib/content";
+
+// Prerendered, then refreshed from the API at most once a minute.
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return CATEGORIES.map((c) => ({ slug: c.slug }));
@@ -31,6 +36,10 @@ export default async function CategoryDetailPage({ params }: { params: Params })
   const category = CATEGORIES.find((c) => c.slug === slug);
   if (!category) notFound();
 
+  const listings = await listingsForCategory(category.slug);
+  const page = listings.ok ? listings.data.businesses : null;
+  const result: ApiResult<Page<PublicListItem>> = page ? { ok: true, data: page } : (listings as ApiResult<Page<PublicListItem>>);
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
       <ArrowLink href="/categories" direction="left" className="text-sm">
@@ -51,9 +60,19 @@ export default async function CategoryDetailPage({ params }: { params: Params })
         </div>
       )}
 
-      <div className="mt-12 rounded-lg border border-dashed border-slate-300 p-8 text-center text-slate-500">
-        Listings in this category will appear here once businesses are submitted and approved.
+      <div className="mt-12">
+        <ListingGrid
+          result={result}
+          empty={<>Listings in this category will appear here once businesses are submitted and approved.</>}
+        />
       </div>
+      {page && page.total > page.items.length && (
+        <div className="mt-6 text-center">
+          <ArrowLink href={`/search?category=${category.slug}`} className="justify-center">
+            View all {page.total} listings in this category
+          </ArrowLink>
+        </div>
+      )}
 
       <div className="mt-8 text-center">
         <Link href="/submit" className="inline-block rounded-md bg-green-700 px-6 py-3 font-semibold text-white hover:bg-green-800">

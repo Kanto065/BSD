@@ -77,8 +77,15 @@ because `main` auto-deploys to production. Nothing on the branch reaches `main` 
 explicit go-ahead.
 - **Phase 0 (this doc update)**: done. Plan approved, decisions logged in Section 6.
 - **Phase 1 (M1.5 v2 shell refresh, `bsd-web`, static)**: built on the branch and committed, awaiting review. Not merged to `main`, so it is not live yet.
-- **Phase 2 (schema v2 and real Prisma migrations, `bsd-api`)**: built on the branch and tested, not yet deployed. The v2 schema, migrations `0_init` (baseline) and `1_v2_schema`, the reconciling seed, the postcode helper and `deploy/v2-migration-runbook.md` are done. The user still has to run the production baseline before this can be merged to `main`. Verified with unit tests, the migrations run in PGlite, and the full Prisma flow on a real PostgreSQL 16.14 (production's version).
-- **Phase 3 (M1 public API and wiring)**: not started.
+- **Phase 2 (schema v2 and real Prisma migrations, `bsd-api`)**: LIVE since 2026-09-25. Migrations `0_init`
+  (baseline) and `1_v2_schema` are recorded in production, the seed loaded 20 categories, 73 subcategories, 3 zones and
+  47 localities, and the API runs `prisma migrate deploy` at boot, so future migrations apply on deploy. Verified with
+  unit tests, the migrations run in PGlite, and the full Prisma flow on a real PostgreSQL 16.14.
+- **Phase 3 (M1 public API and wiring)**: built and tested on the branch, not yet deployed. Read-only public API
+  (`/categories`, `/categories/:slug`, `/businesses/search`, `/businesses/featured`, `/businesses/:slug`, `/zones`,
+  `/zones/:slug`), all going through one `publicWhere()` and two explicit select objects in `src/common/public.ts`.
+  The web app shows real listings on the homepage (Featured & Verified), category and zone pages, `/search` and a new
+  `/businesses/[slug]` profile page. Integration tests run the real seed and Prisma engine on an in-process PostgreSQL.
 - **Phase 4 (M2 submission flow)**: not started.
 - Later, not started: M3 admin with volunteer verification and claim review, M6 update,
   removal and claim flows, M7 print export by zone then category.
@@ -93,28 +100,24 @@ phrasing wherever it wasn't a verbatim client quote (client's own dashes/wording
 left untouched).
 
 **Known gaps / next things to pick up**:
-- Wire `/categories`, `/categories/[slug]`, and a search page to the real API once
-  M1's endpoints exist (`GET /categories`, `GET /categories/:slug`, `GET
-  /businesses/search`), instead of the static `lib/content.ts` data. This is Phase 3.
+- The public endpoints and web pages exist (Phase 3). The taxonomy (categories, zones, localities) stays as static data
+  in `bsd-web/lib/content.ts`, guarded by a test that fails if it drifts from the seed, while listings come from the API.
+  Sitemap entries for individual business pages are still to do (M6).
 - Build M2 (the real submission form + `POST /businesses/submit`) — this is the
   biggest missing piece; `/submit` currently can't actually create a listing.
   Sanitization helper (`src/common/sanitize.ts`) and upload validation rules are
   already written per Section 4's M2 prompt but not wired into a real route yet.
   Fastify is on v5 (not the v4 originally written in the M0 prompt below — bumped
   during deploy debugging to match `@fastify/cors`/`@fastify/rate-limit` v10).
-- No `prisma migrate` history exists yet — the API container runs `prisma db push`
-  on boot instead of `migrate deploy` (see the Dockerfile comment), since there's
-  never been a local/dev Postgres available to generate a first migration against.
-  Phase 2 fixes this: it adds `0_init` and `1_v2_schema` and switches the container to
-  `migrate deploy`. Production already has tables from `db push`, so it needs a one-off
-  baseline (`prisma migrate resolve --applied 0_init`) before the first `migrate deploy`.
-  The steps are in `deploy/v2-migration-runbook.md` (with the helper `deploy/v2-baseline.sh`)
-  and are run by the user, not by Claude Code.
+- Prisma migrations now exist and are applied on deploy. New migrations are written without a database using
+  `prisma migrate diff` and tested in PGlite (see `deploy/v2-migration-runbook.md`). Production had no migration
+  history until the 2026-09-25 baseline.
 - `api.bsd.wales` DNS was only just added — reconfirm it resolves and serves
   `/health` before relying on it publicly.
-- No automated tests exist yet beyond the M0 health-check smoke test — M1's
-  "pending/rejected listings must never leak on public routes" integration test
-  (called for in Section 4 below) still needs writing once those endpoints are real.
+- Tests: the API has 50+ tests, including the "only APPROVED listings are public" guard (12 status x verification
+  combinations plus private-field and search checks) and migration tests. It runs on an in-process PostgreSQL (PGlite
+  over a socket), so nothing needs installing. The web app has unit tests for the contact-link helpers only. There is
+  no CI job yet, so tests run by hand before each merge (`npm test` in each package).
 - No external uptime monitor exists. The 2026-09-24 outage went unnoticed until it was
   reported by hand. Add one (for example UptimeRobot) on `https://bsd.wales/` and
   `https://api.bsd.wales/health`.

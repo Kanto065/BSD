@@ -7,68 +7,188 @@ import {
   CarFront,
   Wrench,
   Hammer,
+  Zap,
   GraduationCap,
   Stethoscope,
+  Dumbbell,
   Home,
   Sparkles,
   ChefHat,
   Briefcase,
+  Building2,
   Scale,
   Landmark,
   Package,
   type LucideIcon,
 } from "lucide-react";
 
-// Verbatim copy and structured data pulled from the client's source doc (BSD_Merged.docx).
-// Do not paraphrase legal/privacy text — see BSD_Architecture_and_Build_Prompts.md M4 notes.
+// Verbatim copy and structured data pulled from the client's source docs. v2 docs win every
+// conflict with v1. Do not paraphrase legal/privacy text. Every change to client legal or
+// transparency wording is marked CLIENT-REVIEW and listed in BSD_Architecture_and_Build_Prompts.md
+// section 7. New copy written here avoids em dashes.
 
 export const SITE_NAME = "BSD – Bangladeshi Business & Service Directory";
 export const SITE_TAGLINE = "Swansea Bay Edition";
 export const SITE_URL = "https://bsd.wales";
 export const SITE_DESCRIPTION =
-  "Find trusted Bangladeshi businesses, services & professionals across Swansea Bay. Free community directory covering Swansea, Neath Port Talbot, Llanelli, Gorseinon, Mumbles, Morriston, Sketty and Uplands.";
+  "Find trusted Bangladeshi businesses, services and professionals across Swansea, Neath Port Talbot and Carmarthenshire (SA1 to SA34). A free community directory powered by BayConnect.";
 
-export const COVERAGE_AREAS = [
-  "Swansea",
-  "Neath Port Talbot",
-  "Llanelli",
-  "Gorseinon",
-  "Mumbles",
-  "Morriston",
-  "Sketty",
-  "Uplands",
+// The v2 mailbox set. info@, partnership@, urgent@ and privacy@ no longer exist.
+export const EMAILS = {
+  support: "support@bsd.wales",
+  compliance: "compliance@bsd.wales",
+  community: "community@bsd.wales",
+  admin: "admin@bsd.wales",
+} as const;
+
+// ---------------------------------------------------------------------------
+// Coverage: 3 zones covering SA1 to SA34, names and localities from the
+// Regional Coverage Factsheet. SA21 to SA30 belong to no zone.
+// ---------------------------------------------------------------------------
+
+export type Zone = {
+  slug: "zone-1" | "zone-2" | "zone-3";
+  number: 1 | 2 | 3;
+  name: string;
+  /** Postcode range as the Factsheet writes it, e.g. "SA1–SA7". */
+  postcodeLabel: string;
+  districts: string[];
+  /** Homepage card "Key Areas" (Homepage Full Body doc). */
+  keyAreas: string;
+  /** Full locality list (Factsheet "Key Coverage Areas"). */
+  localities: string[];
+};
+
+const range = (prefix: string, from: number, to: number) =>
+  Array.from({ length: to - from + 1 }, (_, i) => `${prefix}${from + i}`);
+
+export const ZONES: Zone[] = [
+  {
+    slug: "zone-1",
+    number: 1,
+    name: "Greater Swansea & Gower",
+    postcodeLabel: "SA1–SA7",
+    districts: range("SA", 1, 7),
+    keyAreas: "Swansea City Centre, Uplands, Morriston, Sketty, Mumbles, Gorseinon, Pontarddulais.",
+    localities: [
+      "Swansea City Centre",
+      "Uplands",
+      "Sketty",
+      "Brynmill",
+      "Saint Thomas",
+      "Maritime Quarter",
+      "Morriston",
+      "Manselton",
+      "Hafod",
+      "Plasmarl",
+      "Winch Wen",
+      "Enterprise Park",
+      "Mumbles",
+      "Gower",
+      "Killay",
+      "Dunvant",
+      "Gorseinon",
+      "Pontarddulais",
+      "Loughor",
+    ],
+  },
+  {
+    slug: "zone-2",
+    number: 2,
+    name: "Neath Port Talbot & Swansea Valley",
+    postcodeLabel: "SA8–SA13",
+    districts: range("SA", 8, 13),
+    keyAreas: "Neath Town, Port Talbot, Aberavon, Pontardawe, Ystalyfera, Ystradgynlais.",
+    localities: [
+      "Neath Town Centre",
+      "Briton Ferry",
+      "Skewen",
+      "Port Talbot",
+      "Aberavon",
+      "Margam",
+      "Pontardawe",
+      "Alltwen",
+      "Rhos",
+      "Trebanos",
+      "Ystalyfera",
+      "Ystradgynlais",
+      "Crynant",
+      "Seven Sisters",
+    ],
+  },
+  {
+    slug: "zone-3",
+    number: 3,
+    name: "Carmarthenshire & West Wales",
+    postcodeLabel: "SA14–SA20, SA31–SA34",
+    districts: [...range("SA", 14, 20), ...range("SA", 31, 34)],
+    keyAreas: "Llanelli, Carmarthen Town, Ammanford, Burry Port, Cross Hands, St Clears.",
+    localities: [
+      "Llanelli",
+      "Burry Port",
+      "Pembrey",
+      "Kidwelly",
+      "Ferryside",
+      "Ammanford",
+      "Cross Hands",
+      "Tycroes",
+      "Llandeilo",
+      "Llandovery",
+      "Carmarthen Town",
+      "Saint Clears",
+      "Laugharne",
+      "Whitland",
+    ],
+  },
 ];
 
-export const CATEGORIES: { name: string; slug: string; icon: LucideIcon; subcategories: string[] }[] = [
-  {
-    name: "Grocery & Cash & Carry",
-    slug: "grocery-and-cash-and-carry",
-    icon: ShoppingCart,
-    subcategories: ["Asian Grocery", "Halal Meat Shops", "Bangladeshi Spices & Essentials", "Cash & Carry Stores"],
-  },
+export const ALL_ZONES_LABEL = "All Zones (SA1 - SA34)";
+
+export function zoneLabel(z: Zone): string {
+  return `Zone ${z.number}: ${z.name} (${z.postcodeLabel})`;
+}
+
+export function findZone(slug: string | undefined): Zone | undefined {
+  return ZONES.find((z) => z.slug === slug);
+}
+
+// ---------------------------------------------------------------------------
+// Categories: the approved 20-category mapping. The first 14 are the v2 homepage tiles in
+// the client's order. Old slugs redirect in next.config.ts.
+// ---------------------------------------------------------------------------
+
+export type Category = { name: string; slug: string; icon: LucideIcon; subcategories: string[] };
+
+export const CATEGORIES: Category[] = [
   {
     name: "Restaurants & Takeaways",
     slug: "restaurants-and-takeaways",
     icon: UtensilsCrossed,
-    subcategories: ["Bangladeshi Restaurants", "Curry Houses", "Bengali/Indian Takeaways", "Sweet Shops & Dessert Places"],
+    subcategories: ["Bangladeshi Restaurants", "Curry Houses", "Bengali/Indian Takeaways"],
   },
   {
-    name: "Sweet Shops & Bakeries",
-    slug: "sweet-shops-and-bakeries",
-    icon: Cookie,
-    subcategories: ["Bangladeshi Sweets", "Cakes & Bakery Items", "Event Sweets & Catering"],
+    name: "Legal & Financial",
+    slug: "legal-and-financial",
+    icon: Scale,
+    subcategories: ["Accountants", "Legal Support", "Immigration Advisors", "Mortgage Advisors"],
   },
   {
-    name: "Clothing & Cultural Shops",
-    slug: "clothing-and-cultural-shops",
-    icon: Shirt,
-    subcategories: ["Asian Clothing", "Saree & Panjabi Stores", "Wedding Outfits", "Cultural Accessories"],
+    name: "Health & Care",
+    slug: "health-and-care",
+    icon: Stethoscope,
+    subcategories: ["Physiotherapists", "Mental Wellbeing Support"],
   },
   {
-    name: "Mobile & Tech Repair",
-    slug: "mobile-and-tech-repair",
-    icon: Smartphone,
-    subcategories: ["Mobile Repair", "Laptop Repair", "Accessories Shops", "Tech Support Services"],
+    name: "Trades & Contractors",
+    slug: "trades-and-contractors",
+    icon: Hammer,
+    subcategories: ["Handyman Services", "Home Maintenance"],
+  },
+  {
+    name: "Groceries & Halal",
+    slug: "groceries-and-halal",
+    icon: ShoppingCart,
+    subcategories: ["Asian Grocery", "Halal Meat Shops", "Bangladeshi Spices & Essentials", "Cash & Carry Stores"],
   },
   {
     name: "Taxi & Private Hire",
@@ -77,46 +197,47 @@ export const CATEGORIES: { name: string; slug: string; icon: LucideIcon; subcate
     subcategories: ["Private Hire Drivers", "Taxi Companies", "Airport Transfer Services"],
   },
   {
-    name: "Car Services",
-    slug: "car-services",
-    icon: Wrench,
-    subcategories: ["Car Repair", "MOT Centres", "Car Wash", "Tyre Shops"],
-  },
-  {
-    name: "Electrician/Plumber/Handyman",
-    slug: "electrician-plumber-handyman",
-    icon: Hammer,
-    subcategories: ["Electricians", "Plumbers", "Handyman Services", "Home Maintenance"],
-  },
-  {
-    name: "Tutors & Education",
-    slug: "tutors-and-education",
-    icon: GraduationCap,
-    subcategories: ["Private Tutors", "Academic Coaching", "Quran/Arabic Teachers", "Language Classes"],
-  },
-  {
-    name: "Health & Wellbeing",
-    slug: "health-and-wellbeing",
-    icon: Stethoscope,
-    subcategories: ["Physiotherapists", "Massage Therapists", "Fitness Trainers", "Mental Wellbeing Support"],
-  },
-  {
-    name: "Property & Housing Services",
-    slug: "property-and-housing-services",
-    icon: Home,
-    subcategories: ["Estate Agents", "Letting Services", "Mortgage Advisors", "Housing Support"],
-  },
-  {
-    name: "Beauty & Henna Services",
-    slug: "beauty-and-henna-services",
+    name: "Beauty & Lifestyle",
+    slug: "beauty-and-lifestyle",
     icon: Sparkles,
     subcategories: ["Makeup Artists", "Henna Artists", "Bridal Services", "Beauty Consultants"],
+  },
+  {
+    name: "Community & Faith",
+    slug: "community-and-faith",
+    icon: Landmark,
+    subcategories: ["Mosques", "Community Groups", "Cultural Organisations"],
+  },
+  {
+    // CLIENT-REVIEW: no subcategories supplied for this v2 homepage label.
+    name: "Business Consultants",
+    slug: "business-consultants",
+    icon: Building2,
+    subcategories: [],
+  },
+  {
+    name: "Mobile & Tech Repair",
+    slug: "mobile-and-tech-repair",
+    icon: Smartphone,
+    subcategories: ["Mobile Repair", "Laptop Repair", "Accessories Shops", "Tech Support Services"],
+  },
+  {
+    name: "Clothing & Cultural Shops",
+    slug: "clothing-and-cultural-shops",
+    icon: Shirt,
+    subcategories: ["Asian Clothing", "Saree & Panjabi Stores", "Wedding Outfits", "Cultural Accessories"],
   },
   {
     name: "Home-Based Food Services",
     slug: "home-based-food-services",
     icon: ChefHat,
     subcategories: ["Home Chefs", "Catering Services", "Tiffin Services", "Event Food Supply"],
+  },
+  {
+    name: "Electrician / Plumber",
+    slug: "electrician-plumber",
+    icon: Zap,
+    subcategories: ["Electricians", "Plumbers"],
   },
   {
     name: "Independent Professionals",
@@ -133,66 +254,106 @@ export const CATEGORIES: { name: string; slug: string; icon: LucideIcon; subcate
       "Immigration Helpers",
       "Translators",
       "Community Advisors",
+      "Car Mechanics (home-based)",
+      "Tailors (home-based)",
+      "Freelance IT Support",
+      "Freelance Tutors",
+      "Freelance Designers",
+      "Any skilled individual without a physical office",
     ],
   },
   {
-    name: "Professional Services",
-    slug: "professional-services",
-    icon: Scale,
-    subcategories: ["Accountants", "Immigration Advisors", "Business Consultants", "Legal Support"],
+    name: "Sweet Shops & Bakeries",
+    slug: "sweet-shops-and-bakeries",
+    icon: Cookie,
+    subcategories: ["Bangladeshi Sweets", "Cakes & Bakery Items", "Event Sweets & Catering", "Sweet Shops & Dessert Places"],
   },
   {
-    name: "Community & Religious Services",
-    slug: "community-and-religious-services",
-    icon: Landmark,
-    subcategories: ["Mosques", "Community Groups", "Cultural Organisations"],
+    name: "Car Services",
+    slug: "car-services",
+    icon: Wrench,
+    subcategories: ["Car Repair", "MOT Centres", "Car Wash", "Tyre Shops"],
   },
   {
-    name: "Others/Miscellaneous",
+    name: "Tutors & Education",
+    slug: "tutors-and-education",
+    icon: GraduationCap,
+    subcategories: ["Private Tutors", "Academic Coaching", "Quran/Arabic Teachers", "Language Classes"],
+  },
+  {
+    name: "Property & Housing Services",
+    slug: "property-and-housing-services",
+    icon: Home,
+    subcategories: ["Estate Agents", "Letting Services", "Housing Support"],
+  },
+  {
+    // CLIENT-REVIEW: this category is our own split of Health & Wellbeing, needed to reach 20 categories.
+    name: "Fitness & Wellbeing",
+    slug: "fitness-and-wellbeing",
+    icon: Dumbbell,
+    subcategories: ["Massage Therapists", "Fitness Trainers"],
+  },
+  {
+    name: "Others / Miscellaneous",
     slug: "others-miscellaneous",
     icon: Package,
     subcategories: ["Any service not listed above"],
   },
 ];
 
-export const FEATURED_CATEGORY_SLUGS = [
-  "grocery-and-cash-and-carry",
-  "restaurants-and-takeaways",
-  "mobile-and-tech-repair",
-  "taxi-and-private-hire",
-  "clothing-and-cultural-shops",
-  "home-based-food-services",
-  "electrician-plumber-handyman",
-  "independent-professionals",
-];
+/** The 14 tiles on the v2 homepage "Popular Categories" grid. */
+export const POPULAR_CATEGORIES = CATEGORIES.slice(0, 14);
 
-export const CONTACT_CHANNELS = [
+export function findCategory(slug: string | undefined): Category | undefined {
+  return CATEGORIES.find((c) => c.slug === slug);
+}
+
+// ---------------------------------------------------------------------------
+// Contact
+// ---------------------------------------------------------------------------
+
+export const CONTACT_CHANNELS: {
+  title: string;
+  email: string;
+  description: string;
+  points?: string[];
+  response?: string;
+}[] = [
   {
-    title: "General Enquiries",
-    email: "info@bsd.wales",
-    response: "Within 3–5 working days",
+    title: "Support and General Enquiries",
+    email: EMAILS.support,
     description:
-      "For general questions about the directory, categories, coverage area, or community initiative.",
+      "For general questions about the directory, categories, coverage area, or community initiative. Also for help adding or updating a listing, and for any listing that contains incorrect or sensitive information that needs urgent correction.",
+    points: [
+      "General enquiries are answered within 3–5 working days",
+      "Urgent corrections are handled within 24 hours",
+      "Print edition sponsorship enquiries get details and rate cards by email",
+    ],
   },
   {
-    title: "Community Support & Feedback",
-    email: "community@bsd.wales",
-    response: undefined,
+    title: "Privacy and GDPR",
+    email: EMAILS.compliance,
     description:
-      "Suggest new categories, report incorrect information, provide community recommendations, or request removal of a listing.",
+      "For privacy-related questions or requests, including how your data is used and your rights under UK data protection law.",
   },
   {
-    title: "Partnership & Collaboration (Non-Commercial)",
-    email: "partnership@bsd.wales",
-    response: undefined,
+    title: "Community Outreach and Feedback",
+    email: EMAILS.community,
     description:
-      "BSD does not accept sponsorships or advertisements, but community organisations may collaborate for non-commercial purposes such as community events, cultural programmes, student support initiatives, and welfare projects.",
+      "For feedback, suggestions, corrections, or community collaboration. Also if you want to volunteer as a field representative, help with data verification, or support outreach events.",
+    points: [
+      "Suggest new categories",
+      "Report incorrect information",
+      "Provide community recommendations",
+      "Request removal of a listing",
+    ],
   },
   {
-    title: "Emergency Corrections",
-    email: "urgent@bsd.wales",
-    response: "Within 24 hours",
-    description: "If any listing contains incorrect or sensitive information that needs urgent correction.",
+    title: "Partnerships and Governance",
+    email: EMAILS.admin,
+    description:
+      // CLIENT-REVIEW (L3): "sponsorships" became "website sponsorships" so this stays consistent with print edition sponsorship being allowed.
+      "BSD does not accept website sponsorships or advertisements, but community organisations may collaborate for non-commercial purposes such as community events, cultural programmes, student support initiatives, and welfare projects. Also for corporate partnerships, institutional inquiries, or governance questions.",
   },
 ];
 
@@ -201,6 +362,10 @@ export const OPERATING_HOURS = [
   { day: "Saturday", hours: "11:00 AM – 4:00 PM" },
   { day: "Sunday", hours: "Closed" },
 ];
+
+// ---------------------------------------------------------------------------
+// FAQ page (v1 doc, with the v2 edits noted inline)
+// ---------------------------------------------------------------------------
 
 export const FAQ_ITEMS: { question: string; answer: string }[] = [
   {
@@ -211,7 +376,8 @@ export const FAQ_ITEMS: { question: string; answer: string }[] = [
   {
     question: "Is BSD free?",
     answer:
-      "Yes. BSD is completely free until 30 June 2027. There are no listing fees, no sponsorships, and no advertisements during this period.",
+      // CLIENT-REVIEW (L3): "no sponsorships" became "no website sponsorships".
+      "Yes. BSD is completely free until 30 June 2027. There are no listing fees, no website sponsorships, and no advertisements during this period.",
   },
   {
     question: "What happens after 30 June 2027?",
@@ -229,8 +395,9 @@ export const FAQ_ITEMS: { question: string; answer: string }[] = [
   },
   {
     question: "What areas does BSD cover?",
+    // v2 coverage wording (Regional Coverage Factsheet). The closing sentence is the v1 wording.
     answer:
-      "BSD covers the wider Swansea Bay region, including Swansea, Neath Port Talbot, Llanelli, Gorseinon, Mumbles, Morriston, Sketty and Uplands. Nearby areas may be added as the directory expands.",
+      "BSD covers the Swansea Bay region and South West Wales across postcodes SA1 to SA34, organised into three zones. Zone 1 is Greater Swansea & Gower (SA1–SA7), Zone 2 is Neath Port Talbot & Swansea Valley (SA8–SA13), and Zone 3 is Carmarthenshire & West Wales (SA14–SA20 and SA31–SA34). Nearby areas may be added as the directory expands.",
   },
   {
     question: "How can I submit my business or service?",
@@ -248,7 +415,10 @@ export const FAQ_ITEMS: { question: string; answer: string }[] = [
   {
     question: "Does BSD verify businesses?",
     answer:
-      "No. BSD does not verify or guarantee the accuracy of any business information. All listings are voluntarily submitted by business owners or service providers.",
+      // CLIENT-REVIEW (L1): v1 answer was "No. BSD does not verify or guarantee the accuracy of any business
+      // information. All listings are voluntarily submitted by business owners or service providers."
+      // Reworded minimally to fit the v2 Community Verified badge.
+      "Community Verified confirms contact and operating details only; it is not an endorsement or guarantee of service quality. BSD does not otherwise verify or guarantee the accuracy of business information. All listings are voluntarily submitted by business owners or service providers.",
   },
   {
     question: "Does BSD endorse listed businesses?",
@@ -277,5 +447,59 @@ export const FAQ_ITEMS: { question: string; answer: string }[] = [
   {
     question: "What is the official BSD website?",
     answer: "The official website is: bsd.wales",
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Homepage FAQ accordion (Homepage Full Body Section, answers verbatim)
+// ---------------------------------------------------------------------------
+
+export const HOME_FAQ: { question: string; answer: string }[] = [
+  {
+    question: "Is listing my business on bsd.wales completely free?",
+    answer:
+      "Yes, absolutely. Creating a standard business listing on bsd.wales is 100% free for all local businesses, self-employed professionals, and community services operating within SA postcodes (SA1–SA34). There are no mandatory fees, hidden maintenance charges, or subscription costs.",
+  },
+  {
+    question: "What areas does the directory cover?",
+    answer:
+      // CLIENT-REVIEW (L5): the client's v2 copy says "Zone 3 (Carmarthenshire & Llanelli)". Changed to the
+      // Factsheet zone name, per the decision that Factsheet zone names win.
+      "BSD covers the entire Swansea Bay Region and South West Wales spanning postcodes SA1 to SA34. This includes Zone 1 (Greater Swansea & Gower), Zone 2 (Neath Port Talbot & Swansea Valley), and Zone 3 (Carmarthenshire & West Wales).",
+  },
+  {
+    question: "How does the 'Community Verified' badge work?",
+    answer:
+      "The green Community Verified badge is awarded after our field volunteers cross-check a business's operational details, address, and phone number against official public records or direct contact. This ensures all contact info on our directory remains accurate and active.",
+  },
+  {
+    question: "How can I update or claim an existing listing?",
+    answer:
+      'If your business is already listed and you wish to update contact details, upload a logo, or claim ownership, simply click the "Claim This Listing" button on the business profile page or email us at support@bsd.wales with proof of ownership.',
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Verification (Regional Coverage Factsheet section 3)
+// ---------------------------------------------------------------------------
+
+export const VERIFICATION_INTRO =
+  "To maintain public trust and prevent outdated information, all directory entries undergo a structured 3-tier verification check:";
+
+export const VERIFICATION_TIERS = [
+  {
+    tier: "Tier 1",
+    title: "Public Submission",
+    description: "Business details submitted online or via field capture.",
+  },
+  {
+    tier: "Tier 2",
+    title: "Field Volunteer Audit",
+    description: "Field representative cross-checks address, phone, & active status.",
+  },
+  {
+    tier: "Tier 3",
+    title: "Verified Status",
+    description: 'Entry awarded green "Community Verified" badge.',
   },
 ];

@@ -14,7 +14,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { slug } = await params;
   const category = CATEGORIES.find((c) => c.slug === slug);
   if (!category) return {};
-  const description = `${category.name} businesses and services in Swansea Bay: ${category.subcategories.join(", ")}.`;
+  const description =
+    category.subcategories.length > 0
+      ? `${category.name} businesses and services across South West Wales: ${category.subcategories.join(", ")}.`
+      : `${category.name} businesses and services across South West Wales.`;
   return {
     title: category.name,
     description,
@@ -33,25 +36,27 @@ export default async function CategoryDetailPage({ params }: { params: Params })
       <ArrowLink href="/categories" direction="left" className="text-sm">
         All Categories
       </ArrowLink>
-      <h1 className="mt-4 flex items-center gap-3 text-3xl font-bold text-slate-900">
-        <category.icon className="h-8 w-8 text-teal" aria-hidden="true" />
+      <h1 className="mt-4 flex items-center gap-3 text-3xl font-bold text-brand-navy">
+        <category.icon className="h-8 w-8 text-brand-teal" aria-hidden="true" />
         {category.name}
       </h1>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        {category.subcategories.map((sub) => (
-          <span key={sub} className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600">
-            {sub}
-          </span>
-        ))}
-      </div>
+      {category.subcategories.length > 0 && (
+        <div className="mt-6 flex flex-wrap gap-2">
+          {category.subcategories.map((sub) => (
+            <span key={sub} className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600">
+              {sub}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="mt-12 rounded-lg border border-dashed border-slate-300 p-8 text-center text-slate-500">
         Listings in this category will appear here once businesses are submitted and approved.
       </div>
 
       <div className="mt-8 text-center">
-        <Link href="/submit" className="inline-block rounded-md bg-accent px-6 py-3 font-semibold text-white hover:bg-orange-700">
+        <Link href="/submit" className="inline-block rounded-md bg-green-700 px-6 py-3 font-semibold text-white hover:bg-green-800">
           Submit Your Business
         </Link>
       </div>

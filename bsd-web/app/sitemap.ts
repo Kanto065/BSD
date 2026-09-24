@@ -1,13 +1,19 @@
 import type { MetadataRoute } from "next";
-import { CATEGORIES, SITE_URL } from "@/lib/content";
+import { CATEGORIES, SITE_URL, ZONES } from "@/lib/content";
 
+// Placeholder shells (/community-guidelines, /complaints, /financial-transparency) and /search are noindex,
+// so they are left out on purpose.
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = [
     "",
     "/categories",
     "/about",
     "/coverage-area",
-    "/transparency",
+    "/community-initiative",
+    "/free-access",
+    "/bayconnect",
+    "/verification-policy",
+    "/download-pdf",
     "/legal",
     "/privacy",
     "/faq",
@@ -21,6 +27,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: path === "" ? 1 : 0.7,
   }));
 
+  const zoneRoutes = ZONES.map((z) => ({
+    url: `${SITE_URL}/${z.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
   const categoryRoutes = CATEGORIES.map((c) => ({
     url: `${SITE_URL}/categories/${c.slug}`,
     lastModified: new Date(),
@@ -28,5 +41,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...categoryRoutes];
+  return [...staticRoutes, ...zoneRoutes, ...categoryRoutes];
 }

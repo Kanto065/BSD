@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/content";
+import { EMAILS, SITE_DESCRIPTION, SITE_NAME, SITE_URL, ZONES } from "@/lib/content";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
+// Montserrat is the heading face from the client's brand (see the logo).
+const montserrat = Montserrat({ subsets: ["latin"], display: "swap", variable: "--font-montserrat" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -37,12 +39,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
+    logo: `${SITE_URL}/brand/bsd-logo.png`,
     description: SITE_DESCRIPTION,
-    areaServed: ["Swansea", "Neath Port Talbot", "Llanelli", "Gorseinon", "Mumbles", "Morriston", "Sketty", "Uplands"],
+    parentOrganization: { "@type": "Organization", name: "BayConnect" },
+    areaServed: ZONES.map((z) => `${z.name} (${z.postcodeLabel})`),
+    contactPoint: [
+      { "@type": "ContactPoint", contactType: "customer support", email: EMAILS.support },
+      { "@type": "ContactPoint", contactType: "privacy and data protection", email: EMAILS.compliance },
+      { "@type": "ContactPoint", contactType: "community outreach", email: EMAILS.community },
+      { "@type": "ContactPoint", contactType: "partnerships and governance", email: EMAILS.admin },
+    ],
   };
 
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${montserrat.variable}`}>
       <body className="flex min-h-screen flex-col bg-white font-sans text-slate-900 antialiased">
         <script
           type="application/ld+json"

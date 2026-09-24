@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ArrowLink } from "@/components/ArrowLink";
-import { COVERAGE_AREAS } from "@/lib/content";
+import { ZONES } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "About BSD",
@@ -12,10 +13,10 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <h1 className="text-3xl font-bold text-slate-900">About the Directory</h1>
+      <h1 className="text-3xl font-bold text-brand-navy">About the Directory</h1>
 
       <section className="mt-8">
-        <h2 className="text-xl font-semibold text-slate-900">Full Introduction</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">Full Introduction</h2>
         <p className="mt-3 text-slate-600">
           BSD – Bangladeshi Business & Service Directory (Swansea Bay Edition) is a unified information platform
           designed to highlight and connect Bangladeshi businesses, service providers, professionals, and
@@ -29,7 +30,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold text-slate-900">Purpose</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">Purpose</h2>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
           <li>Provide visibility to local Bangladeshi businesses</li>
           <li>Support new and emerging entrepreneurs</li>
@@ -42,7 +43,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold text-slate-900">Vision</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">Vision</h2>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
           <li>Become the central business and service hub for the Bangladeshi community in Swansea Bay</li>
           <li>Strengthen community economic growth</li>
@@ -55,11 +56,13 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold text-slate-900">Community Initiative</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">Community Initiative</h2>
+        {/* CLIENT-REVIEW (L3): "no sponsorships" became "no website sponsorships" so this stays consistent with
+            print edition sponsorship being allowed. */}
         <p className="mt-3 text-slate-600">
           BSD is currently operated as a free community initiative, created and maintained voluntarily for the
           benefit of the Bangladeshi community. <strong>Free Access Period:</strong> Until 30 June 2027 — all
-          listings are completely free. During this period: no listing fees, no sponsorships, no advertisements, no
+          listings are completely free. During this period: no listing fees, no website sponsorships, no advertisements, no
           paid promotions, no premium charges. Everything is provided free of cost to support community growth and
           accessibility.
         </p>
@@ -74,20 +77,27 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold text-slate-900">Coverage Area</h2>
-        <p className="mt-3 text-slate-600">BSD covers the wider Swansea Bay region, including:</p>
+        <h2 className="text-xl font-semibold text-brand-navy">Coverage Area</h2>
+        <p className="mt-3 text-slate-600">
+          BSD covers the Swansea Bay region and South West Wales across postcodes SA1 to SA34, organised into three
+          zones:
+        </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          {COVERAGE_AREAS.map((a) => (
-            <span key={a} className="rounded-full bg-teal/10 px-4 py-1 text-sm font-medium text-teal">
-              {a}
-            </span>
+          {ZONES.map((z) => (
+            <Link
+              key={z.slug}
+              href={`/${z.slug}`}
+              className="rounded-full bg-brand-teal/10 px-4 py-1 text-sm font-medium text-brand-teal-dark hover:bg-brand-teal/20"
+            >
+              Zone {z.number}: {z.name} ({z.postcodeLabel})
+            </Link>
           ))}
         </div>
         <p className="mt-3 text-sm text-slate-500">Additional nearby areas may be included as the directory expands.</p>
       </section>
 
       <section id="powered-by-bayconnect" className="mt-10 scroll-mt-24">
-        <h2 className="text-xl font-semibold text-slate-900">Powered By BayConnect</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">Powered By BayConnect</h2>
         <p className="mt-3 text-slate-600">
           BSD is operated under BayConnect, a community ecosystem dedicated to connecting, celebrating, and
           empowering the Bangladeshi community in Swansea Bay.
@@ -96,8 +106,11 @@ export default function AboutPage() {
       </section>
 
       <div className="mt-12 text-center">
-        <ArrowLink href="/transparency" className="justify-center">
-          Read the Transparency Statement
+        {/* CLIENT-REVIEW: the v1 CTA pointed at the Transparency Statement page, which is retired in favour of
+            /financial-transparency (no copy yet). It now points at the Free Access Policy, which covers the same
+            ground. */}
+        <ArrowLink href="/free-access" className="justify-center">
+          Read the Free Access Policy
         </ArrowLink>
       </div>
     </div>

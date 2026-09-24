@@ -32,7 +32,9 @@ const SECTIONS = [
   {
     title: "4. Independent Professionals",
     body: [
-      "BSD includes a category for Independent Professionals who may operate without a physical office. Their inclusion is solely for community visibility and does not imply verification, endorsement, or professional accreditation.",
+      // CLIENT-REVIEW (L2): v1 read "...does not imply verification, endorsement, or professional accreditation." The word "verification" is
+      // removed and a Community Verified sentence added, to fit the v2 badge.
+      "BSD includes a category for Independent Professionals who may operate without a physical office. Their inclusion is solely for community visibility and does not imply endorsement or professional accreditation. Any Community Verified badge confirms contact and operating details only.",
       "Users must exercise personal judgment and due diligence when engaging any independent service provider.",
     ],
   },
@@ -52,7 +54,9 @@ const SECTIONS = [
   {
     title: "7. Free Community Initiative",
     body: [
-      "BSD is currently operated as a free community initiative until 30 June 2027. During this period: no listing fees, no sponsorships, no advertisements, no paid promotions are accepted.",
+      // CLIENT-REVIEW (L3): "no sponsorships" became "no website sponsorships" so this stays consistent with print edition
+      // sponsorship being allowed.
+      "BSD is currently operated as a free community initiative until 30 June 2027. During this period: no listing fees, no website sponsorships, no advertisements, no paid promotions are accepted.",
       "Future premium services may be introduced only after necessary preparations and formalities.",
     ],
   },
@@ -79,11 +83,11 @@ const SECTIONS = [
 export default function LegalPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <h1 className="text-3xl font-bold text-slate-900">Legal Disclaimer</h1>
+      <h1 className="text-3xl font-bold text-brand-navy">Legal Disclaimer</h1>
       <div className="mt-8 space-y-8">
         {SECTIONS.map((s) => (
           <section key={s.title}>
-            <h2 className="text-lg font-semibold text-slate-900">{s.title}</h2>
+            <h2 className="text-lg font-semibold text-brand-navy">{s.title}</h2>
             {s.body.map((p, i) => (
               <p key={i} className="mt-2 text-slate-600">
                 {p}

@@ -15,7 +15,7 @@ export function ArrowLink({
   return (
     <Link
       href={href}
-      className={`group inline-flex items-center gap-1.5 font-semibold text-teal hover:underline ${className}`}
+      className={`group inline-flex items-center gap-1.5 font-semibold text-brand-teal-dark hover:underline ${className}`}
     >
       {direction === "left" && (
         <ArrowLeft className="h-4 w-4 shrink-0 transition-transform group-hover:-translate-x-0.5" />

@@ -74,7 +74,9 @@ const SECTIONS = [
   {
     title: "11. Free Community Initiative",
     body: [
-      "BSD operates as a free community initiative until 30 June 2027. During this period: no listing fees, no sponsorships, no advertisements, no paid promotions are accepted.",
+      // CLIENT-REVIEW (L3): "no sponsorships" became "no website sponsorships" so this stays consistent with print edition
+      // sponsorship being allowed.
+      "BSD operates as a free community initiative until 30 June 2027. During this period: no listing fees, no website sponsorships, no advertisements, no paid promotions are accepted.",
       "Your data will never be used for commercial purposes during this period.",
     ],
   },
@@ -86,18 +88,19 @@ const SECTIONS = [
   },
   {
     title: "13. Contact Information",
-    body: ["For privacy-related questions or requests, email privacy@bsd.wales or visit the BSD Contact Page."],
+    // CLIENT-REVIEW (L4): v1 gave privacy@bsd.wales. The v2 mailbox set uses compliance@bsd.wales for privacy and GDPR.
+    body: ["For privacy-related questions or requests, email compliance@bsd.wales or visit the BSD Contact Page."],
   },
 ];
 
 export default function PrivacyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <h1 className="text-3xl font-bold text-slate-900">Privacy Policy</h1>
+      <h1 className="text-3xl font-bold text-brand-navy">Privacy Policy</h1>
       <div className="mt-8 space-y-8">
         {SECTIONS.map((s) => (
           <section key={s.title}>
-            <h2 className="text-lg font-semibold text-slate-900">{s.title}</h2>
+            <h2 className="text-lg font-semibold text-brand-navy">{s.title}</h2>
             {s.body.map((p, i) => (
               <p key={i} className="mt-2 text-slate-600">
                 {p}

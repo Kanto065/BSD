@@ -76,7 +76,7 @@ live site yet. Work is split into phases on the `v2-refresh` branch, with `main`
 because `main` auto-deploys to production. Nothing on the branch reaches `main` without an
 explicit go-ahead.
 - **Phase 0 (this doc update)**: done. Plan approved, decisions logged in Section 6.
-- **Phase 1 (M1.5 v2 shell refresh, `bsd-web`, static)**: not started.
+- **Phase 1 (M1.5 v2 shell refresh, `bsd-web`, static)**: built on the branch and committed, awaiting review. Not merged to `main`, so it is not live yet.
 - **Phase 2 (schema v2 and real Prisma migrations)**: not started.
 - **Phase 3 (M1 public API and wiring)**: not started.
 - **Phase 4 (M2 submission flow)**: not started.
@@ -1055,6 +1055,10 @@ Send these to the client. Each code change is also marked with a `// CLIENT-REVI
 - A small "Legal Disclaimer" link is added to the footer bottom bar, because the v2 footer link list
   has no way to reach `/legal`.
 - `/transparency` is retired to a placeholder and its v1 copy no longer appears on the live site.
+- The About page's v1 call to action "Read the Transparency Statement" now reads "Read the Free Access Policy" and points at `/free-access`, because the Transparency page is retired.
+- The homepage "View Verified Info" step and the footer "Coverage Area" link go to `/coverage-area` directly. The docs give `/coverage`, which redirects to the same page. The coverage page carries a short verification summary so the step still leads somewhere relevant.
+- The Contact page merges the v1 general, listing-help and urgent-correction text under the single support@ mailbox, and adds print sponsorship enquiries (from the Factsheet) to that channel.
+- The logo header and footer image is a transparent PNG keyed from the supplied JPEG.
 - Typos in supplied copy left as written: "Oversite" on the BayConnect page and the grammar of
   "adhering to UK institutional standards" in the same paragraph.
 - Zone 3 postcodes are given as "SA14 to SA34" in the Community Initiative page and Full Body doc,

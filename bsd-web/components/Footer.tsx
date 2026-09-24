@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BadgeCheck, Download, Globe, Lock, Plus } from "lucide-react";
 import Logo from "@/components/Logo";
-import { CREOVA_URL, EMAILS, ZONES, zoneLabel } from "@/lib/content";
+import { CREATIVE_PARTNER, EMAILS, ZONES, zoneLabel } from "@/lib/content";
 
 // Column 2 to 4 links follow "Website Footer Structural Layout". The Coverage Area link points at
 // /coverage-area directly, which is where /coverage redirects to.
@@ -179,8 +179,13 @@ export default function Footer() {
                   Powered by BayConnect
                 </Link>{" "}
                 | Creative Partner:{" "}
-                <a href={CREOVA_URL} target="_blank" rel="noopener noreferrer" className="hover:text-brand-blue hover:underline">
-                  CREOVA Studio
+                <a
+                  href={CREATIVE_PARTNER.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-brand-blue hover:underline"
+                >
+                  {CREATIVE_PARTNER.name}
                 </a>
               </span>
             </p>

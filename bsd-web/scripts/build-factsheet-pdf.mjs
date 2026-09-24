@@ -176,7 +176,7 @@ for (let i = 0; i < range.count; i++) {
     y,
     { width: W, align: "center", lineBreak: false }
   );
-  doc.text("Powered by BayConnect | Creative Partner: CREOVA Studio", doc.page.margins.left, y + 11, {
+  doc.text("Powered by BayConnect | Creative Partner: Kanta Bhattacharjee", doc.page.margins.left, y + 11, {
     width: W,
     align: "center",
     lineBreak: false,

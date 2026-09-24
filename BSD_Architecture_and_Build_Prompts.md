@@ -626,7 +626,7 @@ Shell:
 - Footer per "Website Footer Structural Layout": pre-footer CTA banner ("Grow Your Business Across South
   West Wales" with "+ Add Your Business Free" to /submit and "Download Print Guide (PDF)" to
   /download-pdf), 4 columns with the exact links, contact bar (support@, compliance@, community@ and the
-  BayConnect operations line), and bottom bar "Powered by BayConnect | Creative Partner: CREOVA Studio".
+  BayConnect operations line), and bottom bar "Powered by BayConnect | Creative Partner: <name>", where the name and link come from `CREATIVE_PARTNER` in `lib/content.ts`.
   Add a small "Legal Disclaimer" link in the bottom bar and log it as a CLIENT-REVIEW deviation.
 
 Homepage in the Full Body doc's order: hero exactly per "Exact Copy & Field Specifications" (pill
@@ -1055,6 +1055,7 @@ Send these to the client. Each code change is also marked with a `// CLIENT-REVI
 - A small "Legal Disclaimer" link is added to the footer bottom bar, because the v2 footer link list
   has no way to reach `/legal`.
 - `/transparency` is retired to a placeholder and its v1 copy no longer appears on the live site.
+- The "Creative Partner" credit (footer, `/bayconnect`, Factsheet PDF) shows "Kanta Bhattacharjee", linked to their LinkedIn profile, instead of the client's "CREOVA Studio". This was done at the developer's request and departs from the client's wording in three docs (Footer Structural Layout, Powered by BayConnect Page, Factsheet). Confirm the client accepts it.
 - The About page's v1 call to action "Read the Transparency Statement" now reads "Read the Free Access Policy" and points at `/free-access`, because the Transparency page is retired.
 - The homepage "View Verified Info" step and the footer "Coverage Area" link go to `/coverage-area` directly. The docs give `/coverage`, which redirects to the same page. The coverage page carries a short verification summary so the step still leads somewhere relevant.
 - The Contact page merges the v1 general, listing-help and urgent-correction text under the single support@ mailbox, and adds print sponsorship enquiries (from the Factsheet) to that channel.

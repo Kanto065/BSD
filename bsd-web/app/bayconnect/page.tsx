@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CREOVA_URL, EMAILS } from "@/lib/content";
+import { CREATIVE_PARTNER, EMAILS } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: { absolute: "Powered by BayConnect | BSD Wales" },
@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 
 // Copy is verbatim from the client's "Powered by BayConnect Page" doc, including its own typos
 // ("Oversite", "adhering"). CLIENT-REVIEW: list of typos left as written is in the architecture doc.
+// The one deliberate change is the Creative Partner line, which shows CREATIVE_PARTNER (see lib/content.ts)
+// instead of the client's "CREOVA Studio".
 export default function BayConnectPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
@@ -74,12 +76,12 @@ export default function BayConnectPage() {
           <li>
             Creative Partner:{" "}
             <a
-              href={CREOVA_URL}
+              href={CREATIVE_PARTNER.url}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-brand-teal-dark hover:underline"
             >
-              CREOVA Studio
+              {CREATIVE_PARTNER.name}
             </a>
           </li>
           <li>Coverage Region: Swansea Bay Area & South West Wales, UK</li>

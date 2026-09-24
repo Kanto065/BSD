@@ -33,6 +33,9 @@ export const SITE_URL = "https://bsd.wales";
 export const SITE_DESCRIPTION =
   "Find trusted Bangladeshi businesses, services and professionals across Swansea, Neath Port Talbot and Carmarthenshire (SA1 to SA34). A free community directory powered by BayConnect.";
 
+// Link for the "Creative Partner: CREOVA Studio" credit in the footer and on /bayconnect.
+export const CREOVA_URL = "https://www.linkedin.com/in/kanta-bhattacharjee/";
+
 // The v2 mailbox set. info@, partnership@, urgent@ and privacy@ no longer exist.
 export const EMAILS = {
   support: "support@bsd.wales",

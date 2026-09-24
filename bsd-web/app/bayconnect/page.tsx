@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { EMAILS } from "@/lib/content";
+import { CREOVA_URL, EMAILS } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: { absolute: "Powered by BayConnect | BSD Wales" },
@@ -71,7 +71,17 @@ export default function BayConnectPage() {
         <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
           <li>Platform Portal: bsd.wales</li>
           <li>Parent Organization: BayConnect</li>
-          <li>Creative Partner: CREOVA Studio</li>
+          <li>
+            Creative Partner:{" "}
+            <a
+              href={CREOVA_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-brand-teal-dark hover:underline"
+            >
+              CREOVA Studio
+            </a>
+          </li>
           <li>Coverage Region: Swansea Bay Area & South West Wales, UK</li>
           <li>
             Administrative Email:{" "}

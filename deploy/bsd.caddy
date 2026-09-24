@@ -1,0 +1,16 @@
+# BSD (bsd.wales). Copied to /opt/caddy-sites.d/bsd.caddy on the VPS by /opt/bsd/deploy.sh.
+# The shared Caddy imports /opt/caddy-sites.d/*.caddy (see the platform repo's Caddyfile),
+# so this file survives that project's own deploys.
+bsd.wales {
+	encode gzip
+	reverse_proxy bsd-web:3000
+}
+
+www.bsd.wales {
+	redir https://bsd.wales{uri} permanent
+}
+
+api.bsd.wales {
+	encode gzip
+	reverse_proxy bsd-api:4000
+}

@@ -13,8 +13,12 @@ directly from those documents — nothing invented.
 **Live**: https://bsd.wales (site) and https://api.bsd.wales (API health check) —
 deployed on a shared VPS (169.58.119.208) alongside two unrelated client projects,
 isolated in its own Docker network/containers, behind the same shared Caddy reverse
-proxy (config lives at `/opt/platform/deploy/caddy/Caddyfile`, BSD's blocks appended
-at the end).
+proxy. BSD's site blocks live in `/opt/caddy-sites.d/bsd.caddy` (versioned here as
+`deploy/bsd.caddy`), which the shared Caddyfile pulls in with
+`import /etc/caddy/sites.d/*.caddy`. Do not append BSD blocks to
+`/opt/platform/deploy/caddy/Caddyfile` itself. That file belongs to the other project's
+repo and is reset on each of its deploys, which took bsd.wales down on 2026-09-24
+until the import folder was added.
 
 **Repo**: https://github.com/Kanto065/BSD (public, monorepo) — `bsd-api/` and
 `bsd-web/` live together in one repo instead of the three separate repos

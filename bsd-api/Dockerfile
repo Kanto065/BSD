@@ -18,7 +18,7 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 COPY package.json ./
 EXPOSE 4000
-# Using `db push` until the first real `prisma migrate dev` is run against a dev
-# database (none is available yet) — switch to `migrate deploy` once migration
-# files exist in prisma/migrations.
-CMD ["sh", "-c", "npx prisma db push --skip-generate && node dist/server.js"]
+# Applies any pending Prisma migrations, then starts the API. Production was created with `db push`
+# before migrations existed, so the first deploy of this image needs the one-off baseline described in
+# deploy/v2-migration-runbook.md. Without it `migrate deploy` stops with P3005 and the container restarts in a loop.
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]

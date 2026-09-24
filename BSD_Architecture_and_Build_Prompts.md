@@ -77,7 +77,7 @@ because `main` auto-deploys to production. Nothing on the branch reaches `main` 
 explicit go-ahead.
 - **Phase 0 (this doc update)**: done. Plan approved, decisions logged in Section 6.
 - **Phase 1 (M1.5 v2 shell refresh, `bsd-web`, static)**: built on the branch and committed, awaiting review. Not merged to `main`, so it is not live yet.
-- **Phase 2 (schema v2 and real Prisma migrations)**: not started.
+- **Phase 2 (schema v2 and real Prisma migrations, `bsd-api`)**: built on the branch and tested, not yet deployed. The v2 schema, migrations `0_init` (baseline) and `1_v2_schema`, the reconciling seed, the postcode helper and `deploy/v2-migration-runbook.md` are done. The user still has to run the production baseline before this can be merged to `main`. Verified with unit tests, the migrations run in PGlite, and the full Prisma flow on a real PostgreSQL 16.14 (production's version).
 - **Phase 3 (M1 public API and wiring)**: not started.
 - **Phase 4 (M2 submission flow)**: not started.
 - Later, not started: M3 admin with volunteer verification and claim review, M6 update,
@@ -105,10 +105,11 @@ left untouched).
 - No `prisma migrate` history exists yet — the API container runs `prisma db push`
   on boot instead of `migrate deploy` (see the Dockerfile comment), since there's
   never been a local/dev Postgres available to generate a first migration against.
-  Phase 2 fixes this. Production already has tables from `db push`, so it needs a
-  one-off baseline (`prisma migrate resolve --applied`) before the first
-  `migrate deploy`. The steps go in `deploy/v2-migration-runbook.md` and are run by the
-  user, not by Claude Code.
+  Phase 2 fixes this: it adds `0_init` and `1_v2_schema` and switches the container to
+  `migrate deploy`. Production already has tables from `db push`, so it needs a one-off
+  baseline (`prisma migrate resolve --applied 0_init`) before the first `migrate deploy`.
+  The steps are in `deploy/v2-migration-runbook.md` (with the helper `deploy/v2-baseline.sh`)
+  and are run by the user, not by Claude Code.
 - `api.bsd.wales` DNS was only just added — reconfirm it resolves and serves
   `/health` before relying on it publicly.
 - No automated tests exist yet beyond the M0 health-check smoke test — M1's
@@ -517,8 +518,9 @@ Tasks for this milestone:
    Domains for now: health, categories, businesses, admin, contact — empty/stub modules
    are fine except health.
 2. Add the full Prisma schema for this project [paste the schema from section 2 above].
-   Generate real migrations with `prisma migrate dev` against a local Postgres 16 (a
-   docker compose file for local dev is fine). Do not use `prisma db push`.
+   Generate real migrations. This project deliberately has no local database, so write the SQL
+   with `prisma migrate diff --from-schema-datamodel <old> --to-schema-datamodel <new> --script`
+   and test it with PGlite (see bsd-api/test/migrations.test.ts). Do not use `prisma db push`.
 3. Write a seed script (prisma/seed.ts) that inserts:
    - The 20 categories with their subcategories, exactly as in the Section 2 table —
      categories go in `Category`, each category's subcategory list goes into `Subcategory`
@@ -1072,10 +1074,12 @@ Send these to the client. Each code change is also marked with a `// CLIENT-REVI
 
 ## 8. Open items before production
 
-- Run the production baseline in `deploy/v2-migration-runbook.md` (written in Phase 2) by hand before
-  merging any schema or API change to `main`.
-- Confirm production has zero rows in `Business`, `ContactMessage` and `BusinessPhoto` before the v2
-  migration, since the migration adds required columns to `Business`.
+- Run the production baseline in `deploy/v2-migration-runbook.md` (helper: `deploy/v2-baseline.sh`) by hand
+  before merging any schema or API change to `main`. Skipping it makes the API restart in a loop with Prisma
+  error P3005.
+- Production had zero rows in `Business`, `ContactMessage` and `BusinessPhoto` on 2026-09-25 (checked read
+  only). The migration adds required columns to `Business` and aborts cleanly if that ever stops being true, so
+  re-run `bash deploy/v2-baseline.sh check` just before the baseline.
 - A photo uploads volume must be added to `/opt/bsd/docker-compose.yml` on the VPS before M2 ships.
   That file lives only on the VPS, not in the repo.
 - Add an external uptime monitor on `https://bsd.wales/` and `https://api.bsd.wales/health`.

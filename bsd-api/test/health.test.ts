@@ -1,5 +1,14 @@
-import { describe, it, expect, afterAll } from "vitest";
-import { buildApp } from "../src/server.js";
+import { describe, it, expect, afterAll, vi } from "vitest";
+
+// The health route never touches the database, so stub Prisma and run without one.
+vi.mock("@prisma/client", () => ({
+  PrismaClient: class {
+    async $connect() {}
+    async $disconnect() {}
+  },
+}));
+
+const { buildApp } = await import("../src/server.js");
 
 describe("GET /health", () => {
   const app = buildApp();

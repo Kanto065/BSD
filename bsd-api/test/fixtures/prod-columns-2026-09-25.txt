@@ -1,0 +1,79 @@
+AdminUser|createdAt|timestamp without time zone|timestamp|NO|CURRENT_TIMESTAMP
+AdminUser|email|text|text|NO|
+AdminUser|id|text|text|NO|
+AdminUser|name|text|text|NO|
+AdminUser|passwordHash|text|text|NO|
+AdminUser|role|USER-DEFINED|AdminRole|NO|'MODERATOR'::"AdminRole"
+AuditLog|action|text|text|NO|
+AuditLog|adminId|text|text|NO|
+AuditLog|createdAt|timestamp without time zone|timestamp|NO|CURRENT_TIMESTAMP
+AuditLog|details|jsonb|jsonb|YES|
+AuditLog|entityId|text|text|NO|
+AuditLog|entityType|text|text|NO|
+AuditLog|id|text|text|NO|
+Business|address|text|text|YES|
+Business|categoryId|text|text|NO|
+Business|consentAccurateInfo|boolean|bool|NO|false
+Business|consentDataStorage|boolean|bool|NO|false
+Business|consentNoLiability|boolean|bool|NO|false
+Business|consentPublishPermission|boolean|bool|NO|false
+Business|description|text|text|NO|
+Business|email|text|text|YES|
+Business|gdprConsentRights|boolean|bool|NO|false
+Business|gdprConsentStorage|boolean|bool|NO|false
+Business|id|text|text|NO|
+Business|name|text|text|NO|
+Business|openingHours|text|text|YES|
+Business|otherAreaText|text|text|YES|
+Business|ownerName|text|text|YES|
+Business|phone|text|text|NO|
+Business|rejectionReason|text|text|YES|
+Business|reviewedAt|timestamp without time zone|timestamp|YES|
+Business|reviewedById|text|text|YES|
+Business|servicesOffered|ARRAY|_text|YES|
+Business|slug|text|text|NO|
+Business|specialNotes|text|text|YES|
+Business|status|USER-DEFINED|ListingStatus|NO|'PENDING'::"ListingStatus"
+Business|subcategoryId|text|text|YES|
+Business|submittedAt|timestamp without time zone|timestamp|NO|CURRENT_TIMESTAMP
+Business|websiteOrSocial|text|text|YES|
+BusinessCoverageArea|businessId|text|text|NO|
+BusinessCoverageArea|coverageAreaId|text|text|NO|
+BusinessPhoto|businessId|text|text|NO|
+BusinessPhoto|id|text|text|NO|
+BusinessPhoto|isLogo|boolean|bool|NO|false
+BusinessPhoto|mimeType|text|text|NO|
+BusinessPhoto|sizeBytes|integer|int4|NO|
+BusinessPhoto|uploadedAt|timestamp without time zone|timestamp|NO|CURRENT_TIMESTAMP
+BusinessPhoto|url|text|text|NO|
+Category|description|text|text|YES|
+Category|icon|text|text|YES|
+Category|id|text|text|NO|
+Category|name|text|text|NO|
+Category|requiresOwnerName|boolean|bool|NO|false
+Category|slug|text|text|NO|
+Category|sortOrder|integer|int4|NO|0
+ContactMessage|createdAt|timestamp without time zone|timestamp|NO|CURRENT_TIMESTAMP
+ContactMessage|email|text|text|NO|
+ContactMessage|id|text|text|NO|
+ContactMessage|message|text|text|NO|
+ContactMessage|name|text|text|NO|
+ContactMessage|status|text|text|NO|'OPEN'::text
+ContactMessage|type|USER-DEFINED|ContactType|NO|
+CoverageArea|id|text|text|NO|
+CoverageArea|name|text|text|NO|
+ListingRemovalRequest|businessId|text|text|NO|
+ListingRemovalRequest|id|text|text|NO|
+ListingRemovalRequest|isEmergency|boolean|bool|NO|false
+ListingRemovalRequest|reason|text|text|YES|
+ListingRemovalRequest|requestedAt|timestamp without time zone|timestamp|NO|CURRENT_TIMESTAMP
+ListingRemovalRequest|status|text|text|NO|'PENDING'::text
+ListingUpdateRequest|businessId|text|text|NO|
+ListingUpdateRequest|id|text|text|NO|
+ListingUpdateRequest|requestedAt|timestamp without time zone|timestamp|NO|CURRENT_TIMESTAMP
+ListingUpdateRequest|requestedChanges|jsonb|jsonb|NO|
+ListingUpdateRequest|status|text|text|NO|'PENDING'::text
+Subcategory|categoryId|text|text|NO|
+Subcategory|id|text|text|NO|
+Subcategory|name|text|text|NO|
+Subcategory|slug|text|text|NO|

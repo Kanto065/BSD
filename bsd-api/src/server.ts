@@ -37,4 +37,8 @@ async function start() {
   }
 }
 
-start();
+// Start listening only when this file is the entry point (node dist/server.js, tsx src/server.ts), so tests
+// can import buildApp without opening a port.
+if (process.argv[1] && /server\.(ts|js)$/.test(process.argv[1])) {
+  start();
+}

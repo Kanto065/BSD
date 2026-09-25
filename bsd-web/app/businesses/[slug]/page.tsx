@@ -82,12 +82,18 @@ export default async function BusinessPage({ params }: { params: Params }) {
       </ArrowLink>
 
       <header className="mt-4 flex flex-wrap items-start justify-between gap-4">
-        <div>
+        <div className="flex items-start gap-4">
+          {b.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={b.logoUrl} alt={`${b.name} logo`} className="h-20 w-20 shrink-0 rounded-lg border border-slate-200 bg-white object-contain" />
+          )}
+          <div>
           <h1 className="text-3xl font-bold text-brand-navy">{b.name}</h1>
           <p className="mt-1 font-medium text-brand-teal-dark">
             {b.category.name}
             {b.subcategory ? ` · ${b.subcategory.name}` : ""}
           </p>
+          </div>
         </div>
         <VerificationBadge status={b.verificationStatus} />
       </header>
@@ -134,8 +140,17 @@ export default async function BusinessPage({ params }: { params: Params }) {
                 {b.photos
                   .filter((p) => !p.isLogo)
                   .map((p) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img key={p.url} src={p.url} alt={`${b.name}`} loading="lazy" className="aspect-square w-full rounded-lg border border-slate-200 object-cover" />
+                    <a key={p.url} href={p.url} target="_blank" rel="noopener" className="block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={p.thumbUrl ?? p.url}
+                        alt={b.name}
+                        loading="lazy"
+                        width={p.width ?? undefined}
+                        height={p.height ?? undefined}
+                        className="aspect-square w-full rounded-lg border border-slate-200 object-cover"
+                      />
+                    </a>
                   ))}
               </div>
             </section>

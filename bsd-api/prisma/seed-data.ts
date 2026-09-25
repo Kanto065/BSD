@@ -5,6 +5,8 @@
 // of this data in bsd-web/lib/content.ts until the API-backed pages replace it in the public browsing
 // milestone, so change both together.
 
+import { slugify } from "../src/common/slug.js";
+
 export type SeedCategory = { name: string; subcategories: string[]; requiresOwnerName?: boolean };
 
 export const CATEGORIES: SeedCategory[] = [
@@ -155,13 +157,7 @@ export const ZONES: SeedZone[] = [
   },
 ];
 
-export function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
+export { slugify };
 
 export const categorySlug = (name: string) => slugify(name);
 export const subcategorySlug = (categoryName: string, name: string) => slugify(`${categoryName}-${name}`);

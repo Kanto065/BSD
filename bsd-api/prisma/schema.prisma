@@ -178,13 +178,19 @@ model BusinessServedZone {
   @@id([businessId, zoneId])
 }
 
+// Images live in S3-compatible storage (MinIO). url is the full-size stored image and thumbUrl a smaller
+// high-quality WebP for cards and grids (null when the original is already small). Both are site-relative paths
+// under /uploads. sizeBytes is the size of the stored full-size file.
 model BusinessPhoto {
   id         String   @id @default(cuid())
   businessId String
   business   Business @relation(fields: [businessId], references: [id])
   url        String
+  thumbUrl   String?
   mimeType   String
   sizeBytes  Int
+  width      Int?
+  height     Int?
   isLogo     Boolean  @default(false)
   uploadedAt DateTime @default(now())
 }

@@ -29,7 +29,7 @@ export const publicBusinessListSelect = {
   subcategory: nameSlug,
   zone: nameSlug,
   localities: { select: { locality: nameSlug } },
-  photos: { where: { isLogo: true }, select: { url: true }, take: 1 },
+  photos: { where: { isLogo: true }, select: { url: true, thumbUrl: true }, take: 1 },
 } satisfies Prisma.BusinessSelect;
 
 export const publicBusinessDetailSelect = {
@@ -41,7 +41,7 @@ export const publicBusinessDetailSelect = {
   specialNotes: true,
   otherAreaText: true,
   servedZones: { select: { zone: nameSlug } },
-  photos: { select: { url: true, isLogo: true }, orderBy: { uploadedAt: "asc" } },
+  photos: { select: { url: true, thumbUrl: true, isLogo: true, width: true, height: true }, orderBy: { uploadedAt: "asc" } },
 } satisfies Prisma.BusinessSelect;
 
 type ListRow = Prisma.BusinessGetPayload<{ select: typeof publicBusinessListSelect }>;
@@ -76,7 +76,8 @@ export function toPublicListItem(row: ListRow) {
     whatsapp: row.whatsapp,
     verificationStatus: row.verificationStatus,
     verifiedAt: row.verifiedAt,
-    logoUrl: row.photos[0]?.url ?? null,
+    // Cards show the small version when there is one.
+    logoUrl: row.photos[0] ? (row.photos[0].thumbUrl ?? row.photos[0].url) : null,
   };
 }
 
@@ -93,7 +94,7 @@ export function toPublicDetail(row: DetailRow) {
     otherAreaText: row.otherAreaText,
     servedZones: row.servedZones.map((z) => z.zone),
     logoUrl: row.photos.find((p) => p.isLogo)?.url ?? null,
-    photos: row.photos.map((p) => ({ url: p.url, isLogo: p.isLogo })),
+    photos: row.photos.map((p) => ({ url: p.url, thumbUrl: p.thumbUrl, isLogo: p.isLogo, width: p.width, height: p.height })),
   };
 }
 

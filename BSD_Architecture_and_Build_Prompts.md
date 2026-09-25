@@ -81,12 +81,15 @@ explicit go-ahead.
   (baseline) and `1_v2_schema` are recorded in production, the seed loaded 20 categories, 73 subcategories, 3 zones and
   47 localities, and the API runs `prisma migrate deploy` at boot, so future migrations apply on deploy. Verified with
   unit tests, the migrations run in PGlite, and the full Prisma flow on a real PostgreSQL 16.14.
-- **Phase 3 (M1 public API and wiring)**: built and tested on the branch, not yet deployed. Read-only public API
-  (`/categories`, `/categories/:slug`, `/businesses/search`, `/businesses/featured`, `/businesses/:slug`, `/zones`,
-  `/zones/:slug`), all going through one `publicWhere()` and two explicit select objects in `src/common/public.ts`.
-  The web app shows real listings on the homepage (Featured & Verified), category and zone pages, `/search` and a new
-  `/businesses/[slug]` profile page. Integration tests run the real seed and Prisma engine on an in-process PostgreSQL.
-- **Phase 4 (M2 submission flow)**: not started.
+- **Phase 3 (M1 public API and wiring)**: LIVE since 2026-09-25. Read-only public API (`/categories`, `/businesses/search`,
+  `/businesses/featured`, `/businesses/:slug`, `/zones`...) through one `publicWhere()` in `src/common/public.ts`, and the
+  web pages that show real listings, including `/businesses/[slug]`.
+- **Phase 4 (M2 submission flow)**: built and tested on the branch, not yet deployed. `POST /businesses/submit` and the
+  `/submit` form (v1 fields and the six consent boxes worded exactly, plus postcode, WhatsApp and "Areas you serve").
+  New listings are `PENDING` + `NEWLY_LISTED`. Photos go to the bucket `bsd-uploads` on the restaurant platform's MinIO
+  (decision 2026-09-25: share it rather than run a second MinIO), with a BSD-only access key. Images are compressed
+  without losing quality (see `src/common/images.ts`) and served at `bsd.wales/uploads/...` by `deploy/bsd.caddy`.
+  Before the first deploy the user runs `bash deploy/phase4-setup.sh apply`.
 - Later, not started: M3 admin with volunteer verification and claim review, M6 update,
   removal and claim flows, M7 print export by zone then category.
 
@@ -1085,6 +1088,9 @@ Send these to the client. Each code change is also marked with a `// CLIENT-REVI
   re-run `bash deploy/v2-baseline.sh check` just before the baseline.
 - A photo uploads volume must be added to `/opt/bsd/docker-compose.yml` on the VPS before M2 ships.
   That file lives only on the VPS, not in the repo.
+- Uploaded images live in the `bsd-uploads` bucket on the MinIO server shared with the restaurant platform. Nothing
+  backs up that MinIO today (the platform's backup script covers only its Postgres), so the M6 backup job must copy
+  `bsd-uploads` too. That MinIO runs the last community release of MinIO, which gets no more security updates.
 - Add an external uptime monitor on `https://bsd.wales/` and `https://api.bsd.wales/health`.
 - Consider a non-public login address for the seed super admin in production. `admin@bsd.wales` is
   now a public partnership mailbox.

@@ -32,7 +32,7 @@ export type PublicDetail = Omit<PublicListItem, "summary"> & {
   specialNotes: string | null;
   otherAreaText: string | null;
   servedZones: NameSlug[];
-  photos: { url: string; isLogo: boolean }[];
+  photos: { url: string; thumbUrl: string | null; isLogo: boolean; width: number | null; height: number | null }[];
 };
 
 export type Page<T> = { items: T[]; page: number; pageSize: number; total: number; totalPages: number };
@@ -47,6 +47,17 @@ export type ApiResult<T> =
 function apiBase(): string {
   const env = process.env;
   const configured = env["API_URL"] ?? env["NEXT_PUBLIC_API_URL"];
+  if (configured) return configured.replace(/\/$/, "");
+  return env["NODE_ENV"] === "production" ? "https://api.bsd.wales" : "http://localhost:4000";
+}
+
+/**
+ * The API address the visitor's browser uses (for the submission form). The page reads it on the server at request
+ * time and passes it down, because NEXT_PUBLIC_ values would otherwise be fixed when the image is built.
+ */
+export function publicApiBase(): string {
+  const env = process.env;
+  const configured = env["NEXT_PUBLIC_API_URL"];
   if (configured) return configured.replace(/\/$/, "");
   return env["NODE_ENV"] === "production" ? "https://api.bsd.wales" : "http://localhost:4000";
 }

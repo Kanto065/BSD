@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { CATEGORIES, CATEGORY_RENAMES, ZONES, categorySlug, localitySlug, subcategorySlug } from "../prisma/seed-data.js";
+import * as webSlug from "../../bsd-web/lib/slug.js";
 
 describe("category taxonomy", () => {
   it("has the 20 approved categories with unique names and slugs", () => {
@@ -108,5 +109,15 @@ describe("bsd-web copy stays in sync", () => {
       expect(web, `slug for ${z.name}`).toContain(`slug: "${z.slug}"`);
       for (const l of z.localities) expect(web, `locality ${l}`).toContain(`"${l}"`);
     }
+  });
+});
+
+describe("bsd-web slug rule matches the API", () => {
+  it("builds the same subcategory and locality slugs the seed stores", () => {
+    for (const c of CATEGORIES) {
+      expect(webSlug.slugify(c.name)).toBe(categorySlug(c.name));
+      for (const sub of c.subcategories) expect(webSlug.subcategorySlug(c.name, sub)).toBe(subcategorySlug(c.name, sub));
+    }
+    for (const z of ZONES) for (const l of z.localities) expect(webSlug.localitySlug(l)).toBe(localitySlug(l));
   });
 });

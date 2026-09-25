@@ -13,6 +13,9 @@ bsd.wales {
 
 		rewrite * /bsd-uploads/public{path}
 		reverse_proxy minio:9000 {
+			# MinIO sends its own copies of these. Drop them so each header appears once, set below.
+			header_down -Cache-Control
+			header_down -X-Content-Type-Options
 			header_down -Server
 			header_down -X-Amz-Request-Id
 			header_down -X-Amz-Id-2

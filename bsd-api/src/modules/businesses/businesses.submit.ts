@@ -101,6 +101,9 @@ const accepted = z
 
 export const countWords = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 
+/** The field rules, shared with the admin edit form so a listing always meets the same standard. */
+export const fieldRules = { text, optionalText, slug, phone };
+
 export const submissionSchema = z.object({
   name: text(120).min(2, "Enter the business or service name."),
   category: slug,

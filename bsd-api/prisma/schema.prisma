@@ -45,16 +45,22 @@ enum ClaimStatus {
 }
 
 model AdminUser {
-  id               String                @id @default(cuid())
-  name             String
-  email            String                @unique
-  passwordHash     String
-  role             AdminRole             @default(MODERATOR)
-  createdAt        DateTime              @default(now())
-  reviewedListings Business[]            @relation("ReviewedBy")
-  verifiedListings Business[]            @relation("VerifiedBy")
-  claimReviews     ListingClaimRequest[] @relation("ClaimReviewedBy")
-  auditLogs        AuditLog[]
+  id                 String                @id @default(cuid())
+  name               String
+  email              String                @unique
+  passwordHash       String
+  role               AdminRole             @default(MODERATOR)
+  createdAt          DateTime              @default(now())
+  active             Boolean               @default(true) // a disabled account cannot log in
+  mustChangePassword Boolean               @default(false) // set for first-time and reset passwords
+  failedLoginCount   Int                   @default(0)
+  lockedUntil        DateTime? // temporary lock after repeated failed logins
+  lastLoginAt        DateTime?
+  tokenVersion       Int                   @default(0) // bumped on password change or logout, which ends all sessions
+  reviewedListings   Business[]            @relation("ReviewedBy")
+  verifiedListings   Business[]            @relation("VerifiedBy")
+  claimReviews       ListingClaimRequest[] @relation("ClaimReviewedBy")
+  auditLogs          AuditLog[]
 }
 
 model Category {

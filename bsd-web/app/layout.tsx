@@ -3,6 +3,7 @@ import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SiteChrome from "@/components/SiteChrome";
 import { EMAILS, SITE_DESCRIPTION, SITE_NAME, SITE_URL, ZONES } from "@/lib/content";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
@@ -58,9 +59,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-        <Header />
+        <SiteChrome>
+          <Header />
+        </SiteChrome>
         <main className="flex-1">{children}</main>
-        <Footer />
+        <SiteChrome>
+          <Footer />
+        </SiteChrome>
       </body>
     </html>
   );

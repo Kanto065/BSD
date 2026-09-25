@@ -84,12 +84,15 @@ explicit go-ahead.
 - **Phase 3 (M1 public API and wiring)**: LIVE since 2026-09-25. Read-only public API (`/categories`, `/businesses/search`,
   `/businesses/featured`, `/businesses/:slug`, `/zones`...) through one `publicWhere()` in `src/common/public.ts`, and the
   web pages that show real listings, including `/businesses/[slug]`.
-- **Phase 4 (M2 submission flow)**: built and tested on the branch, not yet deployed. `POST /businesses/submit` and the
-  `/submit` form (v1 fields and the six consent boxes worded exactly, plus postcode, WhatsApp and "Areas you serve").
-  New listings are `PENDING` + `NEWLY_LISTED`. Photos go to the bucket `bsd-uploads` on the restaurant platform's MinIO
-  (decision 2026-09-25: share it rather than run a second MinIO), with a BSD-only access key. Images are compressed
-  without losing quality (see `src/common/images.ts`) and served at `bsd.wales/uploads/...` by `deploy/bsd.caddy`.
-  Before the first deploy the user runs `bash deploy/phase4-setup.sh apply`.
+- **Phase 4 (M2 submission flow)**: LIVE since 2026-09-25. `/submit` form and `POST /businesses/submit`; photos in bucket
+  `bsd-uploads` on the restaurant platform's shared MinIO, served at `bsd.wales/uploads/...`.
+- **M3 (admin panel)**: built and deployed 2026-09-25. `/admin` on the website, `/admin/*` on the API. Roles: VOLUNTEER
+  (verification queue), MODERATOR (listings, claims, messages), ADMIN (audit log), SUPER_ADMIN (team). Short-lived access
+  token in memory plus an httpOnly SameSite=Strict refresh cookie, lockout after 5 failed logins, forced change of
+  one-time passwords, every action in the audit log. Category editing is deliberately NOT in M3: the website's category
+  and zone lists are still static in `bsd-web/lib/content.ts`, so they would drift. Do that together with making those
+  lists come from the API. Set or reset an admin password on the server with
+  `printf '%s' 'password' | docker exec -i bsd-api node dist/cli/set-admin-password.js email`.
 - Later, not started: M3 admin with volunteer verification and claim review, M6 update,
   removal and claim flows, M7 print export by zone then category.
 

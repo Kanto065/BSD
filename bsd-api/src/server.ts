@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import multipart from "@fastify/multipart";
+import cookie from "@fastify/cookie";
 import prismaPlugin from "./plugins/prisma.js";
 import authPlugin from "./plugins/auth.js";
 import healthRoutes from "./modules/health/health.routes.js";
@@ -36,7 +37,13 @@ export function buildApp(opts: AppOptions = {}) {
 
   app.decorate("storage", opts.storage !== undefined ? opts.storage : storageFromEnv());
 
-  app.register(cors, { origin: process.env.CORS_ORIGIN?.split(",") ?? true });
+  // credentials: the admin pages on bsd.wales send the httpOnly refresh cookie to api.bsd.wales.
+  app.register(cors, {
+    origin: process.env.CORS_ORIGIN?.split(",") ?? true,
+    credentials: true,
+    methods: ["GET", "HEAD", "POST", "PATCH", "DELETE"],
+  });
+  app.register(cookie);
   app.register(rateLimit, {
     max: 100,
     timeWindow: "1 minute",

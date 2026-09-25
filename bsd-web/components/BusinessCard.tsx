@@ -36,7 +36,7 @@ export default function BusinessCard({ business: b }: { business: PublicListItem
       </p>
       <p className="mt-2 flex-1 text-sm text-slate-600">{b.summary}</p>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
-        <a href={`tel:${b.phone.replace(/\s+/g, "")}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-navy hover:text-brand-blue">
+        <a href={`tel:${b.phone.replace(/\s+/g, "")}`} className="-my-2 inline-flex items-center gap-1.5 py-2 text-sm font-semibold text-brand-navy hover:text-brand-blue">
           <Phone className="h-4 w-4" aria-hidden="true" />
           {b.phone}
         </a>

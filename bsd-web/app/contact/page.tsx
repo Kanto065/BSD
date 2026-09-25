@@ -18,7 +18,7 @@ const h2 = "text-xl font-semibold text-brand-navy";
 export default function ContactPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <h1 className="text-3xl font-bold text-brand-navy">Contact BSD – Bangladeshi Business & Service Directory</h1>
+      <h1 className="text-2xl font-bold text-brand-navy sm:text-3xl">Contact BSD – Bangladeshi Business & Service Directory</h1>
       <p className="mt-4 text-slate-600">
         If you have questions, need support, want to update your listing, or wish to submit a new business/service,
         you can reach the BSD team through the following channels.

@@ -8,13 +8,9 @@ import { businessBySlug, publicApiBase, safeExternalUrl, whatsappLink } from "@/
 import ListingRequests from "@/components/ListingRequests";
 import { SITE_URL } from "@/lib/content";
 
-// Business pages are rendered on demand the first time they are visited, then cached and refreshed from the API at
-// most once a minute. None are built ahead of time, so the build never depends on the API.
-export const revalidate = 60;
-export const dynamicParams = true;
-export function generateStaticParams() {
-  return [];
-}
+// Rendered on every visit with fresh data from the API, so a listing approved, edited or removed in the admin panel
+// shows up straight away (no cached copy on the server or in the browser).
+export const dynamic = "force-dynamic";
 
 type Params = Promise<{ slug: string }>;
 
@@ -40,13 +36,18 @@ export default async function BusinessPage({ params }: { params: Params }) {
   const result = await businessBySlug(slug);
   if (!result.ok) {
     if (result.reason === "not_found") notFound();
-    // Fail loudly rather than cache an error page: on a refresh Next keeps serving the last good version.
+    // Shows the "try again" page (app/error.tsx) rather than a page with missing details.
     throw new Error("The BSD API is unavailable");
   }
   const b = result.data;
 
   const website = safeExternalUrl(b.websiteOrSocial);
   const wa = b.whatsapp ? whatsappLink(b.whatsapp) : null;
+  const mapUrl = b.postcode
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([b.name, b.address, b.postcode].filter(Boolean).join(", "))}`
+    : null;
+  const quickAction =
+    "inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold";
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -85,10 +86,10 @@ export default async function BusinessPage({ params }: { params: Params }) {
         <div className="flex items-start gap-4">
           {b.logoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={b.logoUrl} alt={`${b.name} logo`} className="h-20 w-20 shrink-0 rounded-lg border border-slate-200 bg-white object-contain" />
+            <img src={b.logoUrl} alt={`${b.name} logo`} className="h-16 w-16 shrink-0 rounded-lg sm:h-20 sm:w-20 border border-slate-200 bg-white object-contain" />
           )}
           <div>
-          <h1 className="text-3xl font-bold text-brand-navy">{b.name}</h1>
+          <h1 className="break-words text-2xl font-bold text-brand-navy sm:text-3xl">{b.name}</h1>
           <p className="mt-1 font-medium text-brand-teal-dark">
             {b.category.name}
             {b.subcategory ? ` · ${b.subcategory.name}` : ""}
@@ -97,6 +98,27 @@ export default async function BusinessPage({ params }: { params: Params }) {
         </div>
         <VerificationBadge status={b.verificationStatus} />
       </header>
+
+      {/* Phones: the main ways to get in touch straight under the name, before the description and photos. On wider
+          screens the Contact box sits beside the content instead. */}
+      <div className="mt-6 flex gap-2 lg:hidden">
+        <a href={`tel:${b.phone.replace(/s+/g, "")}`} className={`${quickAction} bg-brand-blue text-white hover:bg-brand-navy`}>
+          <Phone className="h-4 w-4" aria-hidden="true" />
+          Call
+        </a>
+        {wa && (
+          <a href={wa} target="_blank" rel="noopener noreferrer" className={`${quickAction} bg-green-700 text-white hover:bg-green-800`}>
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            WhatsApp
+          </a>
+        )}
+        {mapUrl && (
+          <a href={mapUrl} target="_blank" rel="noopener noreferrer" className={`${quickAction} border border-slate-300 text-brand-navy hover:bg-slate-50`}>
+            <MapPin className="h-4 w-4" aria-hidden="true" />
+            Map
+          </a>
+        )}
+      </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-8">
@@ -210,9 +232,9 @@ export default async function BusinessPage({ params }: { params: Params }) {
             <p className="mt-1 text-sm font-semibold text-slate-800">{b.postcode ?? b.postcodeDistrict}</p>
             {/* Map location (Website Structure doc). A plain link rather than an embedded map, so no third-party map
                 loads on the page; home-based listings have no public postcode and get no map link. */}
-            {b.postcode && (
+            {mapUrl && (
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([b.name, b.address, b.postcode].filter(Boolean).join(", "))}`}
+                href={mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-teal-dark hover:underline"

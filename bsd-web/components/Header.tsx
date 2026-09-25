@@ -31,10 +31,11 @@ export default function Header() {
 
   return (
     <header className="bg-white">
-      <div className="bg-brand-navy text-white">
+      {/* On phones these links move into the menu (below), where they are easier to tap. */}
+      <div className="hidden bg-brand-navy text-white sm:block">
         <nav
           aria-label="Utility"
-          className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-1 px-4 py-2 text-xs font-medium sm:justify-end sm:px-6"
+          className="mx-auto flex max-w-6xl flex-wrap items-center justify-end gap-x-6 gap-y-1 px-6 py-2 text-xs font-medium"
         >
           {UTILITY.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} className="inline-flex items-center gap-1.5 hover:underline">
@@ -80,7 +81,7 @@ export default function Header() {
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
               aria-controls="mobile-menu"
-              className="rounded-md p-2 text-brand-navy hover:bg-slate-100 lg:hidden"
+              className="rounded-md p-2.5 text-brand-navy hover:bg-slate-100 lg:hidden"
             >
               {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -99,7 +100,7 @@ export default function Header() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 aria-current={isActive(item.href) ? "page" : undefined}
-                className={`rounded-md px-2 py-2 hover:bg-slate-100 ${isActive(item.href) ? "bg-slate-100 text-brand-blue" : ""}`}
+                className={`rounded-md px-2 py-3 text-base hover:bg-slate-100 ${isActive(item.href) ? "bg-slate-100 text-brand-blue" : ""}`}
               >
                 {item.label}
               </Link>
@@ -110,7 +111,7 @@ export default function Header() {
                   key={href}
                   href={href}
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 rounded-md px-2 py-2 font-medium text-slate-600 hover:bg-slate-100"
+                  className="flex items-center gap-2 rounded-md px-2 py-3 font-medium text-slate-600 hover:bg-slate-100"
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
                   {label}

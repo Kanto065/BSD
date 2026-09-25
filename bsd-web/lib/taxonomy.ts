@@ -40,7 +40,7 @@ const fallback: Taxon[] = CATEGORIES.map((c) => ({
 }));
 
 export async function getCategories(): Promise<Taxon[]> {
-  const r = await apiGet<{ categories: ApiCategory[] }>("/categories", { revalidate: 60 });
+  const r = await apiGet<{ categories: ApiCategory[] }>("/categories");
   if (!r.ok || !r.data.categories.length) return fallback;
   return r.data.categories.map((c) => ({
     name: c.name,
@@ -55,9 +55,6 @@ export async function getCategories(): Promise<Taxon[]> {
 
 export const toOptions = (list: Taxon[]): CategoryOption[] =>
   list.map(({ icon: _icon, ...rest }) => rest);
-
-/** Slugs to prebuild at build time. Categories added later are rendered the first time someone visits them. */
-export const fallbackSlugs = () => fallback.map((c) => c.slug);
 
 /** Number of category tiles on the homepage: the first ones in the admin panel's order. */
 export const HOMEPAGE_TILES = 14;

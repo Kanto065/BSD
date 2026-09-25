@@ -158,7 +158,7 @@ export default function ListingRequests({ apiBase, slug, businessName }: { apiBa
                 <textarea id="rq-reason" rows={2} maxLength={2000} value={f.reason} onChange={(e) => setF({ ...f, reason: e.target.value })} className={inputClass} />
               </div>
               <label className="flex items-start gap-2 text-sm text-slate-700">
-                <input type="checkbox" checked={f.isEmergency} onChange={(e) => setF({ ...f, isEmergency: e.target.checked })} className="mt-0.5 h-4 w-4 accent-brand-blue" />
+                <input type="checkbox" checked={f.isEmergency} onChange={(e) => setF({ ...f, isEmergency: e.target.checked })} className="mt-0.5 h-5 w-5 shrink-0 accent-brand-blue" />
                 This is urgent: the listing shows incorrect or sensitive information.
               </label>
             </>

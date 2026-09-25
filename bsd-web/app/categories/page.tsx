@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getCategories } from "@/lib/taxonomy";
 
-// Categories come from the admin panel; the page refreshes at most once a minute.
-export const revalidate = 60;
+// Categories come from the admin panel, fetched fresh on every visit.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Browse Categories",

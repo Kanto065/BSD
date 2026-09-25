@@ -5,16 +5,11 @@ import { ArrowLink } from "@/components/ArrowLink";
 import { ListingGrid } from "@/components/BusinessCard";
 import { listingsForCategory, type ApiResult, type Page, type PublicListItem } from "@/lib/api";
 import { SITE_URL } from "@/lib/content";
-import { fallbackSlugs, getCategories } from "@/lib/taxonomy";
+import { getCategories } from "@/lib/taxonomy";
 
-// Prerendered, then refreshed from the API at most once a minute.
-export const revalidate = 60;
-
-// The known categories are prebuilt; ones added in the admin panel later render on their first visit.
-export const dynamicParams = true;
-export function generateStaticParams() {
-  return fallbackSlugs().map((slug) => ({ slug }));
-}
+// Rendered on every visit with fresh data from the API, so a listing approved, edited or removed in the admin panel
+// shows up straight away (no cached copy on the server or in the browser).
+export const dynamic = "force-dynamic";
 
 const findCategory = async (slug: string) => (await getCategories()).find((c) => c.slug === slug);
 

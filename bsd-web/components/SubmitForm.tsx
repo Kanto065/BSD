@@ -433,12 +433,12 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
                     type="checkbox"
                     checked={serveZones.includes(z.slug)}
                     onChange={() => toggle(serveZones, z.slug, setServeZones)}
-                    className="mt-0.5 h-4 w-4 accent-brand-blue"
+                    className="mt-0.5 h-5 w-5 shrink-0 accent-brand-blue"
                   />
                   All of {zoneLabel(z)}
                 </label>
                 <details className="mt-2">
-                  <summary className="cursor-pointer text-xs font-semibold text-brand-teal-dark">
+                  <summary className="cursor-pointer py-2 text-sm font-semibold text-brand-teal-dark">
                     Or choose areas in Zone {z.number}
                     {localities.some((l) => z.localities.map(localitySlug).includes(l))
                       ? ` (${localities.filter((l) => z.localities.map(localitySlug).includes(l)).length} chosen)`
@@ -448,12 +448,12 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
                     {z.localities.map((l) => {
                       const value = localitySlug(l);
                       return (
-                        <label key={value} className="flex items-center gap-2 text-sm text-slate-700">
+                        <label key={value} className="flex items-center gap-2 py-1.5 text-sm text-slate-700">
                           <input
                             type="checkbox"
                             checked={localities.includes(value)}
                             onChange={() => toggle(localities, value, setLocalities)}
-                            className="h-4 w-4 accent-brand-blue"
+                            className="h-5 w-5 shrink-0 accent-brand-blue"
                           />
                           {l}
                         </label>
@@ -465,7 +465,7 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
             ))}
             <div className="rounded-lg border border-slate-200 p-3">
               <label className="flex items-center gap-2 text-sm font-semibold text-brand-navy">
-                <input type="checkbox" checked={othersChecked} onChange={(e) => setOthersChecked(e.target.checked)} className="h-4 w-4 accent-brand-blue" />
+                <input type="checkbox" checked={othersChecked} onChange={(e) => setOthersChecked(e.target.checked)} className="h-5 w-5 shrink-0 accent-brand-blue" />
                 Others (Specify)
               </label>
               {othersChecked && (
@@ -601,7 +601,7 @@ function Consents({
               checked={!!consents[c.name]}
               onChange={(e) => setConsents((prev) => ({ ...prev, [c.name]: e.target.checked }))}
               aria-invalid={errors[c.name] ? true : undefined}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-brand-blue"
+              className="mt-0.5 h-5 w-5 shrink-0 accent-brand-blue"
             />
             {c.label}
           </label>

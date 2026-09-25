@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
+  // How long the browser reuses a page it already loaded when moving between pages. Listing pages are never reused
+  // (always fresh); fixed content pages for 30 seconds, the shortest Next.js allows (the default is 5 minutes).
+  experimental: {
+    staleTimes: { dynamic: 0, static: 30 },
+  },
   async redirects() {
     return [
       // The v1 Community Transparency page is retired in favour of /financial-transparency.

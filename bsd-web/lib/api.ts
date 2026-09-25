@@ -63,7 +63,7 @@ export function publicApiBase(): string {
 }
 
 type Options = {
-  /** Seconds the response may be reused. Omit for no caching (used for search, so queries are not stored). */
+  /** Seconds the response may be reused. Omit for no caching: listings are always fetched fresh. */
   revalidate?: number;
 };
 
@@ -85,15 +85,15 @@ export async function apiGet<T>(path: string, opts: Options = {}): Promise<ApiRe
   }
 }
 
-export const featured = (limit = 8) => apiGet<Page<PublicListItem>>(`/businesses/featured?limit=${limit}`, { revalidate: 60 });
+export const featured = (limit = 8) => apiGet<Page<PublicListItem>>(`/businesses/featured?limit=${limit}`);
 
 export const listingsForCategory = (slug: string, pageSize = 12) =>
-  apiGet<{ businesses: Page<PublicListItem> }>(`/categories/${encodeURIComponent(slug)}?pageSize=${pageSize}`, { revalidate: 60 });
+  apiGet<{ businesses: Page<PublicListItem> }>(`/categories/${encodeURIComponent(slug)}?pageSize=${pageSize}`);
 
 export const listingsForZone = (slug: string, pageSize = 12) =>
-  apiGet<{ businesses: Page<PublicListItem> }>(`/zones/${encodeURIComponent(slug)}?pageSize=${pageSize}`, { revalidate: 60 });
+  apiGet<{ businesses: Page<PublicListItem> }>(`/zones/${encodeURIComponent(slug)}?pageSize=${pageSize}`);
 
-export const businessBySlug = (slug: string) => apiGet<PublicDetail>(`/businesses/${encodeURIComponent(slug)}`, { revalidate: 60 });
+export const businessBySlug = (slug: string) => apiGet<PublicDetail>(`/businesses/${encodeURIComponent(slug)}`);
 
 export function searchListings(params: { q?: string; zone?: string; category?: string; page?: number }) {
   const qs = new URLSearchParams();

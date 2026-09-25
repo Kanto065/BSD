@@ -8,9 +8,9 @@ import { featured } from "@/lib/api";
 import { ALL_ZONES_LABEL, HOME_FAQ, SITE_DESCRIPTION, ZONES, zoneLabel } from "@/lib/content";
 import { HOMEPAGE_TILES, getCategories } from "@/lib/taxonomy";
 
-// The page is prerendered, then refreshed from the API at most once a minute. The API is never called while the
-// site is being built (see lib/api.ts).
-export const revalidate = 60;
+// Rendered on every visit with fresh data from the API, so a listing approved, edited or removed in the admin panel
+// shows up straight away (no cached copy on the server or in the browser).
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "BSD – Bangladeshi Business & Service Directory | Swansea Bay & South West Wales",
@@ -134,16 +134,16 @@ export default async function HomePage() {
             </button>
           </form>
 
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4">
             <Link
               href="/categories"
-              className="rounded-md border-2 border-brand-blue px-6 py-3 font-semibold text-brand-blue hover:bg-brand-blue hover:text-white"
+              className="rounded-md border-2 text-center border-brand-blue px-6 py-3 font-semibold text-brand-blue hover:bg-brand-blue hover:text-white"
             >
               Browse Directory
             </Link>
             <Link
               href="/submit"
-              className="inline-flex items-center gap-2 rounded-md bg-green-700 px-6 py-3 font-semibold text-white hover:bg-green-800"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-green-700 px-6 py-3 font-semibold text-white hover:bg-green-800"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               Add Business Free

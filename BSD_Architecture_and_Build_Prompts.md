@@ -53,6 +53,11 @@ compose up -d` from `/opt/bsd/docker-compose.yml` (build contexts point at
   `/businesses/featured`, `/businesses/:slug`, `/zones`...) through one `publicWhere()` in `src/common/public.ts`, so
   only APPROVED listings are ever public, and Featured & Verified shows only Community Verified ones. Search by keyword
   and zone, category pages, zone pages and a page per business (with a "View on map" link when the address is public).
+  Every page that shows listings renders with fresh API data on each visit (`dynamic = "force-dynamic"`, `no-store`
+  fetches, `experimental.staleTimes` of 0 for dynamic and 30 seconds for static pages), with a loading skeleton
+  (`app/loading.tsx`) and a retry page (`app/error.tsx`). Mobile pass done 2026-09-25: Call, WhatsApp and Map buttons
+  under the business name on phones, utility links moved into the phone menu, larger tap targets, no page wider
+  than a 360px screen.
 - **M2 (submission flow, Phase 4)**: LIVE. `/submit` form and `POST /businesses/submit` with postcode check, WhatsApp,
   areas served, all six consent checkboxes and the exact confirmation message. Photos are compressed without quality
   loss and stored in bucket `bsd-uploads` on the restaurant platform's shared MinIO, served at `bsd.wales/uploads/...`.

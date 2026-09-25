@@ -7,11 +7,12 @@ import authRoutes from "./admin.auth.js";
 import listingsRoutes from "./admin.listings.js";
 import usersRoutes from "./admin.users.js";
 import categoriesAdminRoutes from "./admin.categories.js";
+import requestsAdminRoutes from "./admin.requests.js";
 import { audit, idParams, invalid, page, pageQuery, statusCounts } from "./admin.service.js";
 
 // The admin API. Who can do what:
 //   VOLUNTEER    the verification queue, and setting a listing's verification status
-//   MODERATOR    also: listings (approve, reject, edit, remove), claims, contact messages
+//   MODERATOR    also: listings (approve, reject, edit, remove), claims, update and removal requests, messages
 //   ADMIN        also: the audit log, categories and subcategories
 //   SUPER_ADMIN  also: team accounts
 // The admin web pages only show what a role can use. These checks are the real boundary.
@@ -26,6 +27,7 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
   app.register(listingsRoutes);
   app.register(usersRoutes);
   app.register(categoriesAdminRoutes);
+  app.register(requestsAdminRoutes);
 
   const anyAdmin = { preHandler: app.requireRole() };
   const moderator = { preHandler: app.requireRole(...rolesFrom("MODERATOR")) };
@@ -33,11 +35,14 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
 
   app.get("/dashboard", anyAdmin, async () => {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const [verificationQueue, approvedThisWeek, pendingClaims, openMessages] = await app.prisma.$transaction([
+    const [verificationQueue, approvedThisWeek, pendingClaims, openMessages, pendingUpdates, pendingRemovals, emergencyRemovals] = await app.prisma.$transaction([
       app.prisma.business.count({ where: { status: "APPROVED", verificationStatus: { not: "COMMUNITY_VERIFIED" } } }),
       app.prisma.business.count({ where: { status: "APPROVED", reviewedAt: { gte: weekAgo } } }),
       app.prisma.listingClaimRequest.count({ where: { status: "PENDING" } }),
       app.prisma.contactMessage.count({ where: { status: "OPEN" } }),
+      app.prisma.listingUpdateRequest.count({ where: { status: "PENDING" } }),
+      app.prisma.listingRemovalRequest.count({ where: { status: "PENDING" } }),
+      app.prisma.listingRemovalRequest.count({ where: { status: "PENDING", isEmergency: true } }),
     ]);
     return {
       listings: await statusCounts(app.prisma),
@@ -45,6 +50,9 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
       verificationQueue,
       pendingClaims,
       openMessages,
+      pendingUpdates,
+      pendingRemovals,
+      emergencyRemovals,
     };
   });
 

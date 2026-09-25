@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL, ZONES } from "@/lib/content";
 import { getCategories } from "@/lib/taxonomy";
+import { apiGet } from "@/lib/api";
 
 export const revalidate = 3600;
 
@@ -44,5 +45,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...zoneRoutes, ...categoryRoutes];
+  // Every public listing page (empty while the site is being built, filled in once it is running).
+  const listings = await apiGet<{ items: { slug: string; lastModified: string }[] }>("/businesses/sitemap", { revalidate: 3600 });
+  const businessRoutes = listings.ok
+    ? listings.data.items.map((b) => ({
+        url: `${SITE_URL}/businesses/${b.slug}`,
+        lastModified: new Date(b.lastModified),
+        changeFrequency: "monthly" as const,
+        priority: 0.5,
+      }))
+    : [];
+
+  return [...staticRoutes, ...zoneRoutes, ...categoryRoutes, ...businessRoutes];
 }

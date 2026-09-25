@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, HeadBucketCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 // Where uploaded images are kept. Production uses a bucket on the MinIO server that is shared with another project on
 // the same VPS (bucket "bsd-uploads", with a BSD-only access key that can reach nothing else). Objects are written
@@ -11,6 +11,8 @@ export interface ObjectStorage {
   readonly kind: "s3" | "memory";
   put(input: PutInput): Promise<void>;
   delete(key: string): Promise<void>;
+  /** Throws if the storage cannot be reached. Used by the readiness check. */
+  check(): Promise<void>;
 }
 
 /** The site-relative URL a stored key is served at. */
@@ -51,6 +53,10 @@ class S3Storage implements ObjectStorage {
   async delete(key: string) {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: PREFIX + key }));
   }
+
+  async check() {
+    await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
+  }
 }
 
 /** Keeps objects in memory. Used by tests, and in local development when no bucket is configured. */
@@ -66,6 +72,10 @@ export class MemoryStorage implements ObjectStorage {
 
   async delete(key: string) {
     this.objects.delete(key);
+  }
+
+  async check() {
+    if (this.failPuts) throw new Error("storage unavailable");
   }
 }
 

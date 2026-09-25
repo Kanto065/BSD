@@ -45,21 +45,23 @@ enum ClaimStatus {
 }
 
 model AdminUser {
-  id                 String                @id @default(cuid())
+  id                 String                  @id @default(cuid())
   name               String
-  email              String                @unique
+  email              String                  @unique
   passwordHash       String
-  role               AdminRole             @default(MODERATOR)
-  createdAt          DateTime              @default(now())
-  active             Boolean               @default(true) // a disabled account cannot log in
-  mustChangePassword Boolean               @default(false) // set for first-time and reset passwords
-  failedLoginCount   Int                   @default(0)
+  role               AdminRole               @default(MODERATOR)
+  createdAt          DateTime                @default(now())
+  active             Boolean                 @default(true) // a disabled account cannot log in
+  mustChangePassword Boolean                 @default(false) // set for first-time and reset passwords
+  failedLoginCount   Int                     @default(0)
   lockedUntil        DateTime? // temporary lock after repeated failed logins
   lastLoginAt        DateTime?
-  tokenVersion       Int                   @default(0) // bumped on password change or logout, which ends all sessions
-  reviewedListings   Business[]            @relation("ReviewedBy")
-  verifiedListings   Business[]            @relation("VerifiedBy")
-  claimReviews       ListingClaimRequest[] @relation("ClaimReviewedBy")
+  tokenVersion       Int                     @default(0) // bumped on password change or logout, which ends all sessions
+  reviewedListings   Business[]              @relation("ReviewedBy")
+  verifiedListings   Business[]              @relation("VerifiedBy")
+  claimReviews       ListingClaimRequest[]   @relation("ClaimReviewedBy")
+  updateReviews      ListingUpdateRequest[]  @relation("UpdateReviewedBy")
+  removalReviews     ListingRemovalRequest[] @relation("RemovalReviewedBy")
   auditLogs          AuditLog[]
 }
 
@@ -202,22 +204,36 @@ model BusinessPhoto {
 }
 
 model ListingUpdateRequest {
-  id               String   @id @default(cuid())
+  id               String     @id @default(cuid())
   businessId       String
-  business         Business @relation(fields: [businessId], references: [id])
-  requestedChanges Json
-  status           String   @default("PENDING")
-  requestedAt      DateTime @default(now())
+  business         Business   @relation(fields: [businessId], references: [id])
+  requestedChanges Json // { message: "what should change" } from the public form
+  status           String     @default("PENDING") // PENDING, APPLIED, REJECTED
+  requestedAt      DateTime   @default(now())
+  requesterName    String?
+  requesterEmail   String?
+  requesterPhone   String?
+  reviewedAt       DateTime?
+  reviewedById     String?
+  reviewNote       String?
+  reviewedBy       AdminUser? @relation("UpdateReviewedBy", fields: [reviewedById], references: [id])
 }
 
 model ListingRemovalRequest {
-  id          String   @id @default(cuid())
-  businessId  String
-  business    Business @relation(fields: [businessId], references: [id])
-  reason      String?
-  isEmergency Boolean  @default(false)
-  status      String   @default("PENDING")
-  requestedAt DateTime @default(now())
+  id             String     @id @default(cuid())
+  businessId     String
+  business       Business   @relation(fields: [businessId], references: [id])
+  reason         String?
+  isEmergency    Boolean    @default(false) // incorrect or sensitive information: 24-hour target
+  status         String     @default("PENDING") // PENDING, REMOVED, REJECTED
+  requestedAt    DateTime   @default(now())
+  requesterName  String?
+  requesterEmail String?
+  requesterPhone String?
+  reviewedAt     DateTime?
+  reviewedById   String?
+  reviewNote     String?
+  reviewedBy     AdminUser? @relation("RemovalReviewedBy", fields: [reviewedById], references: [id])
 }
 
 // "Claim This Listing" with proof of ownership (Homepage Full Body FAQ Q4).

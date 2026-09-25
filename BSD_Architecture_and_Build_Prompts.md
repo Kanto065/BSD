@@ -94,8 +94,13 @@ explicit go-ahead.
   with `bsd-web/lib/content.ts` only as a fallback. The seed writes categories only into an empty database (or with
   `SEED_TAXONOMY=reset`), so re-running it never undoes admin edits. Zones and localities are still static. Set or reset an admin password on the server with
   `printf '%s' 'password' | docker exec -i bsd-api node dist/cli/set-admin-password.js email`.
-- Later, not started: M3 admin with volunteer verification and claim review, M6 update,
-  removal and claim flows, M7 print export by zone then category.
+- **M6 (requests, backups, monitoring)**: built and deployed 2026-09-25. Business pages have Claim This Listing, Request
+  an update and Request removal (emergency flag, 24-hour target); admin queues under "Update & removal" and "Claims",
+  emergencies first, with working days waiting. Claims take a written description of proof, not uploads (the photo
+  bucket is public). `/health/ready` checks the database and photo storage for an uptime monitor. Approved business
+  pages are in the sitemap. Nightly backups (database + bsd-uploads, 14 days) are installed with
+  `bash deploy/install-backup.sh`; they sit on the same server, so copy /root/backups/bsd off it from time to time.
+- Not started: M7 print export by zone then category, M5 mobile app.
 
 **SEO/perf choices made along the way**: every page is fully static (SSG) —
 `output: "standalone"` in `next.config.ts`, per-page `metadata`/canonical/OpenGraph,

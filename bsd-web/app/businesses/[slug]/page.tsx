@@ -4,8 +4,9 @@ import type { Metadata } from "next";
 import { Clock, Globe, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { ArrowLink } from "@/components/ArrowLink";
 import VerificationBadge from "@/components/VerificationBadge";
-import { businessBySlug, safeExternalUrl, whatsappLink } from "@/lib/api";
-import { EMAILS, SITE_URL } from "@/lib/content";
+import { businessBySlug, publicApiBase, safeExternalUrl, whatsappLink } from "@/lib/api";
+import ListingRequests from "@/components/ListingRequests";
+import { SITE_URL } from "@/lib/content";
 
 // Business pages are rendered on demand the first time they are visited, then cached and refreshed from the API at
 // most once a minute. None are built ahead of time, so the build never depends on the API.
@@ -46,7 +47,6 @@ export default async function BusinessPage({ params }: { params: Params }) {
 
   const website = safeExternalUrl(b.websiteOrSocial);
   const wa = b.whatsapp ? whatsappLink(b.whatsapp) : null;
-  const claimHref = `mailto:${EMAILS.support}?subject=${encodeURIComponent(`Claim listing: ${b.name}`)}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -234,17 +234,8 @@ export default async function BusinessPage({ params }: { params: Params }) {
           </Link>
           .
         </p>
-        <p className="mt-2">
-          Is this your business?{" "}
-          <a href={claimHref} className="font-semibold text-brand-teal-dark hover:underline">
-            Claim This Listing
-          </a>
-          , or{" "}
-          <Link href="/contact" className="font-semibold text-brand-teal-dark hover:underline">
-            contact us
-          </Link>{" "}
-          to update or remove it.
-        </p>
+        <p className="mt-2">Is this your business, or is something wrong? Claim it, or ask us to update or remove it.</p>
+        <ListingRequests apiBase={publicApiBase()} slug={b.slug} businessName={b.name} />
       </footer>
     </div>
   );

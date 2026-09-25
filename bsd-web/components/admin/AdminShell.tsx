@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { BadgeCheck, ClipboardList, FolderTree, FileClock, Inbox, KeyRound, LayoutDashboard, Loader2, LogOut, MessageSquare, Users } from "lucide-react";
+import { BadgeCheck, ClipboardList, FilePen, FolderTree, FileClock, Inbox, KeyRound, LayoutDashboard, Loader2, LogOut, MessageSquare, Users } from "lucide-react";
 import { atLeast, useSession, type Role } from "@/lib/admin-session";
 
 const NAV: { href: string; label: string; icon: typeof LayoutDashboard; minimum: Role }[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, minimum: "VOLUNTEER" },
   { href: "/admin/listings", label: "Listings", icon: ClipboardList, minimum: "MODERATOR" },
   { href: "/admin/verification", label: "Verification", icon: BadgeCheck, minimum: "VOLUNTEER" },
+  { href: "/admin/requests", label: "Update & removal", icon: FilePen, minimum: "MODERATOR" },
   { href: "/admin/claims", label: "Claims", icon: Inbox, minimum: "MODERATOR" },
   { href: "/admin/messages", label: "Messages", icon: MessageSquare, minimum: "MODERATOR" },
   { href: "/admin/categories", label: "Categories", icon: FolderTree, minimum: "ADMIN" },

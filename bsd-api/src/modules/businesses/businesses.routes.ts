@@ -1,8 +1,9 @@
 import type { FastifyPluginAsync } from "fastify";
-import { badQuery } from "../../common/public.js";
+import { badQuery, publicWhere } from "../../common/public.js";
 import { featuredQuery, searchQuery, slugParams } from "./businesses.schema.js";
 import { featuredBusinesses, getPublicBusiness, searchBusinesses } from "./businesses.service.js";
 import { HONEYPOT_FIELD, SubmissionError, readSubmission, saveSubmission } from "./businesses.submit.js";
+import requestsRoutes from "./businesses.requests.js";
 
 // The exact confirmation text from the client's Submission Form doc.
 export const CONFIRMATION_MESSAGE =
@@ -42,6 +43,19 @@ const businessesRoutes: FastifyPluginAsync = async (app) => {
       }
       throw err;
     }
+  });
+
+  app.register(requestsRoutes);
+
+  // Every public listing, for the website's sitemap.
+  app.get("/sitemap", async () => {
+    const rows = await app.prisma.business.findMany({
+      where: publicWhere(),
+      select: { slug: true, reviewedAt: true, submittedAt: true },
+      orderBy: { slug: "asc" },
+      take: 50_000,
+    });
+    return { items: rows.map((r) => ({ slug: r.slug, lastModified: (r.reviewedAt ?? r.submittedAt).toISOString() })) };
   });
 
   app.get("/:slug", async (req, reply) => {

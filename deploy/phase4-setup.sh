@@ -55,7 +55,10 @@ docker exec platform-minio-1 sh -c 'command -v mc >/dev/null' || { echo "mc is n
 STAMP=$(date +%Y%m%d-%H%M%S)
 cp /opt/bsd/.env "/opt/bsd/.env.bak-$STAMP"
 cp /opt/bsd/docker-compose.yml "/opt/bsd/docker-compose.yml.bak-$STAMP"
-SECRET=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 40)
+# Every command here reads its whole input, so nothing is cut short (with pipefail, a "tr </dev/urandom | head" pipe
+# ends in SIGPIPE and silently stops the script).
+SECRET=$(head -c 45 /dev/urandom | base64 | tr -dc 'A-Za-z0-9')
+[ "${#SECRET}" -ge 40 ] || { echo "could not generate a secret"; exit 1; }
 
 echo "== configuring MinIO (bucket bsd-uploads, user bsd-api)"
 docker exec -i -e BSD_SECRET="$SECRET" platform-minio-1 sh -s <<'IN_MINIO'

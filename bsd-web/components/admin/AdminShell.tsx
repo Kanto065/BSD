@@ -14,6 +14,7 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; minimum:
   { href: "/admin/messages", label: "Messages", icon: MessageSquare, minimum: "MODERATOR" },
   { href: "/admin/audit", label: "Audit log", icon: FileClock, minimum: "ADMIN" },
   { href: "/admin/users", label: "Team", icon: Users, minimum: "SUPER_ADMIN" },
+  { href: "/admin/password", label: "Change password", icon: KeyRound, minimum: "VOLUNTEER" },
 ];
 
 const ROLE_LABEL: Record<Role, string> = { SUPER_ADMIN: "Super Admin", ADMIN: "Admin", MODERATOR: "Moderator", VOLUNTEER: "Volunteer" };
@@ -55,9 +56,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <span className="hidden sm:inline">
               {admin.name} <span className="text-slate-300">({ROLE_LABEL[admin.role]})</span>
             </span>
-            <Link href="/admin/password" className="inline-flex items-center gap-1 hover:underline">
-              <KeyRound className="h-4 w-4" aria-hidden="true" /> Password
-            </Link>
             <button
               type="button"
               onClick={async () => {

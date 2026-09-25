@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Clock, Globe, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Clock, ExternalLink, Globe, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { ArrowLink } from "@/components/ArrowLink";
 import VerificationBadge from "@/components/VerificationBadge";
 import { businessBySlug, publicApiBase, safeExternalUrl, whatsappLink } from "@/lib/api";
@@ -208,6 +208,19 @@ export default async function BusinessPage({ params }: { params: Params }) {
             </h2>
             <p className="mt-3 text-sm text-slate-600">{b.address ?? "HomeBased"}</p>
             <p className="mt-1 text-sm font-semibold text-slate-800">{b.postcode ?? b.postcodeDistrict}</p>
+            {/* Map location (Website Structure doc). A plain link rather than an embedded map, so no third-party map
+                loads on the page; home-based listings have no public postcode and get no map link. */}
+            {b.postcode && (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([b.name, b.address, b.postcode].filter(Boolean).join(", "))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-teal-dark hover:underline"
+              >
+                View on map
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </a>
+            )}
             {b.localities.length > 0 && <p className="mt-2 text-sm text-slate-600">{b.localities.map((l) => l.name).join(", ")}</p>}
             <p className="mt-2 text-sm">
               <Link href={`/${b.zone.slug}`} className="font-semibold text-brand-teal-dark hover:underline">

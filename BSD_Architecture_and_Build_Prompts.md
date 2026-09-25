@@ -41,66 +41,50 @@ compose up -d` from `/opt/bsd/docker-compose.yml` (build contexts point at
 (`bsd-postgres`) on an internal-only network; only `api` and `web` join the shared
 `platform_internal` network so Caddy can reach them.
 
-**What's actually built, milestone by milestone** (this is the state of `main`, which is
-what production runs; the v1 layout described here is being replaced on the `v2-refresh`
-branch, see the next paragraph):
-- **M0 (Foundation)**: done. Fastify + Prisma schema (with the subcategory/
-  requiresOwnerName/otherAreaText/upload-validation fixes from the design review
-  folded in — see Section 5 below), seeded with the *real* full category/subcategory
-  list and all 8 coverage areas (pulled from the client's actual `BSD_Merged.docx`,
-  not the placeholder examples originally in this doc), a super-admin user, and a
-  Vitest + `.inject()` test harness. NestJS-style module folders
-  (`src/modules/<domain>/{routes,service,schema}.ts`) exist for health, categories,
-  businesses, admin, contact — only `health` has real logic; the rest are stubs
-  pending their milestones.
-- **M1 (Public browsing)**: partially done, ahead of schedule but not wired to real
-  data yet. `/categories` and `/categories/[slug]` exist and render for real from the
-  full category/subcategory list, but as static content (no live business listings —
-  the API's `/categories` and `/businesses/*` endpoints are still stubs). Homepage
-  matches the client's v1 Homepage Layout doc section-by-section, including the two
-  sections the first draft missed (the "Featured Listings (Future Premium)"
-  placeholder and the dedicated "Powered By BayConnect" section with its own CTA).
-- **M2 (Submission flow)**: not built. `/submit` is a placeholder page with a mailto
-  fallback to info@bsd.wales — no form, no API endpoint yet.
-- **M3 (Admin panel)**: not built at all — no `/admin` routes or pages exist yet.
-- **M4 (Static content pages)**: done, plus one page the original milestone list
-  missed entirely — **FAQ** (`/faq`) exists as its own page with FAQPage JSON-LD,
-  even though Section 3's M4 milestone never listed it (the client's doc has a full
-  "BSD – Frequently Asked Questions" page). About/Coverage Area/Transparency/Legal/
-  Privacy/Contact/Branding are all live with verbatim copy from the client's doc.
-  `/branding` is a "coming soon" shell, matching the doc's stated scope.
-- **M5, M6, M7**: not started.
-
-**v2 refresh (branch `v2-refresh`, started 2026-09-25)**: the v2 client docs are not on the
-live site yet. Work is split into phases on the `v2-refresh` branch, with `main` untouched
-because `main` auto-deploys to production. Nothing on the branch reaches `main` without an
-explicit go-ahead.
-- **Phase 0 (this doc update)**: done. Plan approved, decisions logged in Section 6.
-- **Phase 1 (M1.5 v2 shell refresh, `bsd-web`, static)**: built on the branch and committed, awaiting review. Not merged to `main`, so it is not live yet.
-- **Phase 2 (schema v2 and real Prisma migrations, `bsd-api`)**: LIVE since 2026-09-25. Migrations `0_init`
-  (baseline) and `1_v2_schema` are recorded in production, the seed loaded 20 categories, 73 subcategories, 3 zones and
-  47 localities, and the API runs `prisma migrate deploy` at boot, so future migrations apply on deploy. Verified with
-  unit tests, the migrations run in PGlite, and the full Prisma flow on a real PostgreSQL 16.14.
-- **Phase 3 (M1 public API and wiring)**: LIVE since 2026-09-25. Read-only public API (`/categories`, `/businesses/search`,
-  `/businesses/featured`, `/businesses/:slug`, `/zones`...) through one `publicWhere()` in `src/common/public.ts`, and the
-  web pages that show real listings, including `/businesses/[slug]`.
-- **Phase 4 (M2 submission flow)**: LIVE since 2026-09-25. `/submit` form and `POST /businesses/submit`; photos in bucket
-  `bsd-uploads` on the restaurant platform's shared MinIO, served at `bsd.wales/uploads/...`.
-- **M3 (admin panel)**: built and deployed 2026-09-25. `/admin` on the website, `/admin/*` on the API. Roles: VOLUNTEER
-  (verification queue), MODERATOR (listings, claims, messages), ADMIN (audit log), SUPER_ADMIN (team). Short-lived access
-  token in memory plus an httpOnly SameSite=Strict refresh cookie, lockout after 5 failed logins, forced change of
-  one-time passwords, every action in the audit log. Categories are managed in the admin panel (ADMIN and up): add, rename, reorder,
-  choose the icon, owner-name rule, and subcategories. The website reads them from the API (refreshed within a minute),
-  with `bsd-web/lib/content.ts` only as a fallback. The seed writes categories only into an empty database (or with
-  `SEED_TAXONOMY=reset`), so re-running it never undoes admin edits. Zones and localities are still static. Set or reset an admin password on the server with
+**What's live (production runs `main`)**, milestone by milestone:
+- **M0 (Foundation)**: done. Fastify 5 + Prisma 5 API, Next.js 15 website, Docker on the shared VPS, deploy on push to `main`.
+- **M1.5 v2 shell (Phase 1)**: LIVE. New logo and brand colours, v2 header, homepage and footer, the 3 zone pages, Free
+  Access Policy, Community Initiative, Powered by BayConnect, Verification Policy, Coverage Area, download page with the
+  Regional Coverage Factsheet PDF, and placeholder shells for Community Guidelines, Complaints and Financial Transparency.
+- **Phase 2 (schema v2 and real Prisma migrations)**: LIVE. Migrations `0_init` to `4_request_contacts` are applied and
+  the API runs `prisma migrate deploy` at boot, so new migrations apply on deploy. Migrations are written without a
+  database using `prisma migrate diff` and tested in PGlite (see `deploy/v2-migration-runbook.md`).
+- **M1 (public API and wiring, Phase 3)**: LIVE. Read-only public API (`/categories`, `/businesses/search`,
+  `/businesses/featured`, `/businesses/:slug`, `/zones`...) through one `publicWhere()` in `src/common/public.ts`, so
+  only APPROVED listings are ever public, and Featured & Verified shows only Community Verified ones. Search by keyword
+  and zone, category pages, zone pages and a page per business (with a "View on map" link when the address is public).
+- **M2 (submission flow, Phase 4)**: LIVE. `/submit` form and `POST /businesses/submit` with postcode check, WhatsApp,
+  areas served, all six consent checkboxes and the exact confirmation message. Photos are compressed without quality
+  loss and stored in bucket `bsd-uploads` on the restaurant platform's shared MinIO, served at `bsd.wales/uploads/...`.
+- **M3 (admin panel)**: LIVE at `/admin`. Roles: VOLUNTEER (verification queue), MODERATOR (listings, claims, messages),
+  ADMIN (audit log, categories), SUPER_ADMIN (team). Short-lived access token in memory plus an httpOnly SameSite=Strict
+  refresh cookie, lockout after 5 failed logins, forced change of one-time passwords, every action in the audit log.
+  Categories are edited in the admin panel and the website reads them from the API (refreshed within a minute), with
+  `bsd-web/lib/content.ts` only as a fallback. The seed writes categories only into an empty database (or with
+  `SEED_TAXONOMY=reset`). Zones and localities are still static. Set or reset an admin password on the server with
   `printf '%s' 'password' | docker exec -i bsd-api node dist/cli/set-admin-password.js email`.
-- **M6 (requests, backups, monitoring)**: built and deployed 2026-09-25. Business pages have Claim This Listing, Request
-  an update and Request removal (emergency flag, 24-hour target); admin queues under "Update & removal" and "Claims",
-  emergencies first, with working days waiting. Claims take a written description of proof, not uploads (the photo
-  bucket is public). `/health/ready` checks the database and photo storage for an uptime monitor. Approved business
-  pages are in the sitemap. Nightly backups (database + bsd-uploads, 14 days) are installed with
-  `bash deploy/install-backup.sh`; they sit on the same server, so copy /root/backups/bsd off it from time to time.
-- Not started: M7 print export by zone then category, M5 mobile app.
+- **M4 (content pages)**: LIVE and checked against the client docs on 2026-09-25. About, FAQ (all 18 questions), Legal
+  Disclaimer, Privacy Policy and Contact follow the docs' wording and structure (lists kept as lists, the docs' links
+  included). The only differences are the CLIENT-REVIEW items in Section 7. `/branding` is a "coming soon" shell
+  because no brand guide was supplied.
+- **M6 (requests, backups, monitoring)**: LIVE. Business pages have Claim This Listing, Request an update and Request
+  removal (emergency flag, 24-hour target); admin queues under "Update & removal" and "Claims", emergencies first.
+  Claims take a written description of proof, not uploads (the photo bucket is public). `/health/ready` checks the
+  database and photo storage. Approved business pages are in the sitemap. Nightly backups (database + bsd-uploads,
+  03:15, kept 14 days) run from `/etc/cron.d/bsd-backup`; they sit on the same server, so copy /root/backups/bsd off it
+  from time to time.
+
+**Remaining**:
+- **M7 print export**: listings exported for the printed guide, grouped by zone then category.
+- **M5 mobile app**.
+- **Not built from the v1 Website Structure doc**: filters on category pages (Location, Service type, Availability),
+  category descriptions (no copy supplied), a News & Updates page (marked optional), and the Branding guide (no content
+  supplied). Future premium pages stay hidden, as the doc says.
+- **Client review**: the items in Section 7, including the Contact page's Social Media links, which the doc says will
+  be supplied later.
+- **Ops**: add an external uptime monitor (for example UptimeRobot) on `https://api.bsd.wales/health/ready` and
+  `https://bsd.wales/`. There is no CI job yet, so tests run by hand before each merge (`npm test` in `bsd-api`, and
+  `npx tsc --noEmit` plus `next build` in `bsd-web`).
 
 **SEO/perf choices made along the way**: every page is fully static (SSG) —
 `output: "standalone"` in `next.config.ts`, per-page `metadata`/canonical/OpenGraph,
@@ -110,29 +94,6 @@ build time via `next/og` (`app/icon.tsx`, `app/apple-icon.tsx`) rather than a st
 asset. Marketing copy was deliberately written to avoid em-dash/colon-heavy "AI-sounding"
 phrasing wherever it wasn't a verbatim client quote (client's own dashes/wording were
 left untouched).
-
-**Known gaps / next things to pick up**:
-- The public endpoints and web pages exist (Phase 3). The taxonomy (categories, zones, localities) stays as static data
-  in `bsd-web/lib/content.ts`, guarded by a test that fails if it drifts from the seed, while listings come from the API.
-  Sitemap entries for individual business pages are still to do (M6).
-- Build M2 (the real submission form + `POST /businesses/submit`) — this is the
-  biggest missing piece; `/submit` currently can't actually create a listing.
-  Sanitization helper (`src/common/sanitize.ts`) and upload validation rules are
-  already written per Section 4's M2 prompt but not wired into a real route yet.
-  Fastify is on v5 (not the v4 originally written in the M0 prompt below — bumped
-  during deploy debugging to match `@fastify/cors`/`@fastify/rate-limit` v10).
-- Prisma migrations now exist and are applied on deploy. New migrations are written without a database using
-  `prisma migrate diff` and tested in PGlite (see `deploy/v2-migration-runbook.md`). Production had no migration
-  history until the 2026-09-25 baseline.
-- `api.bsd.wales` DNS was only just added — reconfirm it resolves and serves
-  `/health` before relying on it publicly.
-- Tests: the API has 50+ tests, including the "only APPROVED listings are public" guard (12 status x verification
-  combinations plus private-field and search checks) and migration tests. It runs on an in-process PostgreSQL (PGlite
-  over a socket), so nothing needs installing. The web app has unit tests for the contact-link helpers only. There is
-  no CI job yet, so tests run by hand before each merge (`npm test` in each package).
-- No external uptime monitor exists. The 2026-09-24 outage went unnoticed until it was
-  reported by hand. Add one (for example UptimeRobot) on `https://bsd.wales/` and
-  `https://api.bsd.wales/health`.
 
 ---
 
@@ -1084,6 +1045,19 @@ Send these to the client. Each code change is also marked with a `// CLIENT-REVI
   write, and the Community Initiative page is reproduced verbatim. SA21 to SA30 belong to no zone.
 - Public pages show only the postcode district and locality, never the full postcode, for HomeBased
   listings. Confirm whether the client wants the full postcode shown.
+- Doc audit, 2026-09-25: every client doc was checked against the live site. The Legal, Privacy, FAQ, About and
+  Contact pages were brought back to the docs' exact wording and structure (lists, the FAQ's Q17 and Q18, the About
+  page's One-Paragraph Summary, the docs' links). What remains different, apart from the items above:
+  - Contact "Social Media (Optional)" is not shown, because the doc says the links will be added later. The
+    "Postal / Physical Correspondence" line is shown as written ("Now unavailable. We will add address later.").
+  - FAQ Q6 and the About coverage section list the 3 v2 zones in place of the v1 town list.
+  - The FAQ's and Contact page's "Request Listing Update" link opens an email to support@ and points to the
+    "Request an update" form on each business page, as there is no single update page.
+  - The Full Body doc names owner step 3 both "Verified & Get Listed" (diagram) and "Get Listed & Verified" (link
+    list). The site uses the diagram's wording.
+  - Not built from the v1 Website Structure doc: category page filters (Location, Service type, Availability),
+    category descriptions (no copy), News & Updates (optional). Business pages have a "View on map" link rather
+    than an embedded map, so no third-party map loads (Free Access promises no tracking).
 
 ---
 

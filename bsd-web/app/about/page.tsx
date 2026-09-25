@@ -16,7 +16,7 @@ export default function AboutPage() {
       <h1 className="text-3xl font-bold text-brand-navy">About the Directory</h1>
 
       <section className="mt-8">
-        <h2 className="text-xl font-semibold text-brand-navy">Full Introduction</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">1. Full Introduction</h2>
         <p className="mt-3 text-slate-600">
           BSD – Bangladeshi Business & Service Directory (Swansea Bay Edition) is a unified information platform
           designed to highlight and connect Bangladeshi businesses, service providers, professionals, and
@@ -30,7 +30,8 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold text-brand-navy">Purpose</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">2. Purpose</h2>
+        <p className="mt-3 text-slate-600">The core purpose of BSD is to:</p>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
           <li>Provide visibility to local Bangladeshi businesses</li>
           <li>Support new and emerging entrepreneurs</li>
@@ -43,7 +44,8 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold text-brand-navy">Vision</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">3. Vision</h2>
+        <p className="mt-3 text-slate-600">BSD’s long-term vision is to:</p>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
           <li>Become the central business and service hub for the Bangladeshi community in Swansea Bay</li>
           <li>Strengthen community economic growth</li>
@@ -56,28 +58,43 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold text-brand-navy">Community Initiative</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">4. Community Initiative</h2>
         {/* CLIENT-REVIEW (L3): "no sponsorships" became "no website sponsorships" so this stays consistent with
             print edition sponsorship being allowed. */}
         <p className="mt-3 text-slate-600">
           BSD is currently operated as a free community initiative, created and maintained voluntarily for the
-          benefit of the Bangladeshi community. <strong>Free Access Period:</strong> Until 30 June 2027 — all
-          listings are completely free. During this period: no listing fees, no website sponsorships, no advertisements, no
-          paid promotions, no premium charges. Everything is provided free of cost to support community growth and
-          accessibility.
+          benefit of the Bangladeshi community.
         </p>
-        <h3 className="mt-4 font-semibold text-slate-800">Independent Professionals Inclusion</h3>
+        <p className="mt-3 font-semibold text-slate-800">Free Access Period:</p>
+        <p className="mt-1 text-slate-600">Until 30 June 2027 — all listings are completely free.</p>
+        <p className="mt-3 text-slate-600">During this period:</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-600">
+          <li>No listing fees</li>
+          <li>No website sponsorships</li>
+          <li>No advertisements</li>
+          <li>No paid promotions</li>
+          <li>No premium charges</li>
+        </ul>
+        <p className="mt-3 text-slate-600">
+          Everything is provided free of cost to support community growth and accessibility.
+        </p>
+        <h3 className="mt-6 font-semibold text-slate-800">Independent Professionals Inclusion</h3>
         <p className="mt-2 text-slate-600">
           BSD proudly includes a dedicated category for individuals who provide essential services without a
-          physical office: Independent Professionals. This includes electricians, plumbers, tutors, beauticians,
-          barbers, photographers, decorators, translators, driving instructors, home-based caterers, mechanics,
-          tailors, IT helpers, and other skilled individuals. This ensures that every valuable service provider in
-          the community receives equal recognition.
+          physical office:
+        </p>
+        <p className="mt-2 font-semibold text-slate-800">Independent Professionals</p>
+        <p className="mt-1 text-slate-600">
+          This includes: Electricians, plumbers, tutors, beauticians, barbers, photographers, decorators, translators,
+          driving instructors, home-based caterers, mechanics, tailors, IT helpers, and other skilled individuals.
+        </p>
+        <p className="mt-2 text-slate-600">
+          This ensures that every valuable service provider in the community receives equal recognition.
         </p>
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold text-brand-navy">Coverage Area</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">5. Coverage Area</h2>
         <p className="mt-3 text-slate-600">
           BSD covers the Swansea Bay region and South West Wales across postcodes SA1 to SA34, organised into three
           zones:
@@ -97,12 +114,24 @@ export default function AboutPage() {
       </section>
 
       <section id="powered-by-bayconnect" className="mt-10 scroll-mt-24">
-        <h2 className="text-xl font-semibold text-brand-navy">Powered By BayConnect</h2>
+        <h2 className="text-xl font-semibold text-brand-navy">6. Powered By BayConnect</h2>
         <p className="mt-3 text-slate-600">
           BSD is operated under BayConnect, a community ecosystem dedicated to connecting, celebrating, and
           empowering the Bangladeshi community in Swansea Bay.
         </p>
         <p className="mt-2 font-medium text-slate-800">BayConnect — Connect. Celebrate. Empower.</p>
+      </section>
+
+      <section className="mt-10 rounded-lg bg-slate-50 p-6">
+        <h2 className="text-xl font-semibold text-brand-navy">One-Paragraph Summary</h2>
+        <p className="mt-3 text-slate-600">
+          BSD – Bangladeshi Business & Service Directory (Swansea Bay Edition) is a trusted community initiative
+          designed to connect local Bangladeshi businesses, service providers, and independent professionals under one
+          unified platform. Free until 30 June 2027, BSD aims to make essential services easy to find and accessible for
+          everyone. Operated under the BayConnect ecosystem, BSD supports economic growth, community visibility, and
+          long-term digital development, with plans for premium services, annual printed editions, and future
+          expansion.
+        </p>
       </section>
 
       <div className="mt-12 text-center">

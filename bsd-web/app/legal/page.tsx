@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ArrowLink } from "@/components/ArrowLink";
+import { DocSections, type DocSection } from "@/components/DocSections";
 
 export const metadata: Metadata = {
   title: "Legal Disclaimer",
@@ -7,7 +8,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/legal" },
 };
 
-const SECTIONS = [
+// Verbatim from the client's "BSD – Legal Disclaimer" document, including its lists. The only wording changes are the
+// CLIENT-REVIEW items marked below.
+const SECTIONS: DocSection[] = [
   {
     title: "1. Information Accuracy",
     body: [
@@ -25,7 +28,20 @@ const SECTIONS = [
   {
     title: "3. No Liability",
     body: [
-      "BSD and BayConnect shall not be held responsible or liable for: business transactions, service quality, miscommunication, disputes, delays, damages, financial loss, personal loss, or any issues arising between users and listed businesses or individuals.",
+      "BSD and BayConnect shall not be held responsible or liable for:",
+      {
+        list: [
+          "Business transactions",
+          "Service quality",
+          "Miscommunication",
+          "Disputes",
+          "Delays",
+          "Damages",
+          "Financial loss",
+          "Personal loss",
+          "Any issues arising between users and listed businesses or individuals",
+        ],
+      },
       "All interactions are strictly between the user and the business/service provider.",
     ],
   },
@@ -48,22 +64,34 @@ const SECTIONS = [
     title: "6. Data & Privacy",
     body: [
       "Information submitted to BSD is used exclusively for directory purposes. BSD does not sell, trade, or share user-submitted data with third parties.",
-      "Business owners or service providers may request correction, update, temporary suspension, or permanent removal of their listing at any time.",
+      "Business owners or service providers may request:",
+      { list: ["Correction", "Update", "Temporary suspension", "Permanent removal"] },
+      "of their listing at any time.",
     ],
   },
   {
     title: "7. Free Community Initiative",
     body: [
-      // CLIENT-REVIEW (L3): "no sponsorships" became "no website sponsorships" so this stays consistent with print edition
+      "BSD is currently operated as a free community initiative until 30 June 2027. During this period:",
+      // CLIENT-REVIEW (L3): "No sponsorships" became "No website sponsorships" so this stays consistent with print edition
       // sponsorship being allowed.
-      "BSD is currently operated as a free community initiative until 30 June 2027. During this period: no listing fees, no website sponsorships, no advertisements, no paid promotions are accepted.",
+      { list: ["No listing fees", "No website sponsorships", "No advertisements", "No paid promotions"] },
+      "are accepted.",
       "Future premium services may be introduced only after necessary preparations and formalities.",
     ],
   },
   {
     title: "8. Right to Modify or Remove Listings",
     body: [
-      "BSD reserves the right to edit formatting for consistency, remove duplicate or inappropriate listings, and decline submissions that do not meet community guidelines, all without prior notice.",
+      "BSD reserves the right to:",
+      {
+        list: [
+          "Edit formatting for consistency",
+          "Remove duplicate or inappropriate listings",
+          "Decline submissions that do not meet community guidelines",
+        ],
+      },
+      "without prior notice.",
     ],
   },
   {
@@ -84,18 +112,7 @@ export default function LegalPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">Legal Disclaimer</h1>
-      <div className="mt-8 space-y-8">
-        {SECTIONS.map((s) => (
-          <section key={s.title}>
-            <h2 className="text-lg font-semibold text-brand-navy">{s.title}</h2>
-            {s.body.map((p, i) => (
-              <p key={i} className="mt-2 text-slate-600">
-                {p}
-              </p>
-            ))}
-          </section>
-        ))}
-      </div>
+      <DocSections sections={SECTIONS} />
       <div className="mt-12 text-center">
         <ArrowLink href="/privacy" className="justify-center">
           Read the Privacy Policy

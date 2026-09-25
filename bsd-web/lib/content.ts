@@ -372,91 +372,166 @@ export const OPERATING_HOURS = [
 ];
 
 // ---------------------------------------------------------------------------
-// FAQ page (v1 doc, with the v2 edits noted inline)
+// FAQ page (v1 doc, with the v2 edits noted inline). Answers keep the document's own structure: a string is a
+// paragraph, { list } a bulleted list, { links } the document's linked lines.
 // ---------------------------------------------------------------------------
 
-export const FAQ_ITEMS: { question: string; answer: string }[] = [
+export type FaqBlock = string | { list: string[] } | { links: { label: string; href: string }[] };
+
+export const FAQ_ITEMS: { question: string; answer: FaqBlock[] }[] = [
   {
     question: "What is BSD?",
-    answer:
+    answer: [
       "BSD (Bangladeshi Business & Service Directory – Swansea Bay Edition) is a free community directory that lists Bangladeshi businesses, service providers, and independent professionals across the Swansea Bay region.",
+    ],
   },
   {
     question: "Is BSD free?",
-    answer:
+    answer: [
       // CLIENT-REVIEW (L3): "no sponsorships" became "no website sponsorships".
       "Yes. BSD is completely free until 30 June 2027. There are no listing fees, no website sponsorships, and no advertisements during this period.",
+    ],
   },
   {
     question: "What happens after 30 June 2027?",
-    answer:
-      "BSD will continue operating, but may introduce optional premium features such as featured listings, sponsored categories, enhanced visibility, digital tools, and mobile app features. Basic listings will remain free, and any future changes will be announced publicly on bsd.wales.",
+    answer: [
+      "BSD will continue operating, but may introduce optional premium features such as:",
+      { list: ["Featured listings", "Sponsored categories", "Enhanced visibility", "Digital tools", "Mobile app features"] },
+      "Basic listings will remain free, and any future changes will be announced publicly on bsd.wales.",
+    ],
   },
   {
     question: "Who operates BSD?",
-    answer: "BSD is operated under BayConnect, a community ecosystem serving the Bangladeshi community in Swansea Bay.",
+    answer: ["BSD is operated under BayConnect, a community ecosystem serving the Bangladeshi community in Swansea Bay."],
   },
   {
     question: "Does BSD have volunteers?",
-    answer:
-      "Yes. BSD is supported by community volunteers who help with data collection, listing updates, category management, community communication, and print directory preparation. If you want to volunteer, contact us through the BSD Contact Page.",
+    answer: [
+      "Yes. BSD is supported by community volunteers who help with:",
+      {
+        list: [
+          "Data collection",
+          "Listing updates",
+          "Category management",
+          "Community communication",
+          "Print directory preparation",
+        ],
+      },
+      "If you want to volunteer, contact us through the BSD Contact Page.",
+    ],
   },
   {
     question: "What areas does BSD cover?",
-    // v2 coverage wording (Regional Coverage Factsheet). The closing sentence is the v1 wording.
-    answer:
-      "BSD covers the Swansea Bay region and South West Wales across postcodes SA1 to SA34, organised into three zones. Zone 1 is Greater Swansea & Gower (SA1–SA7), Zone 2 is Neath Port Talbot & Swansea Valley (SA8–SA13), and Zone 3 is Carmarthenshire & West Wales (SA14–SA20 and SA31–SA34). Nearby areas may be added as the directory expands.",
+    // v2 coverage wording (Regional Coverage Factsheet) in place of the v1 town list. The closing sentence is the v1 wording.
+    answer: [
+      "BSD covers the Swansea Bay region and South West Wales across postcodes SA1 to SA34, organised into three zones:",
+      {
+        list: [
+          "Zone 1: Greater Swansea & Gower (SA1–SA7)",
+          "Zone 2: Neath Port Talbot & Swansea Valley (SA8–SA13)",
+          "Zone 3: Carmarthenshire & West Wales (SA14–SA20, SA31–SA34)",
+        ],
+      },
+      "Nearby areas may be added as the directory expands.",
+    ],
   },
   {
     question: "How can I submit my business or service?",
-    answer: "You can submit your listing through the official submission form.",
+    answer: [
+      "You can submit your listing through the official submission form:",
+      { links: [{ label: "Submit Your Listing", href: "/submit" }] },
+    ],
   },
   {
     question: "Can I update my listing later?",
-    answer: "Yes. You can request updates anytime. Updates are usually processed within 3–7 working days.",
+    answer: [
+      "Yes. You can request updates anytime:",
+      // Update requests are made from the listing's own page (the "Request an update" form) or through support@, both
+      // explained on the Contact page.
+      { links: [{ label: "Request Listing Update", href: "/contact#submit-or-update" }] },
+      "Updates are usually processed within 3–7 working days.",
+    ],
   },
   {
     question: "Can I remove my listing?",
-    answer:
+    answer: [
       "Yes. You may request removal at any time. Emergency removals (incorrect or sensitive information) are handled within 24 hours.",
+    ],
   },
   {
     question: "Does BSD verify businesses?",
-    answer:
+    answer: [
       // CLIENT-REVIEW (L1): v1 answer was "No. BSD does not verify or guarantee the accuracy of any business
       // information. All listings are voluntarily submitted by business owners or service providers."
       // Reworded minimally to fit the v2 Community Verified badge.
       "Community Verified confirms contact and operating details only; it is not an endorsement or guarantee of service quality. BSD does not otherwise verify or guarantee the accuracy of business information. All listings are voluntarily submitted by business owners or service providers.",
+    ],
   },
   {
     question: "Does BSD endorse listed businesses?",
-    answer: "No. Inclusion in BSD does not imply endorsement, recommendation, or partnership.",
+    answer: ["No. Inclusion in BSD does not imply endorsement, recommendation, or partnership."],
   },
   {
     question: "What types of businesses and services are included?",
-    answer:
-      "Shops, restaurants, takeaways, home-based services, professional services, and independent skilled individuals (electricians, plumbers, tutors, beauticians, etc.).",
+    answer: [
+      "BSD includes:",
+      {
+        list: [
+          "Shops",
+          "Restaurants",
+          "Takeaways",
+          "Home-based services",
+          "Professional services",
+          "Independent skilled individuals (electricians, plumbers, tutors, beauticians, etc.)",
+        ],
+      },
+    ],
   },
   {
     question: "What are Independent Professionals?",
-    answer:
+    answer: [
       "Independent Professionals are skilled individuals who provide services without a physical office. BSD includes a dedicated category for them to ensure equal visibility.",
+    ],
   },
   {
     question: "How is my data used?",
-    answer:
+    answer: [
       "Your submitted information is used only for directory publication. BSD does not sell, share, or trade your data. You may request updates or removal at any time.",
+    ],
   },
   {
     question: "Will BSD introduce premium services?",
-    answer:
+    answer: [
       "Possibly — but not before 30 June 2027. Premium listings, featured businesses, and sponsored categories may be introduced after essential preparations and formalities.",
+    ],
   },
   {
     question: "What is the official BSD website?",
-    answer: "The official website is: bsd.wales",
+    answer: ["The official website is: bsd.wales"],
+  },
+  {
+    question: "How can I contact BSD?",
+    answer: ["Visit the contact page:", { links: [{ label: "BSD Contact Page", href: "/contact" }] }],
+  },
+  {
+    question: "Where can I read the Legal Disclaimer and Privacy Policy?",
+    answer: [
+      {
+        links: [
+          { label: "Legal Disclaimer", href: "/legal" },
+          { label: "Privacy Policy", href: "/privacy" },
+        ],
+      },
+    ],
   },
 ];
+
+/** The answer as plain text, for the FAQPage structured data. */
+export function faqAnswerText(answer: FaqBlock[]): string {
+  return answer
+    .map((b) => (typeof b === "string" ? b : "list" in b ? b.list.join("; ") + "." : b.links.map((l) => l.label).join(", ")))
+    .join(" ");
+}
 
 // ---------------------------------------------------------------------------
 // Homepage FAQ accordion (Homepage Full Body Section, answers verbatim)

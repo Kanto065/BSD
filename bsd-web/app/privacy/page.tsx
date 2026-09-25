@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { DocSections, docLink, type DocSection } from "@/components/DocSections";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -6,7 +8,15 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-const SECTIONS = [
+const contactPage = (
+  <Link href="/contact" className={docLink}>
+    BSD Contact Page
+  </Link>
+);
+
+// Verbatim from the client's "BSD – Privacy Policy" document, including its lists. The only wording changes are the
+// CLIENT-REVIEW items marked below.
+const SECTIONS: DocSection[] = [
   {
     title: "1. Introduction",
     body: [
@@ -17,46 +27,96 @@ const SECTIONS = [
   {
     title: "2. Data We Collect",
     body: [
-      "When you submit your business or service to BSD, we may collect the following information: Business / Service Name, Category, Owner / Provider Name, Phone Number, Email Address (optional), Website / Social Media Links (optional), Address or Coverage Area, Description of Services, Photos or Logo (optional), and additional notes provided voluntarily.",
+      "When you submit your business or service to BSD, we may collect the following information:",
+      {
+        list: [
+          "Business / Service Name",
+          "Category",
+          "Owner / Provider Name",
+          "Phone Number",
+          "Email Address (optional)",
+          "Website / Social Media Links (optional)",
+          "Address or Coverage Area",
+          "Description of Services",
+          "Photos or Logo (optional)",
+          "Additional notes provided voluntarily",
+        ],
+      },
       "We do not collect sensitive personal data.",
     ],
   },
   {
     title: "3. How We Use Your Data",
     body: [
-      "Your submitted information is used exclusively for the following purposes: publishing your listing in the BSD directory (print + digital), helping community members find your business or service, improving directory accuracy and coverage, contacting you for updates or corrections (if needed), and preparing future digital platforms or mobile apps.",
+      "Your submitted information is used exclusively for the following purposes:",
+      {
+        list: [
+          "Publishing your listing in the BSD directory (print + digital)",
+          "Helping community members find your business or service",
+          "Improving directory accuracy and coverage",
+          "Contacting you for updates or corrections (if needed)",
+          "Preparing future digital platforms or mobile apps",
+        ],
+      },
       "We do not use your data for marketing, advertising, or commercial purposes.",
     ],
   },
   {
     title: "4. Legal Basis for Processing (GDPR)",
     body: [
-      "BSD processes your data under three GDPR principles. You give consent by voluntarily submitting your information and agreeing to its publication. BSD relies on legitimate interest in supporting community access to local Bangladeshi businesses and services. And BSD maintains transparency by keeping you informed about how your data is used and stored.",
+      "BSD processes your data under the following GDPR principles:",
+      {
+        list: [
+          "Consent: You voluntarily submit your information and agree to its publication.",
+          "Legitimate Interest: BSD aims to support community access to local Bangladeshi businesses and services.",
+          "Transparency: You are informed about how your data is used and stored.",
+        ],
+      },
     ],
   },
   {
     title: "5. Data Storage & Protection",
     body: [
-      "Your data is stored securely within BSD's internal systems. Access is restricted to authorised administrators only. We do not share, sell, trade, or transfer your data to third parties. We take reasonable measures to prevent unauthorised access, alteration, or misuse.",
+      {
+        list: [
+          "Your data is stored securely within BSD’s internal systems.",
+          "Access is restricted to authorised administrators only.",
+          "We do not share, sell, trade, or transfer your data to third parties.",
+          "We take reasonable measures to prevent unauthorised access, alteration, or misuse.",
+        ],
+      },
     ],
   },
   {
     title: "6. Data Sharing",
     body: [
-      "BSD does not share your data with advertisers, sponsors, external companies, or third-party marketing platforms. Your data is used only for directory publication and community benefit.",
+      "BSD does not share your data with:",
+      { list: ["Advertisers", "Sponsors", "External companies", "Third-party marketing platforms"] },
+      "Your data is used only for directory publication and community benefit.",
     ],
   },
   {
     title: "7. Your Rights (GDPR)",
     body: [
-      "You have the right to: access your listing, request correction of inaccurate information, request removal of your listing, request updates at any time, withdraw consent for publication, and request temporary suspension of your listing.",
-      "To exercise these rights, contact us via the BSD Contact Page.",
+      "You have the right to:",
+      {
+        list: [
+          "Access your listing",
+          "Request correction of inaccurate information",
+          "Request removal of your listing",
+          "Request updates at any time",
+          "Withdraw consent for publication",
+          "Request temporary suspension of your listing",
+        ],
+      },
+      { node: <p>To exercise these rights, contact us via the {contactPage}.</p> },
     ],
   },
   {
     title: "8. Removal of Listings",
     body: [
-      "You may request removal of your listing at any time. BSD will remove the listing within 3–7 working days. Emergency corrections (incorrect or sensitive information) will be addressed within 24 hours.",
+      "You may request removal of your listing at any time. BSD will remove the listing within 3–7 working days.",
+      "Emergency corrections (incorrect or sensitive information) will be addressed within 24 hours.",
     ],
   },
   {
@@ -66,7 +126,7 @@ const SECTIONS = [
     ],
   },
   {
-    title: "10. Children's Privacy",
+    title: "10. Children’s Privacy",
     body: [
       "BSD does not knowingly collect or publish information from individuals under the age of 16. All submissions must be made by adults or authorised representatives.",
     ],
@@ -74,9 +134,11 @@ const SECTIONS = [
   {
     title: "11. Free Community Initiative",
     body: [
-      // CLIENT-REVIEW (L3): "no sponsorships" became "no website sponsorships" so this stays consistent with print edition
+      "BSD operates as a free community initiative until 30 June 2027. During this period:",
+      // CLIENT-REVIEW (L3): "No sponsorships" became "No website sponsorships" so this stays consistent with print edition
       // sponsorship being allowed.
-      "BSD operates as a free community initiative until 30 June 2027. During this period: no listing fees, no website sponsorships, no advertisements, no paid promotions are accepted.",
+      { list: ["No listing fees", "No website sponsorships", "No advertisements", "No paid promotions"] },
+      "are accepted.",
       "Your data will never be used for commercial purposes during this period.",
     ],
   },
@@ -88,8 +150,25 @@ const SECTIONS = [
   },
   {
     title: "13. Contact Information",
-    // CLIENT-REVIEW (L4): v1 gave privacy@bsd.wales. The v2 mailbox set uses compliance@bsd.wales for privacy and GDPR.
-    body: ["For privacy-related questions or requests, email compliance@bsd.wales or visit the BSD Contact Page."],
+    body: [
+      "For privacy-related questions or requests:",
+      {
+        node: (
+          <>
+            {/* CLIENT-REVIEW (L4): v1 gave privacy@bsd.wales. The v2 mailbox set uses compliance@bsd.wales for privacy and GDPR. */}
+            <p>
+              <span className="font-semibold text-slate-800">Email:</span>{" "}
+              <a href="mailto:compliance@bsd.wales" className={docLink}>
+                compliance@bsd.wales
+              </a>
+            </p>
+            <p className="mt-1">
+              <span className="font-semibold text-slate-800">Contact Page:</span> {contactPage}
+            </p>
+          </>
+        ),
+      },
+    ],
   },
 ];
 
@@ -97,18 +176,7 @@ export default function PrivacyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">Privacy Policy</h1>
-      <div className="mt-8 space-y-8">
-        {SECTIONS.map((s) => (
-          <section key={s.title}>
-            <h2 className="text-lg font-semibold text-brand-navy">{s.title}</h2>
-            {s.body.map((p, i) => (
-              <p key={i} className="mt-2 text-slate-600">
-                {p}
-              </p>
-            ))}
-          </section>
-        ))}
-      </div>
+      <DocSections sections={SECTIONS} />
     </div>
   );
 }

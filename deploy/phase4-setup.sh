@@ -103,7 +103,7 @@ echo "== verifying isolation"
 docker exec -i -e BSD_SECRET="$SECRET" platform-minio-1 sh -s <<'IN_MINIO'
 set -u
 mc alias set -- bsdcheck http://localhost:9000 bsd-api "$BSD_SECRET" >/dev/null
-trap 'mc rm bsdcheck/bsd-uploads/public/_setup-check.txt >/dev/null 2>&1; mc alias remove bsdcheck >/dev/null 2>&1 || true' EXIT
+trap 'mc alias remove bsdcheck >/dev/null 2>&1 || true' EXIT
 echo ok | mc pipe bsdcheck/bsd-uploads/public/_setup-check.txt >/dev/null && echo "PASS bsd-api can write its bucket" || echo "FAIL bsd-api cannot write"
 if mc ls bsdcheck/uploads >/dev/null 2>&1; then echo "FAIL bsd-api can see the platform bucket"; else echo "PASS bsd-api cannot see the platform bucket"; fi
 IN_MINIO
@@ -114,6 +114,8 @@ if docker exec platform-caddy-1 sh -c 'wget -qO- "http://minio:9000/bsd-uploads/
 else
   echo "PASS the bucket cannot be listed anonymously"
 fi
+# The check file is removed only now, after the anonymous read above has used it.
+docker exec -i -e BSD_SECRET="$SECRET" platform-minio-1 sh -c 'mc alias set -- bsdcheck http://localhost:9000 bsd-api "$BSD_SECRET" >/dev/null 2>&1; mc rm bsdcheck/bsd-uploads/public/_setup-check.txt >/dev/null 2>&1; mc alias remove bsdcheck >/dev/null 2>&1; true'
 REMOTE
     echo "== installing the updated /opt/bsd/deploy.sh"
     ssh_vps 'cp /opt/bsd/deploy.sh /opt/bsd/deploy.sh.bak-phase4'

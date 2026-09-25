@@ -25,13 +25,28 @@ export const VERIFICATION_BADGES: Record<
   },
 };
 
-export default function VerificationBadge({ status, className = "" }: { status: VerificationStatus; className?: string }) {
+// "sm" is the compact pill used on listing cards; "md" is for the business page header.
+const SIZES = {
+  sm: { pill: "gap-1 px-2 py-0.5 text-xs", icon: "h-3.5 w-3.5" },
+  md: { pill: "gap-1.5 px-3 py-1 text-sm", icon: "h-4 w-4" },
+};
+
+export default function VerificationBadge({
+  status,
+  size = "md",
+  className = "",
+}: {
+  status: VerificationStatus;
+  size?: keyof typeof SIZES;
+  className?: string;
+}) {
   const { label, Icon, className: tone } = VERIFICATION_BADGES[status];
+  const s = SIZES[size];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ring-1 ring-inset ${tone} ${className}`}
+      className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full font-semibold ring-1 ring-inset ${s.pill} ${tone} ${className}`}
     >
-      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+      <Icon className={`${s.icon} shrink-0`} aria-hidden="true" />
       {label}
     </span>
   );

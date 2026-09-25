@@ -191,7 +191,7 @@ export default function ListingDetailPage() {
               .filter((s) => s !== l.verificationStatus)
               .map((s) => (
                 <button key={s} type="button" disabled={busy} onClick={() => act(`/listings/${l.id}/verification`, "PATCH", { status: s })} className={`${buttonClass} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`}>
-                  Set: <VerificationBadge status={s} className="!px-2 !py-0 !text-xs" />
+                  Set: <VerificationBadge status={s} size="sm" />
                 </button>
               ))}
           </div>

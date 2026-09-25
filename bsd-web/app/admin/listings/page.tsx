@@ -99,7 +99,7 @@ function Listings() {
                   <StatusPill status={r.status} />
                   {r.status === "APPROVED" && (
                     <div>
-                      <VerificationBadge status={r.verificationStatus} className="!px-2 !py-0.5 !text-xs" />
+                      <VerificationBadge status={r.verificationStatus} size="sm" />
                     </div>
                   )}
                 </td>

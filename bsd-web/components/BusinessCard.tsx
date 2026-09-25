@@ -19,7 +19,7 @@ export default function BusinessCard({ business: b }: { business: PublicListItem
           // eslint-disable-next-line @next/next/no-img-element
           <img src={b.logoUrl} alt="" loading="lazy" className="h-12 w-12 rounded-md border border-slate-200 object-contain" />
         ) : null}
-        <VerificationBadge status={b.verificationStatus} className={b.logoUrl ? "ml-auto" : ""} />
+        <VerificationBadge status={b.verificationStatus} size="sm" className={b.logoUrl ? "ml-auto" : ""} />
       </div>
       <h3 className="mt-3 text-lg font-bold text-brand-navy">
         <Link href={`/businesses/${b.slug}`} className="hover:text-brand-blue hover:underline">

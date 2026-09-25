@@ -7,33 +7,37 @@
 
 import { slugify } from "../src/common/slug.js";
 
-export type SeedCategory = { name: string; subcategories: string[]; requiresOwnerName?: boolean };
+export type SeedCategory = { name: string; icon?: string; subcategories: string[]; requiresOwnerName?: boolean };
 
 export const CATEGORIES: SeedCategory[] = [
-  { name: "Restaurants & Takeaways", subcategories: ["Bangladeshi Restaurants", "Curry Houses", "Bengali/Indian Takeaways"] },
-  { name: "Legal & Financial", subcategories: ["Accountants", "Legal Support", "Immigration Advisors", "Mortgage Advisors"] },
-  { name: "Health & Care", subcategories: ["Physiotherapists", "Mental Wellbeing Support"] },
-  { name: "Trades & Contractors", subcategories: ["Handyman Services", "Home Maintenance"] },
+  { name: "Restaurants & Takeaways", icon: "utensils-crossed", subcategories: ["Bangladeshi Restaurants", "Curry Houses", "Bengali/Indian Takeaways"] },
+  { name: "Legal & Financial", icon: "scale", subcategories: ["Accountants", "Legal Support", "Immigration Advisors", "Mortgage Advisors"] },
+  { name: "Health & Care", icon: "stethoscope", subcategories: ["Physiotherapists", "Mental Wellbeing Support"] },
+  { name: "Trades & Contractors", icon: "hammer", subcategories: ["Handyman Services", "Home Maintenance"] },
   {
     name: "Groceries & Halal",
+    icon: "shopping-cart",
     subcategories: ["Asian Grocery", "Halal Meat Shops", "Bangladeshi Spices & Essentials", "Cash & Carry Stores"],
   },
-  { name: "Taxi & Private Hire", subcategories: ["Private Hire Drivers", "Taxi Companies", "Airport Transfer Services"] },
-  { name: "Beauty & Lifestyle", subcategories: ["Makeup Artists", "Henna Artists", "Bridal Services", "Beauty Consultants"] },
-  { name: "Community & Faith", subcategories: ["Mosques", "Community Groups", "Cultural Organisations"] },
-  { name: "Business Consultants", subcategories: [] },
+  { name: "Taxi & Private Hire", icon: "car-front", subcategories: ["Private Hire Drivers", "Taxi Companies", "Airport Transfer Services"] },
+  { name: "Beauty & Lifestyle", icon: "sparkles", subcategories: ["Makeup Artists", "Henna Artists", "Bridal Services", "Beauty Consultants"] },
+  { name: "Community & Faith", icon: "landmark", subcategories: ["Mosques", "Community Groups", "Cultural Organisations"] },
+  { name: "Business Consultants", icon: "building-2", subcategories: [] },
   {
     name: "Mobile & Tech Repair",
+    icon: "smartphone",
     subcategories: ["Mobile Repair", "Laptop Repair", "Accessories Shops", "Tech Support Services"],
   },
   {
     name: "Clothing & Cultural Shops",
+    icon: "shirt",
     subcategories: ["Asian Clothing", "Saree & Panjabi Stores", "Wedding Outfits", "Cultural Accessories"],
   },
-  { name: "Home-Based Food Services", subcategories: ["Home Chefs", "Catering Services", "Tiffin Services", "Event Food Supply"] },
-  { name: "Electrician / Plumber", subcategories: ["Electricians", "Plumbers"] },
+  { name: "Home-Based Food Services", icon: "chef-hat", subcategories: ["Home Chefs", "Catering Services", "Tiffin Services", "Event Food Supply"] },
+  { name: "Electrician / Plumber", icon: "zap", subcategories: ["Electricians", "Plumbers"] },
   {
     name: "Independent Professionals",
+    icon: "briefcase",
     requiresOwnerName: true,
     subcategories: [
       "Freelance Electricians",
@@ -56,13 +60,14 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     name: "Sweet Shops & Bakeries",
+    icon: "cookie",
     subcategories: ["Bangladeshi Sweets", "Cakes & Bakery Items", "Event Sweets & Catering", "Sweet Shops & Dessert Places"],
   },
-  { name: "Car Services", subcategories: ["Car Repair", "MOT Centres", "Car Wash", "Tyre Shops"] },
-  { name: "Tutors & Education", subcategories: ["Private Tutors", "Academic Coaching", "Quran/Arabic Teachers", "Language Classes"] },
-  { name: "Property & Housing Services", subcategories: ["Estate Agents", "Letting Services", "Housing Support"] },
-  { name: "Fitness & Wellbeing", subcategories: ["Massage Therapists", "Fitness Trainers"] },
-  { name: "Others / Miscellaneous", subcategories: ["Any service not listed above"] },
+  { name: "Car Services", icon: "wrench", subcategories: ["Car Repair", "MOT Centres", "Car Wash", "Tyre Shops"] },
+  { name: "Tutors & Education", icon: "graduation-cap", subcategories: ["Private Tutors", "Academic Coaching", "Quran/Arabic Teachers", "Language Classes"] },
+  { name: "Property & Housing Services", icon: "house", subcategories: ["Estate Agents", "Letting Services", "Housing Support"] },
+  { name: "Fitness & Wellbeing", icon: "dumbbell", subcategories: ["Massage Therapists", "Fitness Trainers"] },
+  { name: "Others / Miscellaneous", icon: "package", subcategories: ["Any service not listed above"] },
 ];
 
 // Categories that were only renamed in v2. The seed renames the existing row in place, so any listings

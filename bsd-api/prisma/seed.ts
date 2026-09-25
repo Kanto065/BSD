@@ -16,7 +16,22 @@ import {
 
 type Tx = Prisma.TransactionClient;
 
+// Categories are managed in the admin panel once the site is set up. The approved list is written only into an empty
+// database, or when SEED_TAXONOMY=reset is set on purpose. Otherwise the seed only fills in missing icons, so running it
+// again can never undo an admin's changes.
 async function seedCategories(tx: Tx) {
+  const existing = await tx.category.count();
+  if (existing > 0 && process.env.SEED_TAXONOMY !== "reset") {
+    for (const cat of CATEGORIES) {
+      if (cat.icon) await tx.category.updateMany({ where: { name: cat.name, icon: null }, data: { icon: cat.icon } });
+    }
+    console.log("categories already set up: kept as they are (missing icons filled in)");
+    return;
+  }
+  await resetCategories(tx);
+}
+
+async function resetCategories(tx: Tx) {
   // 1. Straight renames keep the same row, so attached listings keep their link.
   for (const [from, to] of Object.entries(CATEGORY_RENAMES)) {
     const old = await tx.category.findUnique({ where: { name: from } });
@@ -31,8 +46,9 @@ async function seedCategories(tx: Tx) {
   for (const [index, cat] of CATEGORIES.entries()) {
     const category = await tx.category.upsert({
       where: { name: cat.name },
-      update: { slug: categorySlug(cat.name), sortOrder: index, requiresOwnerName: cat.requiresOwnerName ?? false },
+      update: { slug: categorySlug(cat.name), sortOrder: index, requiresOwnerName: cat.requiresOwnerName ?? false, icon: cat.icon ?? null },
       create: {
+        icon: cat.icon ?? null,
         name: cat.name,
         slug: categorySlug(cat.name),
         sortOrder: index,

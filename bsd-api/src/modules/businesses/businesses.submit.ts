@@ -199,7 +199,7 @@ export async function saveSubmission(
     else subcategoryId = sub.id;
   }
   if (category?.requiresOwnerName && !s.ownerName) {
-    errors.ownerName = "Independent Professionals must give the owner or service provider name.";
+    errors.ownerName = "This category needs the owner or service provider name.";
   }
 
   // The postcode decides the zone. The submitter never picks it.

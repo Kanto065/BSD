@@ -24,6 +24,8 @@ export class ApiError extends Error {
 }
 
 type Session = {
+  /** The API address, for public reads such as the category list. */
+  apiBase: string;
   status: "loading" | "signed-in" | "signed-out";
   admin: SessionAdmin | null;
   signIn: (email: string, password: string) => Promise<void>;
@@ -127,6 +129,6 @@ export function SessionProvider({ apiBase, children }: { apiBase: string; childr
     endLocally();
   }, [apiBase, endLocally]);
 
-  const value = useMemo<Session>(() => ({ status, admin, signIn, signOut, api, adopt }), [status, admin, signIn, signOut, api, adopt]);
+  const value = useMemo<Session>(() => ({ apiBase, status, admin, signIn, signOut, api, adopt }), [apiBase, status, admin, signIn, signOut, api, adopt]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

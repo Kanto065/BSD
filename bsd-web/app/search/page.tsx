@@ -3,7 +3,8 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, MapPin, Plus, Search } from "lucide-react";
 import { ListingGrid } from "@/components/BusinessCard";
 import { searchListings } from "@/lib/api";
-import { ALL_ZONES_LABEL, CATEGORIES, ZONES, findCategory, findZone, zoneLabel } from "@/lib/content";
+import { ALL_ZONES_LABEL, ZONES, findZone, zoneLabel } from "@/lib/content";
+import { getCategories, type Taxon } from "@/lib/taxonomy";
 
 export const metadata: Metadata = {
   title: "Search the Directory",
@@ -25,7 +26,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
   const sp = await searchParams;
   const q = one(sp.q);
   const zone = findZone(one(sp.zone));
-  const category = findCategory(one(sp.category));
+  const categories = await getCategories();
+  const category = categories.find((c) => c.slug === one(sp.category));
   const pageNumber = Math.min(1000, Math.max(1, Number.parseInt(one(sp.page), 10) || 1));
   const needle = q.toLowerCase();
 
@@ -41,15 +43,15 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     return s ? `/search?${s}` : "/search";
   };
 
-  const pool = category ? [category] : CATEGORIES;
+  const pool = category ? [category] : categories;
   const matches = needle
     ? pool
         .map((c) => {
           const nameHit = c.name.toLowerCase().includes(needle);
-          const subs = c.subcategories.filter((s) => s.toLowerCase().includes(needle));
+          const subs = c.subcategories.map((s) => s.name).filter((s) => s.toLowerCase().includes(needle));
           return nameHit || subs.length > 0 ? { category: c, subs: nameHit ? [] : subs } : null;
         })
-        .filter((m): m is { category: (typeof CATEGORIES)[number]; subs: string[] } => m !== null)
+        .filter((m): m is { category: Taxon; subs: string[] } => m !== null)
     : pool.map((c) => ({ category: c, subs: [] as string[] }));
 
   const hasFilter = Boolean(q || zone || category);
@@ -102,7 +104,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
             className="w-full rounded-md border border-slate-300 bg-white px-3 py-3 text-sm focus:border-brand-blue focus:outline-none"
           >
             <option value="">All categories</option>
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <option key={c.slug} value={c.slug}>
                 {c.name}
               </option>

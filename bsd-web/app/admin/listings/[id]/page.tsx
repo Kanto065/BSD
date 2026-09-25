@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ExternalLink, Trash2 } from "lucide-react";
 import VerificationBadge, { type VerificationStatus } from "@/components/VerificationBadge";
 import { ApiError, atLeast, useSession } from "@/lib/admin-session";
 import { Card, ErrorNote, StatusPill, buttonClass, fmtDate, inputClass, useAdminData } from "@/components/admin/ui";
-import { CATEGORIES, ZONES } from "@/lib/content";
-import { localitySlug, subcategorySlug } from "@/lib/slug";
+import { ZONES } from "@/lib/content";
+import { localitySlug } from "@/lib/slug";
+import type { CategoryOption } from "@/lib/taxonomy";
 
 type NameSlug = { name: string; slug: string };
 type Listing = {
@@ -301,7 +302,14 @@ function HistoryDetails({ details }: { details: unknown }) {
 }
 
 function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => void }) {
-  const { api } = useSession();
+  const { api, apiBase } = useSession();
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  useEffect(() => {
+    fetch(`${apiBase}/categories`)
+      .then((r) => r.json())
+      .then((d: { categories: CategoryOption[] }) => setCategories(d.categories))
+      .catch(() => setCategories([]));
+  }, [apiBase]);
   const [f, setF] = useState({
     name: l.name,
     category: l.category.slug,
@@ -324,7 +332,7 @@ function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => vo
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
-  const category = CATEGORIES.find((c) => c.slug === f.category);
+  const category = categories.find((c) => c.slug === f.category);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
   const toggle = (list: string[], v: string, fn: (x: string[]) => void) => fn(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
@@ -390,7 +398,8 @@ function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => vo
               Category
             </label>
             <select id="e-category" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value, subcategory: "" })} className={inputClass}>
-              {CATEGORIES.map((c) => (
+              {categories.length === 0 && <option value={f.category}>{l.category.name}</option>}
+              {categories.map((c) => (
                 <option key={c.slug} value={c.slug}>
                   {c.name}
                 </option>
@@ -404,8 +413,8 @@ function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => vo
             <select id="e-subcategory" value={f.subcategory} onChange={set("subcategory")} className={inputClass}>
               <option value="">None</option>
               {category?.subcategories.map((s) => (
-                <option key={s} value={subcategorySlug(category.name, s)}>
-                  {s}
+                <option key={s.slug} value={s.slug}>
+                  {s.name}
                 </option>
               ))}
             </select>

@@ -5,7 +5,8 @@ import VerificationBadge from "@/components/VerificationBadge";
 import { ArrowLink } from "@/components/ArrowLink";
 import BusinessCard from "@/components/BusinessCard";
 import { featured } from "@/lib/api";
-import { ALL_ZONES_LABEL, HOME_FAQ, POPULAR_CATEGORIES, SITE_DESCRIPTION, ZONES, zoneLabel } from "@/lib/content";
+import { ALL_ZONES_LABEL, HOME_FAQ, SITE_DESCRIPTION, ZONES, zoneLabel } from "@/lib/content";
+import { HOMEPAGE_TILES, getCategories } from "@/lib/taxonomy";
 
 // The page is prerendered, then refreshed from the API at most once a minute. The API is never called while the
 // site is being built (see lib/api.ts).
@@ -66,7 +67,8 @@ function StepList({ title, steps }: { title: string; steps: Step[] }) {
 }
 
 export default async function HomePage() {
-  const featuredResult = await featured(8);
+  const [featuredResult, categories] = await Promise.all([featured(8), getCategories()]);
+  const popular = categories.slice(0, HOMEPAGE_TILES);
   const featuredItems = featuredResult.ok ? featuredResult.data.items : [];
 
   return (
@@ -166,7 +168,7 @@ export default async function HomePage() {
           <p className="mt-2 text-slate-600">Find Verified Services Across South West Wales</p>
         </div>
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-          {POPULAR_CATEGORIES.map((c) => (
+          {popular.map((c) => (
             <Link
               key={c.slug}
               href={`/categories/${c.slug}`}

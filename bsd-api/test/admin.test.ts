@@ -418,3 +418,84 @@ describe("claims and messages", () => {
     expect((await prisma.contactMessage.findUniqueOrThrow({ where: { id: m.id } })).status).toBe("RESOLVED");
   });
 });
+
+describe("categories", () => {
+  const cat = (token: string) => ({
+    list: () => call("GET", "/admin/categories", { token }),
+    create: (body: object) => call("POST", "/admin/categories", { token, body }),
+    patch: (id: string, body: object) => call("PATCH", `/admin/categories/${id}`, { token, body }),
+    del: (id: string) => call("DELETE", `/admin/categories/${id}`, { token }),
+  });
+
+  it("is for Admin and Super Admin only", async () => {
+    expect((await call("GET", "/admin/categories", { token: tokens.VOLUNTEER })).status).toBe(403);
+    const mod = (await login(emailFor("ADMIN"))).token; // fresh token: the moderator's was reset earlier
+    expect((await call("GET", "/admin/categories", { token: mod })).status).toBe(200);
+  });
+
+  it("adds, renames, re-icons and deletes a category, and the public list follows", async () => {
+    const a = cat((await login(emailFor("ADMIN"))).token);
+    const created = await a.create({ name: "Photography & <b>Video</b>", icon: "camera", description: "Weddings & events" });
+    expect(created.status).toBe(201);
+    expect(created.body.category).toMatchObject({ name: "Photography & Video", slug: "photography-and-video", icon: "camera" });
+    const id = created.body.category.id;
+    expect((await a.create({ name: "Photography & Video" })).status).toBe(409);
+    expect((await a.create({ name: "Bad icon", icon: "not-an-icon" })).body.fieldErrors.icon).toBeDefined();
+
+    const pub = async () => (await call("GET", "/categories")).body.categories.map((c: { slug: string; name: string; icon: string }) => c);
+    expect((await pub()).find((c: { slug: string }) => c.slug === "photography-and-video")?.icon).toBe("camera");
+
+    // renaming keeps the web address unless the slug is changed on purpose
+    expect((await a.patch(id, { name: "Photo & Video", icon: "palette" })).body.changed.sort()).toEqual(["icon", "name"]);
+    expect((await pub()).find((c: { name: string }) => c.name === "Photo & Video")?.slug).toBe("photography-and-video");
+    expect((await a.patch(id, { slug: "Bad Slug!" })).status).toBe(400);
+    expect((await a.patch(id, { slug: "restaurants-and-takeaways" })).body.fieldErrors.slug).toBeDefined();
+    expect((await a.patch(id, { slug: "photo-and-video" })).status).toBe(200);
+    expect((await call("GET", "/categories/photo-and-video")).status).toBe(200);
+
+    // subcategories
+    const sub = await call("POST", `/admin/categories/${id}/subcategories`, { token: (await login(emailFor("ADMIN"))).token, body: { name: "Wedding Photographers" } });
+    expect(sub.status).toBe(201);
+    const t = (await login(emailFor("ADMIN"))).token;
+    expect((await call("POST", `/admin/categories/${id}/subcategories`, { token: t, body: { name: "Wedding Photographers" } })).status).toBe(409);
+    expect((await call("PATCH", `/admin/subcategories/${sub.body.subcategory.id}`, { token: t, body: { name: "Wedding Photography" } })).status).toBe(200);
+    const after = await prisma.subcategory.findUniqueOrThrow({ where: { id: sub.body.subcategory.id } });
+    expect(after.name).toBe("Wedding Photography");
+    expect(after.slug).toBe(sub.body.subcategory.slug); // slug kept, so links keep working
+
+    expect((await call("DELETE", `/admin/subcategories/${after.id}`, { token: t })).status).toBe(200);
+    expect((await cat(t).del(id)).status).toBe(200);
+    expect((await pub()).some((c: { name: string }) => c.name === "Photo & Video")).toBe(false);
+    expect(await prisma.auditLog.count({ where: { entityId: id } })).toBeGreaterThanOrEqual(6);
+  });
+
+  it("refuses to delete a category or subcategory that listings use", async () => {
+    const t = (await login(emailFor("ADMIN"))).token;
+    const sub = await prisma.subcategory.findFirstOrThrow({ where: { category: { slug: "restaurants-and-takeaways" } } });
+    await makeListing({ subcategoryId: sub.id });
+    const restaurants = await prisma.category.findUniqueOrThrow({ where: { slug: "restaurants-and-takeaways" } });
+    expect((await call("DELETE", `/admin/categories/${restaurants.id}`, { token: t })).status).toBe(409);
+    expect((await call("DELETE", `/admin/subcategories/${sub.id}`, { token: t })).status).toBe(409);
+  });
+
+  it("reorders when every category is sent exactly once", async () => {
+    const t = (await login(emailFor("ADMIN"))).token;
+    const ids = (await call("GET", "/admin/categories", { token: t })).body.categories.map((c: { id: string }) => c.id);
+    const reversed = [...ids].reverse();
+    expect((await call("POST", "/admin/categories/reorder", { token: t, body: { ids: reversed.slice(1) } })).status).toBe(400);
+    expect((await call("POST", "/admin/categories/reorder", { token: t, body: { ids: [...reversed.slice(1), reversed[1]] } })).status).toBe(400);
+    expect((await call("POST", "/admin/categories/reorder", { token: t, body: { ids: reversed } })).status).toBe(200);
+    expect((await call("GET", "/categories")).body.categories[0].slug).toBe((await prisma.category.findUniqueOrThrow({ where: { id: reversed[0] } })).slug);
+    await call("POST", "/admin/categories/reorder", { token: t, body: { ids } });
+  });
+
+  it("running the seed again keeps admin changes", async () => {
+    const c = await prisma.category.findUniqueOrThrow({ where: { slug: "car-services" } });
+    await prisma.category.update({ where: { id: c.id }, data: { name: "Car Care", icon: "wrench" } });
+    const { runSeed } = await import("../prisma/seed.js");
+    await runSeed(prisma);
+    expect((await prisma.category.findUniqueOrThrow({ where: { id: c.id } })).name).toBe("Car Care");
+    expect(await prisma.category.count({ where: { name: "Car Services" } })).toBe(0);
+    await prisma.category.update({ where: { id: c.id }, data: { name: "Car Services" } });
+  });
+});

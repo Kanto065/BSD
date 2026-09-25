@@ -89,9 +89,10 @@ explicit go-ahead.
 - **M3 (admin panel)**: built and deployed 2026-09-25. `/admin` on the website, `/admin/*` on the API. Roles: VOLUNTEER
   (verification queue), MODERATOR (listings, claims, messages), ADMIN (audit log), SUPER_ADMIN (team). Short-lived access
   token in memory plus an httpOnly SameSite=Strict refresh cookie, lockout after 5 failed logins, forced change of
-  one-time passwords, every action in the audit log. Category editing is deliberately NOT in M3: the website's category
-  and zone lists are still static in `bsd-web/lib/content.ts`, so they would drift. Do that together with making those
-  lists come from the API. Set or reset an admin password on the server with
+  one-time passwords, every action in the audit log. Categories are managed in the admin panel (ADMIN and up): add, rename, reorder,
+  choose the icon, owner-name rule, and subcategories. The website reads them from the API (refreshed within a minute),
+  with `bsd-web/lib/content.ts` only as a fallback. The seed writes categories only into an empty database (or with
+  `SEED_TAXONOMY=reset`), so re-running it never undoes admin edits. Zones and localities are still static. Set or reset an admin password on the server with
   `printf '%s' 'password' | docker exec -i bsd-api node dist/cli/set-admin-password.js email`.
 - Later, not started: M3 admin with volunteer verification and claim review, M6 update,
   removal and claim flows, M7 print export by zone then category.

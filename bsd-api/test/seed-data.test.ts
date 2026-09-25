@@ -121,3 +121,15 @@ describe("bsd-web slug rule matches the API", () => {
     for (const z of ZONES) for (const l of z.localities) expect(webSlug.localitySlug(l)).toBe(localitySlug(l));
   });
 });
+
+describe("category icons", () => {
+  it("every seeded icon is allowed, and the website knows every allowed icon", async () => {
+    const { CATEGORY_ICONS } = await import("../src/common/category-icons.js");
+    for (const c of CATEGORIES) expect(CATEGORY_ICONS as readonly string[], c.name).toContain(c.icon);
+    const web = fs.readFileSync(path.resolve(__dirname, "../../bsd-web/lib/category-icons.ts"), "utf8");
+    for (const name of CATEGORY_ICONS) {
+      const key = name.includes("-") ? `"${name}":` : `${name}:`;
+      expect(web, `web icon ${name}`).toContain(key);
+    }
+  });
+});

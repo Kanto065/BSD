@@ -4,24 +4,29 @@ import type { Metadata } from "next";
 import { ArrowLink } from "@/components/ArrowLink";
 import { ListingGrid } from "@/components/BusinessCard";
 import { listingsForCategory, type ApiResult, type Page, type PublicListItem } from "@/lib/api";
-import { CATEGORIES, SITE_URL } from "@/lib/content";
+import { SITE_URL } from "@/lib/content";
+import { fallbackSlugs, getCategories } from "@/lib/taxonomy";
 
 // Prerendered, then refreshed from the API at most once a minute.
 export const revalidate = 60;
 
+// The known categories are prebuilt; ones added in the admin panel later render on their first visit.
+export const dynamicParams = true;
 export function generateStaticParams() {
-  return CATEGORIES.map((c) => ({ slug: c.slug }));
+  return fallbackSlugs().map((slug) => ({ slug }));
 }
+
+const findCategory = async (slug: string) => (await getCategories()).find((c) => c.slug === slug);
 
 type Params = Promise<{ slug: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const category = CATEGORIES.find((c) => c.slug === slug);
+  const category = await findCategory(slug);
   if (!category) return {};
   const description =
     category.subcategories.length > 0
-      ? `${category.name} businesses and services across South West Wales: ${category.subcategories.join(", ")}.`
+      ? `${category.name} businesses and services across South West Wales: ${category.subcategories.map((s) => s.name).join(", ")}.`
       : `${category.name} businesses and services across South West Wales.`;
   return {
     title: category.name,
@@ -33,7 +38,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function CategoryDetailPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const category = CATEGORIES.find((c) => c.slug === slug);
+  const category = await findCategory(slug);
   if (!category) notFound();
 
   const listings = await listingsForCategory(category.slug);
@@ -53,8 +58,8 @@ export default async function CategoryDetailPage({ params }: { params: Params })
       {category.subcategories.length > 0 && (
         <div className="mt-6 flex flex-wrap gap-2">
           {category.subcategories.map((sub) => (
-            <span key={sub} className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600">
-              {sub}
+            <span key={sub.slug} className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600">
+              {sub.name}
             </span>
           ))}
         </div>

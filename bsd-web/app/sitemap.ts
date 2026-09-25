@@ -1,9 +1,12 @@
 import type { MetadataRoute } from "next";
-import { CATEGORIES, SITE_URL, ZONES } from "@/lib/content";
+import { SITE_URL, ZONES } from "@/lib/content";
+import { getCategories } from "@/lib/taxonomy";
+
+export const revalidate = 3600;
 
 // Placeholder shells (/community-guidelines, /complaints, /financial-transparency) and /search are noindex,
 // so they are left out on purpose.
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     "",
     "/categories",
@@ -34,7 +37,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  const categoryRoutes = CATEGORIES.map((c) => ({
+  const categoryRoutes = (await getCategories()).map((c) => ({
     url: `${SITE_URL}/categories/${c.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,

@@ -2,8 +2,9 @@
 
 import { useMemo, useRef, useState } from "react";
 import { CheckCircle2, ImagePlus, Loader2, MapPin, X } from "lucide-react";
-import { CATEGORIES, ZONES, zoneLabel } from "@/lib/content";
-import { localitySlug, subcategorySlug } from "@/lib/slug";
+import { ZONES, zoneLabel } from "@/lib/content";
+import { localitySlug } from "@/lib/slug";
+import type { CategoryOption } from "@/lib/taxonomy";
 
 // The listing form, built from the client's Submission Form doc: every field, the six consent boxes worded exactly,
 // and the exact confirmation message. v2 changes: a required postcode that decides the zone, an optional WhatsApp
@@ -68,7 +69,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export default function SubmitForm({ apiBase }: { apiBase: string }) {
+export default function SubmitForm({ apiBase, categories }: { apiBase: string; categories: CategoryOption[] }) {
   const [name, setName] = useState("");
   const [categorySlug, setCategorySlug] = useState("");
   const [subcategory, setSubcategory] = useState("");
@@ -97,8 +98,9 @@ export default function SubmitForm({ apiBase }: { apiBase: string }) {
   const [formError, setFormError] = useState("");
   const summaryRef = useRef<HTMLDivElement>(null);
 
-  const category = CATEGORIES.find((c) => c.slug === categorySlug);
-  const ownerRequired = category?.slug === "independent-professionals";
+  const category = categories.find((c) => c.slug === categorySlug);
+  // Which categories need an owner name is set per category in the admin panel.
+  const ownerRequired = category?.requiresOwnerName ?? false;
   const words = countWords(description);
   const postcodeCheck = useMemo(() => zoneForPostcode(postcode), [postcode]);
   const serviceList = services
@@ -139,7 +141,7 @@ export default function SubmitForm({ apiBase }: { apiBase: string }) {
     if (words < 50 || words > 150) e.description = "The short description must be between 50 and 150 words.";
     if (!serviceList.length) e.servicesOffered = "List at least one service.";
     if (serviceList.length > 15) e.servicesOffered = "List up to 15 services.";
-    if (ownerRequired && !ownerName.trim()) e.ownerName = "Independent Professionals must give the owner or service provider name.";
+    if (ownerRequired && !ownerName.trim()) e.ownerName = "This category needs the owner or service provider name.";
     const digits = phone.replace(/\D/g, "");
     if (!/^[+()\d\s-]+$/.test(phone.trim()) || digits.length < 10 || digits.length > 15) e.phone = "Enter a valid phone number.";
     if (whatsapp.trim()) {
@@ -267,7 +269,7 @@ export default function SubmitForm({ apiBase }: { apiBase: string }) {
               {...invalid("category")}
             >
               <option value="">Choose a category</option>
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <option key={c.slug} value={c.slug}>
                   {c.name}
                 </option>
@@ -289,8 +291,8 @@ export default function SubmitForm({ apiBase }: { apiBase: string }) {
             >
               <option value="">{category ? "Choose a subcategory" : "Choose a category first"}</option>
               {category?.subcategories.map((s) => (
-                <option key={s} value={subcategorySlug(category.name, s)}>
-                  {s}
+                <option key={s.slug} value={s.slug}>
+                  {s.name}
                 </option>
               ))}
             </select>
@@ -342,7 +344,7 @@ export default function SubmitForm({ apiBase }: { apiBase: string }) {
         <div>
           <label htmlFor="ownerName" className={labelClass}>
             Owner / Service Provider Name{" "}
-            <span className="font-normal text-slate-500">{ownerRequired ? "(required for Independent Professionals)" : "(optional)"}</span>
+            <span className="font-normal text-slate-500">{ownerRequired ? "(required for this category)" : "(optional)"}</span>
           </label>
           <p className={helpClass}>Required for personal services. It is not shown on your public listing.</p>
           <input id="ownerName" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} maxLength={120} className={inputClass} {...invalid("ownerName")} />

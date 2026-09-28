@@ -69,7 +69,7 @@ function Requests() {
 
   return (
     <div>
-      <PageTitle sub="Targets: updates and removals within 3–7 working days, emergency removals within 24 hours.">Update & removal requests</PageTitle>
+      <PageTitle sub="Targets: updates and removals within 3 to 7 working days, emergency removals within 24 hours.">Update & removal requests</PageTitle>
       <div className="mb-4 flex flex-wrap gap-2">
         {(["update", "removal"] as const).map((t) => (
           <button

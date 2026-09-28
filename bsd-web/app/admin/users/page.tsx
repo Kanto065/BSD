@@ -52,7 +52,7 @@ export default function UsersPage() {
       <Card title="People">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-500">
+            <thead className="border-b border-slate-200 text-xs font-semibold text-slate-600">
               <tr>
                 <th className="py-2 pr-4">Person</th>
                 <th className="py-2 pr-4">Role</th>

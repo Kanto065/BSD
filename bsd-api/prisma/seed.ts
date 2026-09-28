@@ -55,11 +55,12 @@ async function resetCategories(tx: Tx) {
         requiresOwnerName: cat.requiresOwnerName ?? false,
       },
     });
-    for (const sub of cat.subcategories) {
+    // New subcategories start in the seed's order. Existing ones keep whatever order an admin has set.
+    for (const [subIndex, sub] of cat.subcategories.entries()) {
       await tx.subcategory.upsert({
         where: { categoryId_name: { categoryId: category.id, name: sub } },
         update: { slug: subcategorySlug(cat.name, sub) },
-        create: { name: sub, slug: subcategorySlug(cat.name, sub), categoryId: category.id },
+        create: { name: sub, slug: subcategorySlug(cat.name, sub), categoryId: category.id, sortOrder: subIndex },
       });
     }
   }

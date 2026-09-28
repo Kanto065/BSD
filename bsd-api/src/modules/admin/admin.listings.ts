@@ -16,6 +16,8 @@ const VERIFICATION = ["NEWLY_LISTED", "PENDING_VERIFICATION", "COMMUNITY_VERIFIE
 const listQuery = pageQuery.extend({
   status: z.enum(STATUSES).optional(),
   q: z.string().trim().max(100).optional(),
+  // A subcategory id, used by the Categories page to show which listings sit in a subcategory.
+  subcategory: z.string().trim().min(1).max(64).optional(),
 });
 
 const rejectBody = z.object({ reason: z.string().trim().min(3, "Give a short reason (it is kept for the record).").max(500) });
@@ -66,7 +68,9 @@ const listingsRoutes: FastifyPluginAsync = async (app) => {
   app.get("/listings", moderator, async (req, reply) => {
     const q = listQuery.safeParse(req.query);
     if (!q.success) return invalid(reply, q.error);
+    const scope: Prisma.BusinessWhereInput = q.data.subcategory ? { subcategoryId: q.data.subcategory } : {};
     const where: Prisma.BusinessWhereInput = {
+      ...scope,
       ...(q.data.status ? { status: q.data.status } : {}),
       ...(q.data.q
         ? {
@@ -103,12 +107,17 @@ const listingsRoutes: FastifyPluginAsync = async (app) => {
         },
       }),
     ]);
+    const subcategory = q.data.subcategory
+      ? await app.prisma.subcategory.findUnique({ where: { id: q.data.subcategory }, select: { id: true, name: true, category: { select: { name: true } } } })
+      : null;
     return {
       items,
       total,
       page: q.data.page,
       pageSize: q.data.pageSize,
-      counts: await statusCounts(app.prisma),
+      // Tab counts follow the subcategory filter, so the numbers match what the tabs show.
+      counts: await statusCounts(app.prisma, scope),
+      ...(q.data.subcategory ? { subcategory } : {}),
     };
   });
 

@@ -20,7 +20,10 @@ const slug = z
 const icon = z.enum(CATEGORY_ICONS, { errorMap: () => ({ message: "Choose an icon from the list." }) });
 const description = z.string().trim().max(300).nullable();
 
-const createCategory = z.object({ name, description: description.optional(), icon: icon.optional(), requiresOwnerName: z.boolean().optional() }).strict();
+// Subcategories can be added with the category in one go, in the order given.
+const createCategory = z
+  .object({ name, description: description.optional(), icon: icon.optional(), requiresOwnerName: z.boolean().optional(), subcategories: z.array(name).max(40).optional() })
+  .strict();
 const updateCategory = z.object({ name, slug, description, icon, requiresOwnerName: z.boolean() }).partial().strict();
 const reorder = z.object({ ids: z.array(z.string().min(1).max(64)).min(1).max(200) }).strict();
 const subBody = z.object({ name }).strict();
@@ -33,7 +36,7 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
       orderBy: { sortOrder: "asc" },
       include: {
         _count: { select: { businesses: true } },
-        subcategories: { orderBy: { name: "asc" }, include: { _count: { select: { businesses: true } } } },
+        subcategories: { orderBy: [{ sortOrder: "asc" }, { name: "asc" }], include: { _count: { select: { businesses: true } } } },
       },
     });
     return {
@@ -47,7 +50,7 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
         sortOrder: c.sortOrder,
         requiresOwnerName: c.requiresOwnerName,
         listingCount: c._count.businesses,
-        subcategories: c.subcategories.map((s) => ({ id: s.id, name: s.name, slug: s.slug, listingCount: s._count.businesses })),
+        subcategories: c.subcategories.map((s) => ({ id: s.id, name: s.name, slug: s.slug, sortOrder: s.sortOrder, listingCount: s._count.businesses })),
       })),
     };
   });
@@ -60,6 +63,7 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
     if (!newSlug) return reply.code(400).send({ error: "Please check the highlighted fields.", fieldErrors: { name: "Use letters or numbers in the name." } });
     const clash = await app.prisma.category.findFirst({ where: { OR: [{ name: clean }, { slug: newSlug }] } });
     if (clash) return reply.code(409).send({ error: "Please check the highlighted fields.", fieldErrors: { name: "A category with this name already exists." } });
+    const subNames = [...new Set((body.data.subcategories ?? []).map((n) => sanitizeText(n)).filter(Boolean))];
     const last = await app.prisma.category.aggregate({ _max: { sortOrder: true } });
     const category = await app.prisma.$transaction(async (tx) => {
       const c = await tx.category.create({
@@ -72,7 +76,12 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
           sortOrder: (last._max.sortOrder ?? -1) + 1,
         },
       });
-      await audit(tx, req.admin!.id, "CREATE_CATEGORY", "Category", c.id, { name: c.name, slug: c.slug });
+      for (const [i, subName] of subNames.entries()) {
+        let s = slugify(`${c.name}-${subName}`);
+        if (await tx.subcategory.findUnique({ where: { slug: s } })) s = `${s}-${Date.now().toString(36)}${i}`;
+        await tx.subcategory.create({ data: { name: subName, slug: s, categoryId: c.id, sortOrder: i } });
+      }
+      await audit(tx, req.admin!.id, "CREATE_CATEGORY", "Category", c.id, { name: c.name, slug: c.slug, ...(subNames.length ? { subcategories: subNames } : {}) });
       return c;
     });
     return reply.code(201).send({ category });
@@ -163,12 +172,32 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
     // Same slug rule as the seed ("category-name-subcategory-name"), made unique if a renamed category collides.
     let s = slugify(`${c.name}-${clean}`);
     if (await app.prisma.subcategory.findUnique({ where: { slug: s } })) s = `${s}-${Date.now().toString(36)}`;
+    const lastSub = await app.prisma.subcategory.aggregate({ where: { categoryId: c.id }, _max: { sortOrder: true } });
     const sub = await app.prisma.$transaction(async (tx) => {
-      const created = await tx.subcategory.create({ data: { name: clean, slug: s, categoryId: c.id } });
+      const created = await tx.subcategory.create({ data: { name: clean, slug: s, categoryId: c.id, sortOrder: (lastSub._max.sortOrder ?? -1) + 1 } });
       await audit(tx, req.admin!.id, "CREATE_SUBCATEGORY", "Category", c.id, { subcategory: clean });
       return created;
     });
     return reply.code(201).send({ subcategory: sub });
+  });
+
+  // The order of the subcategories within one category, as shown on the site and in the submission form.
+  app.post("/categories/:id/subcategories/reorder", admins, async (req, reply) => {
+    const p = idParams.safeParse(req.params);
+    if (!p.success) return reply.code(404).send({ error: "Not found" });
+    const body = reorder.safeParse(req.body);
+    if (!body.success) return invalid(reply, body.error);
+    const subs = await app.prisma.subcategory.findMany({ where: { categoryId: p.data.id }, select: { id: true } });
+    if (!subs.length) return reply.code(404).send({ error: "Not found" });
+    const ids = new Set(subs.map((s) => s.id));
+    if (body.data.ids.length !== ids.size || new Set(body.data.ids).size !== ids.size || body.data.ids.some((id) => !ids.has(id))) {
+      return reply.code(400).send({ error: "Send every subcategory of this category exactly once." });
+    }
+    await app.prisma.$transaction([
+      ...body.data.ids.map((id, index) => app.prisma.subcategory.update({ where: { id }, data: { sortOrder: index } })),
+      audit(app.prisma, req.admin!.id, "REORDER_SUBCATEGORIES", "Category", p.data.id, { order: body.data.ids }),
+    ]);
+    return { ok: true };
   });
 
   app.patch("/subcategories/:id", admins, async (req, reply) => {

@@ -1,8 +1,10 @@
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { filterConditions, listPublicBusinesses, publicWhere, type Filters } from "../../common/public.js";
 
 // Listing counts only ever count what the public may see.
 const publicCount = { _count: { select: { businesses: { where: publicWhere() } } } } as const;
+// Admin-set position first, name as the tie-break (all rows share position 0 until someone reorders).
+const subcategoryOrder: Prisma.SubcategoryOrderByWithRelationInput[] = [{ sortOrder: "asc" }, { name: "asc" }];
 
 const categorySelect = {
   name: true,
@@ -12,7 +14,7 @@ const categorySelect = {
   sortOrder: true,
   requiresOwnerName: true,
   ...publicCount,
-  subcategories: { orderBy: { name: "asc" as const }, select: { name: true, slug: true, ...publicCount } },
+  subcategories: { orderBy: subcategoryOrder, select: { name: true, slug: true, ...publicCount } },
 } as const;
 
 type CategoryRow = {

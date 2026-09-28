@@ -81,6 +81,8 @@ model Subcategory {
   id         String     @id @default(cuid())
   name       String
   slug       String     @unique
+  // Position within its category, set by admins (drag to reorder). The site lists subcategories in this order.
+  sortOrder  Int        @default(0)
   categoryId String
   category   Category   @relation(fields: [categoryId], references: [id])
   businesses Business[]

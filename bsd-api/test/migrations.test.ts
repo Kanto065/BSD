@@ -118,3 +118,26 @@ describe("1_v2_schema", () => {
     await db.close();
   });
 });
+
+describe("5_subcategory_order", () => {
+  it("adds the position column and starts each category's subcategories in today's alphabetical order", async () => {
+    const db = new PGlite();
+    for (const m of ["0_init", "1_v2_schema", "2_photo_variants", "3_admin_auth", "4_request_contacts"]) await db.exec(sql(m));
+    await db.exec(`insert into "Category"(id,name,slug) values ('c1','One','one'),('c2','Two','two')`);
+    await db.exec(`insert into "Subcategory"(id,name,slug,"categoryId") values
+      ('s1','Tailors','t','c1'),('s2','Barbers','b','c1'),('s3','Henna','h','c1'),('s4','Zebra','z','c2'),('s5','Apple','a','c2')`);
+    await db.exec(sql("5_subcategory_order"));
+    const rows = (await db.query<{ id: string; p: number }>(`select id, "sortOrder" p from "Subcategory" order by "categoryId", "sortOrder"`)).rows;
+    expect(rows).toEqual([
+      { id: "s2", p: 0 },
+      { id: "s3", p: 1 },
+      { id: "s1", p: 2 },
+      { id: "s5", p: 0 },
+      { id: "s4", p: 1 },
+    ]);
+    // new rows default to 0 and the column is required
+    await db.exec(`insert into "Subcategory"(id,name,slug,"categoryId") values ('s6','New','n','c1')`);
+    expect((await db.query<{ p: number }>(`select "sortOrder" p from "Subcategory" where id='s6'`)).rows[0]!.p).toBe(0);
+    await db.close();
+  });
+});

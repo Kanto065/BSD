@@ -44,8 +44,8 @@ export function invalid(reply: FastifyReply, error: z.ZodError) {
 }
 
 /** Number of listings in each moderation status. */
-export async function statusCounts(prisma: PrismaClient) {
-  const rows = await prisma.business.groupBy({ by: ["status"], _count: { _all: true } });
+export async function statusCounts(prisma: PrismaClient, where: Prisma.BusinessWhereInput = {}) {
+  const rows = await prisma.business.groupBy({ by: ["status"], where, _count: { _all: true } });
   const count = (s: string) => rows.find((r) => r.status === s)?._count._all ?? 0;
   return { PENDING: count("PENDING"), APPROVED: count("APPROVED"), REJECTED: count("REJECTED"), REMOVED: count("REMOVED") };
 }

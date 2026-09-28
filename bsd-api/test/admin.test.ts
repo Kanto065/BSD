@@ -489,6 +489,55 @@ describe("categories", () => {
     await call("POST", "/admin/categories/reorder", { token: t, body: { ids } });
   });
 
+  it("creates a category with its subcategories in the order given", async () => {
+    const t = (await login(emailFor("ADMIN"))).token;
+    const created = await call("POST", "/admin/categories", {
+      token: t,
+      body: { name: "Event Services", icon: "ticket", subcategories: ["Stage Decor", "Catering", "Stage Decor", "  DJs  "] },
+    });
+    expect(created.status).toBe(201);
+    const list = (await call("GET", "/admin/categories", { token: t })).body.categories;
+    const ev = list.find((c: { id: string }) => c.id === created.body.category.id);
+    expect(ev.subcategories.map((s: { name: string }) => s.name)).toEqual(["Stage Decor", "Catering", "DJs"]); // duplicates dropped
+    expect((await call("POST", "/admin/categories", { token: t, body: { name: "Bad Subs", subcategories: ["x"] } })).status).toBe(400);
+    await call("DELETE", `/admin/categories/${ev.id}`, { token: t });
+  });
+
+  it("reorders subcategories within a category, and the public list follows", async () => {
+    const t = (await login(emailFor("ADMIN"))).token;
+    const c = (await call("POST", "/admin/categories", { token: t, body: { name: "Order Test", subcategories: ["Alpha", "Bravo", "Charlie"] } })).body.category;
+    const subs = async () =>
+      (await call("GET", "/admin/categories", { token: t })).body.categories.find((x: { id: string }) => x.id === c.id).subcategories as { id: string; name: string }[];
+    const ids = (await subs()).map((s) => s.id);
+    const url = `/admin/categories/${c.id}/subcategories/reorder`;
+    expect((await call("POST", url, { token: t, body: { ids: ids.slice(1) } })).status).toBe(400);
+    expect((await call("POST", url, { token: tokens.VOLUNTEER, body: { ids } })).status).toBe(403);
+    expect((await call("POST", url, { token: t, body: { ids: [ids[2], ids[0], ids[1]] } })).status).toBe(200);
+    expect((await subs()).map((s) => s.name)).toEqual(["Charlie", "Alpha", "Bravo"]);
+    const pub = (await call("GET", "/categories")).body.categories.find((x: { slug: string }) => x.slug === "order-test");
+    expect(pub.subcategories.map((s: { name: string }) => s.name)).toEqual(["Charlie", "Alpha", "Bravo"]);
+    // a new subcategory goes to the end
+    await call("POST", `/admin/categories/${c.id}/subcategories`, { token: t, body: { name: "Aardvark" } });
+    expect((await subs()).map((s) => s.name)).toEqual(["Charlie", "Alpha", "Bravo", "Aardvark"]);
+    await call("DELETE", `/admin/categories/${c.id}`, { token: t });
+  });
+
+  it("lists the listings in one subcategory, with tab counts for that subcategory only", async () => {
+    const t = (await login(emailFor("ADMIN"))).token;
+    const c = (await call("POST", "/admin/categories", { token: t, body: { name: "Filter Test", subcategories: ["Only This"] } })).body.category;
+    const sub = await prisma.subcategory.findFirstOrThrow({ where: { categoryId: c.id } });
+    const l = await makeListing({ categoryId: c.id, subcategoryId: sub.id });
+    const res = await call("GET", `/admin/listings?subcategory=${sub.id}&pageSize=5`, { token: t });
+    expect(res.status).toBe(200);
+    expect(res.body.items.map((i: { id: string }) => i.id)).toEqual([l.id]);
+    expect(res.body.subcategory).toMatchObject({ id: sub.id, name: "Only This", category: { name: "Filter Test" } });
+    expect(Object.values(res.body.counts as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(1);
+    // without the filter the counts cover every listing
+    const all = await call("GET", "/admin/listings?pageSize=1", { token: t });
+    expect(Object.values(all.body.counts as Record<string, number>).reduce((a, b) => a + b, 0)).toBeGreaterThan(1);
+    expect(all.body.subcategory).toBeUndefined();
+  });
+
   it("running the seed again keeps admin changes", async () => {
     const c = await prisma.category.findUniqueOrThrow({ where: { slug: "car-services" } });
     await prisma.category.update({ where: { id: c.id }, data: { name: "Car Care", icon: "wrench" } });

@@ -217,13 +217,18 @@ describe("the rules from the submission form", () => {
     }
   });
 
-  it("requires a 50 to 150 word description", async () => {
-    await expectError(validFields({ description: words(49) }), "description");
-    await expectError(validFields({ description: words(151) }), "description");
-    // tags do not count as words
-    await expectError(validFields({ description: `<b>${words(30)}</b> ${"<i></i> ".repeat(30)}` }), "description");
+  it("requires a description of at least 150 characters and at most 150 words", async () => {
+    const short = "The short description must be at least 150 characters.";
+    expect(await expectError(validFields({ description: "a".repeat(149) }), "description")).toBe(short);
+    expect(await expectError(validFields({ description: `   ${"a".repeat(149)}   ` }), "description")).toBe(short);
+    // tags are stripped by sanitising and do not count toward the 150
+    expect(await expectError(validFields({ description: `<b>${"a".repeat(100)}</b><i></i><script></script>${"b".repeat(49)}` }), "description")).toBe(short);
+    expect(await expectError(validFields({ description: words(151) }), "description")).toBe("The short description must be 150 words or fewer.");
+    expect((await submit(validFields({ description: "a".repeat(150) }))).status).toBe(201);
+    expect((await submit(validFields({ description: `  ${"a".repeat(150)}  ` }))).status).toBe(201);
+    // 150 characters made of short repeated words is under the word limit
+    expect((await submit(validFields({ description: "ab ".repeat(51).trim() }))).status).toBe(201);
     expect((await submit(validFields({ description: words(150) }))).status).toBe(201);
-    expect((await submit(validFields({ description: words(50) }))).status).toBe(201);
   });
 
   it("requires the name, a real category and at least one service", async () => {

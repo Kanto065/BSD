@@ -101,6 +101,20 @@ const accepted = z
 
 export const countWords = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 
+/** Description rule: at least this many characters (after trim and sanitising) and at most 150 words. Mirrored in bsd-web lib/description.ts. */
+export const DESCRIPTION_MIN_CHARS = 150;
+export const DESCRIPTION_MAX_WORDS = 150;
+export const DESCRIPTION_TOO_SHORT = `The short description must be at least ${DESCRIPTION_MIN_CHARS} characters.`;
+export const DESCRIPTION_TOO_LONG = `The short description must be ${DESCRIPTION_MAX_WORDS} words or fewer.`;
+
+/** Takes the already sanitised text. Returns the error message, or null when it is acceptable. */
+export function descriptionProblem(clean: string): string | null {
+  const t = clean.trim();
+  if (t.length < DESCRIPTION_MIN_CHARS) return DESCRIPTION_TOO_SHORT;
+  if (countWords(t) > DESCRIPTION_MAX_WORDS) return DESCRIPTION_TOO_LONG;
+  return null;
+}
+
 /** The field rules, shared with the admin edit form so a listing always meets the same standard. */
 export const fieldRules = { text, optionalText, slug, phone };
 
@@ -108,9 +122,7 @@ export const submissionSchema = z.object({
   name: text(120).min(2, "Enter the business or service name."),
   category: slug,
   subcategory: slug.optional().or(z.literal("")).transform((v) => v || undefined),
-  description: text(2000).refine((v) => countWords(v) >= 50 && countWords(v) <= 150, {
-    message: "The short description must be between 50 and 150 words.",
-  }),
+  description: text(2000), // the length and word rule runs after sanitising, see descriptionProblem
   servicesOffered: z
     .array(text(100))
     .transform((a) => a.filter(Boolean))
@@ -244,7 +256,8 @@ export async function saveSubmission(
   const name = sanitizeText(s.name);
   const afterClean: FieldErrors = {};
   if (name.length < 2) afterClean.name = "Enter the business or service name.";
-  if (countWords(description) < 50) afterClean.description = "The short description must be between 50 and 150 words.";
+  const descriptionError = descriptionProblem(description);
+  if (descriptionError) afterClean.description = descriptionError;
   if (!servicesOffered.length) afterClean.servicesOffered = "List at least one service.";
   if (Object.keys(afterClean).length) throw new SubmissionError(400, afterClean);
 

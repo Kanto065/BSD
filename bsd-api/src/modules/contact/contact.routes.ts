@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 
-// Implemented starting in M1/M2/M3 per the milestone roadmap — this module is
+// Implemented starting in M1/M2/M3 per the milestone roadmap. This module is
 // registered now so the app boots with the full domain structure in place.
 const contactRoutes: FastifyPluginAsync = async () => {};
 

@@ -3,7 +3,8 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, MapPin, Plus, Search } from "lucide-react";
 import { ListingGrid } from "@/components/BusinessCard";
 import { searchListings } from "@/lib/api";
-import { ALL_ZONES_LABEL, ZONES, findZone, zoneLabel } from "@/lib/content";
+import { findZone, zoneLabel } from "@/lib/content";
+import ZoneSelect from "@/components/ZoneSelect";
 import { getCategories, type Taxon } from "@/lib/taxonomy";
 
 export const metadata: Metadata = {
@@ -72,26 +73,19 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
             defaultValue={q}
             maxLength={100}
             placeholder="Search restaurants, solicitors, trades, accountants..."
-            className="w-full rounded-md border border-slate-300 px-3 py-3 text-sm focus:border-brand-blue focus:outline-none"
+            className="w-full rounded-md border border-slate-300 px-3 py-3 text-base focus:border-brand-blue focus:outline-none md:text-sm"
           />
         </div>
         <div>
           <label htmlFor="zone" className="sr-only">
             Zone
           </label>
-          <select
+          <ZoneSelect
             id="zone"
             name="zone"
             defaultValue={zone?.slug ?? ""}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-3 text-sm focus:border-brand-blue focus:outline-none"
-          >
-            <option value="">{ALL_ZONES_LABEL}</option>
-            {ZONES.map((z) => (
-              <option key={z.slug} value={z.slug}>
-                {zoneLabel(z)}
-              </option>
-            ))}
-          </select>
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-3 text-base focus:border-brand-blue focus:outline-none md:text-sm"
+          />
         </div>
         <div>
           <label htmlFor="category" className="sr-only">
@@ -101,7 +95,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
             id="category"
             name="category"
             defaultValue={category?.slug ?? ""}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-3 text-sm focus:border-brand-blue focus:outline-none"
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-3 text-base focus:border-brand-blue focus:outline-none md:text-sm"
           >
             <option value="">All categories</option>
             {categories.map((c) => (

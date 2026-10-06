@@ -319,13 +319,15 @@ describe("editing a listing", () => {
     const edit = (body: object) => call("PATCH", `/admin/listings/${l.id}`, { token: tokens.MODERATOR, body });
 
     expect((await edit({ description: words(20) })).body.fieldErrors.description).toBeDefined();
+    expect((await edit({ description: "a".repeat(149) })).body.fieldErrors.description).toBe("The short description must be at least 150 characters.");
+    expect((await edit({ description: `  <b>${"a".repeat(149)}</b>  ` })).body.fieldErrors.description).toBeDefined();
+    expect((await edit({ description: words(151) })).body.fieldErrors.description).toBe("The short description must be 150 words or fewer.");
     expect((await edit({ postcode: "SA25 1AA" })).body.fieldErrors.postcode).toBeDefined();
     expect((await edit({ unknownField: "x" })).status).toBe(400);
 
     const r = await edit({ name: "Better <i>Name</i> & Co", postcode: "sa10 9aa", localities: ["skewen"] });
     expect(r.status).toBe(200);
-    expect(r.body.changed.sort()).toEqual(["localities", "name", "postcode", "postcodeDistrict", "zoneId"].sort());
-    const after = await prisma.business.findUniqueOrThrow({ where: { id: l.id }, include: { zone: true, localities: { include: { locality: true } } } });
+    expect(r.body.changed.sort()).toEqual(["localities", "name", "postcode", "postcodeDistrict", "zoneId"].sort());    const after = await prisma.business.findUniqueOrThrow({ where: { id: l.id }, include: { zone: true, localities: { include: { locality: true } } } });
     expect(after.name).toBe("Better Name & Co");
     expect(after.postcode).toBe("SA10 9AA");
     expect(after.zone.slug).toBe("zone-2");
@@ -334,6 +336,17 @@ describe("editing a listing", () => {
     expect((entry.details as Record<string, { from: unknown; to: unknown }>).name).toEqual({ from: l.name, to: "Better Name & Co" });
 
     expect((await edit({ name: "Better Name & Co" })).body.changed).toEqual([]); // nothing changed, nothing logged
+  });
+
+  it("lets an existing short listing be edited when the description is not changed, and rejects a short new one", async () => {
+    const old = "Thirty words or so, written under the old rule.";
+    const l = await makeListing({ description: old });
+    const edit = (body: object) => call("PATCH", `/admin/listings/${l.id}`, { token: tokens.MODERATOR, body });
+    expect((await edit({ name: "New Name", description: old })).status).toBe(200); // the admin form sends the full body
+    expect((await edit({ phone: "01792 111111" })).status).toBe(200);
+    expect((await edit({ description: old + " More." })).body.fieldErrors.description).toBeDefined();
+    expect((await edit({ description: "a".repeat(150) })).status).toBe(200);
+    expect((await prisma.business.findUniqueOrThrow({ where: { id: l.id } })).description).toBe("a".repeat(150));
   });
 
   it("keeps the category and subcategory consistent, and requires an owner for Independent Professionals", async () => {

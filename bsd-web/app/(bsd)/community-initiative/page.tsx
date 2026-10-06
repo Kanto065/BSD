@@ -25,7 +25,7 @@ export default function CommunityInitiativePage() {
         <h2 className="text-xl font-semibold text-brand-navy">Why We Started BSD</h2>
         <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           The Bangladeshi community has long been a vital pillar of South West Wales&apos;s economy and social
-          fabric—from renowned restaurants and takeaways to solicitors, accountants, healthcare professionals,
+          fabric, from renowned restaurants and takeaways to solicitors, accountants, healthcare professionals,
           skilled tradespeople, and cultural organizations.
         </p>
         <p className="mt-3 max-w-prose leading-relaxed text-slate-600">

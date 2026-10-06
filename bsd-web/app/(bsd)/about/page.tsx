@@ -21,7 +21,7 @@ export default function AboutPage() {
           BSD – Bangladeshi Business & Service Directory (Swansea Bay Edition) is a unified information platform
           designed to highlight and connect Bangladeshi businesses, service providers, professionals, and
           independent skilled individuals across the Swansea Bay region. Its purpose is to make essential community
-          services easy to find, easy to access, and easy to trust — both in print and digital formats.
+          services easy to find, easy to access, and easy to trust, both in print and digital formats.
         </p>
         <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           BSD operates as a community-driven initiative under the BayConnect ecosystem, ensuring that every listing
@@ -66,7 +66,7 @@ export default function AboutPage() {
           benefit of the Bangladeshi community.
         </p>
         <p className="mt-3 font-semibold text-slate-800">Free Access Period:</p>
-        <p className="mt-1 max-w-prose leading-relaxed text-slate-600">Until 30 June 2027 — all listings are completely free.</p>
+        <p className="mt-1 max-w-prose leading-relaxed text-slate-600">Until 30 June 2027, all listings are completely free.</p>
         <p className="mt-3 max-w-prose leading-relaxed text-slate-600">During this period:</p>
         <ul className="mt-2 max-w-prose list-disc space-y-1 pl-5 leading-relaxed text-slate-600">
           <li>No listing fees</li>
@@ -119,7 +119,7 @@ export default function AboutPage() {
           BSD is operated under BayConnect, a community ecosystem dedicated to connecting, celebrating, and
           empowering the Bangladeshi community in Swansea Bay.
         </p>
-        <p className="mt-2 font-medium text-slate-800">BayConnect — Connect. Celebrate. Empower.</p>
+        <p className="mt-2 font-medium text-slate-800">BayConnect. Connect. Celebrate. Empower.</p>
       </section>
 
       <section className="mt-10 rounded-lg bg-slate-50 p-6">

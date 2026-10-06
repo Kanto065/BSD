@@ -5,7 +5,8 @@ import VerificationBadge from "@/components/VerificationBadge";
 import { ArrowLink } from "@/components/ArrowLink";
 import BusinessCard from "@/components/BusinessCard";
 import { featured } from "@/lib/api";
-import { ALL_ZONES_LABEL, HOME_FAQ, SITE_DESCRIPTION, ZONES, zoneLabel } from "@/lib/content";
+import { HOME_FAQ, SITE_DESCRIPTION, ZONES } from "@/lib/content";
+import ZoneSelect from "@/components/ZoneSelect";
 import { HOMEPAGE_TILES, getCategories } from "@/lib/taxonomy";
 
 // Rendered on every visit with fresh data from the API, so a listing approved, edited or removed in the admin panel
@@ -108,22 +109,14 @@ export default async function HomePage() {
             </div>
             <div className="relative md:w-72">
               <label htmlFor="hero-zone" className="sr-only">
-                Select Zone (All SA1-SA34)
+                Select Zone
               </label>
               <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-              <select
+              <ZoneSelect
                 id="hero-zone"
                 name="zone"
-                defaultValue=""
                 className="w-full rounded-md border border-slate-300 bg-white py-3 pl-9 pr-3 text-base focus:border-brand-blue md:text-sm focus:outline-none"
-              >
-                <option value="">{ALL_ZONES_LABEL}</option>
-                {ZONES.map((z) => (
-                  <option key={z.slug} value={z.slug}>
-                    {zoneLabel(z)}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
             <button
               type="submit"

@@ -23,6 +23,8 @@ const nextConfig: NextConfig = {
   // (always fresh); fixed content pages for 30 seconds, the shortest Next.js allows (the default is 5 minutes).
   experimental: {
     staleTimes: { dynamic: 0, static: 30 },
+    // Lets app/global-not-found.tsx render unmatched URLs now that every route sits in a route group.
+    globalNotFound: true,
   },
   async redirects() {
     return [

@@ -100,3 +100,32 @@ describe("shared member login", () => {
     expect(r.setCookie).toMatch(/^bsd_session=;/);
   });
 });
+
+describe("joining a site on purpose", () => {
+  const other = { ...signup, email: "other@test.example" };
+
+  it("needs a session", async () => {
+    expect((await call("POST", "/auth/modules", { body: { module: "CARD" } })).status).toBe(401);
+  });
+
+  it("adds the site once, returns the profile, and leaves other people alone", async () => {
+    const a = await call("POST", "/auth/register", { body: { ...signup, email: "joiner@test.example" } });
+    const b = await call("POST", "/auth/register", { body: other });
+    const first = await call("POST", "/auth/modules", { body: { module: "CARD" }, cookie: a.cookie });
+    expect(first.status).toBe(200);
+    expect(first.body.user.modules.sort()).toEqual(["CARD", "DIRECTORY"]);
+    await call("POST", "/auth/modules", { body: { module: "CARD" }, cookie: a.cookie });
+    const rows = (email: string) => prisma.userModule.count({ where: { user: { email } } });
+    expect(await rows("joiner@test.example")).toBe(2);
+    expect(await rows(other.email)).toBe(1);
+    expect((await call("GET", "/auth/me", { cookie: b.cookie })).body.user.modules).toEqual(["DIRECTORY"]);
+  });
+
+  it("rejects an unknown site or an empty body and adds nothing", async () => {
+    const login = await call("POST", "/auth/login", { body: { email: other.email, password: PASSWORD } });
+    const before = await prisma.userModule.count();
+    expect((await call("POST", "/auth/modules", { body: { module: "BOGUS" }, cookie: login.cookie })).status).toBe(400);
+    expect((await call("POST", "/auth/modules", { body: {}, cookie: login.cookie })).status).toBe(400);
+    expect(await prisma.userModule.count()).toBe(before);
+  });
+});

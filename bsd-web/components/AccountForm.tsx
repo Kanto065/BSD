@@ -4,26 +4,13 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { ErrorNote, inputClass } from "@/components/admin/ui";
 import { ApiError } from "@/lib/admin-session";
+import { memberCall as call, type Member } from "@/lib/member-api";
 
 // Sign in, create an account, or see who you are signed in as. The API sets one httpOnly cookie on the parent
 // domain, so the same sign-in works on the Privilege Pass and Marketplace sites. The page never sees the token.
 
-type Member = { id: string; name: string; email: string; postcode: string; modules: string[]; badges: string[] };
-
 const SITES: Record<string, string> = { DIRECTORY: "Directory", CARD: "Privilege Pass", MARKETPLACE: "Marketplace" };
 const BADGES: Record<string, string> = { MEMBER: "Member", STUDENT: "Student", VOLUNTEER: "Volunteer" };
-
-async function call(apiBase: string, path: string, body?: unknown): Promise<{ user?: Member }> {
-  const res = await fetch(`${apiBase}/auth/${path}`, {
-    method: body === undefined && path === "me" ? "GET" : "POST",
-    credentials: "include",
-    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, data.error ?? "Something went wrong.", data.fieldErrors ?? {});
-  return data;
-}
 
 const label = "text-sm font-semibold text-slate-800";
 const fieldError = (e: unknown, key: string) => (e instanceof ApiError ? e.fieldErrors[key] : undefined);

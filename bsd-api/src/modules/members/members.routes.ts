@@ -122,6 +122,15 @@ const membersRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/me", { preHandler: app.requireUser() }, async (req) => profile(req.user!.id));
+
+  // Joins a site on purpose, for a person who signed in elsewhere. Repeating it is harmless.
+  app.post("/modules", { preHandler: app.requireUser(), config: { rateLimit: { max: 20, timeWindow: "1 hour" } } }, async (req, reply) => {
+    const body = z.object({ module: moduleField }).safeParse(req.body);
+    if (!body.success) return invalid(reply, body.error);
+    const userId = req.user!.id;
+    await app.prisma.userModule.upsert({ where: { userId_module: { userId, module: body.data.module } }, create: { userId, module: body.data.module }, update: {} });
+    return profile(userId);
+  });
 };
 
 export default membersRoutes;

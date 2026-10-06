@@ -1,4 +1,5 @@
-import type { SiteInfo } from "@/lib/site";
+import SiteSession from "@/components/SiteSession";
+import { SITES, type SiteInfo } from "@/lib/site";
 
 export function SiteBar({ site }: { site: SiteInfo }) {
   return (
@@ -8,7 +9,7 @@ export function SiteBar({ site }: { site: SiteInfo }) {
   );
 }
 
-export default function SitePlaceholder({ site }: { site: SiteInfo }) {
+export default function SitePlaceholder({ site, apiBase }: { site: SiteInfo; apiBase: string }) {
   return (
     <>
       <SiteBar site={site} />
@@ -21,13 +22,9 @@ export default function SitePlaceholder({ site }: { site: SiteInfo }) {
           <a href="https://bsd.wales" className="rounded-md border border-slate-300 px-4 py-2.5 hover:bg-slate-50">
             Back to BSD Directory
           </a>
-          <a
-            href="https://bsd.wales/account"
-            className="rounded-md px-4 py-2.5 text-white"
-            style={{ background: site.themeColor }}
-          >
-            Sign in
-          </a>
+        </div>
+        <div className="mt-6">
+          <SiteSession site={site === SITES.card ? "card" : "market"} apiBase={apiBase} />
         </div>
       </main>
     </>

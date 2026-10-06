@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle, ChevronLeft, ChevronRight, Inbox } from "lucide-react";
 import { ApiError, useSession } from "@/lib/admin-session";
 
@@ -111,28 +111,40 @@ export function Pager({ page, total, pageSize, onPage }: { page: number; total: 
 export const fmtDate = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
 
-/** Loads admin data for a page and lets it reload after an action. */
+// Pages already visited this session, so switching tabs shows the last data at once while fresh data loads quietly.
+// Keyed by admin and path, so one person's data is never shown to another signing in on the same browser.
+const dataCache = new Map<string, unknown>();
+
+/** Loads admin data for a page and lets it reload after an action. Shows the last seen data while it refreshes. */
 export function useAdminData<T>(path: string | null) {
-  const { api } = useSession();
-  const [data, setData] = useState<T | null>(null);
+  const { api, admin } = useSession();
+  const key = path && admin ? `${admin.email}|${path}` : null;
+  const [, rerender] = useState(0);
   const [error, setError] = useState<unknown>(null);
-  const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
+  const current = useRef(key);
+  current.current = key;
   const load = useCallback(async () => {
-    if (!path) return;
-    setLoading(true);
+    if (!key || !path) return;
+    setFetching(true);
     try {
-      setData(await api<T>(path));
-      setError(null);
+      dataCache.set(key, await api<T>(path));
+      if (current.current === key) {
+        setError(null);
+        rerender((n) => n + 1);
+      }
     } catch (e) {
-      setError(e);
+      if (current.current === key) setError(e);
     } finally {
-      setLoading(false);
+      if (current.current === key) setFetching(false);
     }
-  }, [api, path]);
+  }, [api, key, path]);
   useEffect(() => {
     void load();
   }, [load]);
-  return { data, error, loading, reload: load };
+  const data = key ? ((dataCache.get(key) as T | undefined) ?? null) : null;
+  // The skeleton only shows when there is nothing to show yet.
+  return { data, error, loading: fetching && data === null, reload: load };
 }
 
 export const STATUS_STYLE: Record<string, string> = {

@@ -68,6 +68,9 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <Link href="/account" className="hidden px-2 py-2 text-sm font-semibold text-brand-navy hover:text-brand-blue sm:inline">
+              Sign in
+            </Link>
             <Link
               href="/submit"
               className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-brand-blue px-3 py-2 text-sm font-semibold text-white hover:bg-brand-navy sm:px-4"
@@ -106,6 +109,9 @@ export default function Header() {
               </Link>
             ))}
             <div className="mt-2 border-t border-slate-200 pt-2">
+              <Link href="/account" onClick={() => setOpen(false)} className="block rounded-md px-2 py-3 text-base hover:bg-slate-100">
+                Sign in
+              </Link>
               {UTILITY.map(({ href, label, icon: Icon }) => (
                 <Link
                   key={href}

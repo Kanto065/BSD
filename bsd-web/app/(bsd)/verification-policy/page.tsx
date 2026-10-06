@@ -38,7 +38,7 @@ export default function VerificationPolicyPage() {
       <section className="mt-8">
         <h2 className="text-xl font-semibold text-brand-navy">The 3-Tier Community Verification System</h2>
         {/* Factsheet section 3, verbatim */}
-        <p className="mt-3 text-slate-600">{VERIFICATION_INTRO}</p>
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">{VERIFICATION_INTRO}</p>
         <ol className="mt-6 grid gap-4 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-stretch">
           {VERIFICATION_TIERS.map((t, i) => (
             <li key={t.tier} className="contents">
@@ -81,13 +81,13 @@ export default function VerificationPolicyPage() {
             </tbody>
           </table>
         </div>
-        <p className="mt-4 text-slate-600">The homepage &quot;Featured & Verified&quot; section shows only Community Verified listings.</p>
+        <p className="mt-4 max-w-prose leading-relaxed text-slate-600">The homepage &quot;Featured & Verified&quot; section shows only Community Verified listings.</p>
       </section>
 
       <section className="mt-12 rounded-xl bg-slate-50 p-6">
         <h2 className="text-lg font-semibold text-brand-navy">What verification does not mean</h2>
         {/* CLIENT-REVIEW (L1, L2): same wording as the smallest-change edits to the FAQ and Legal Disclaimer. */}
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 max-w-prose leading-relaxed text-slate-600">
           Community Verified confirms contact and operating details only; it is not an endorsement or guarantee of
           service quality.
         </p>

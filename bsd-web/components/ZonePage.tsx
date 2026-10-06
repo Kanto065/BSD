@@ -41,7 +41,7 @@ export default function ZonePage({
         <h2 className="text-lg font-semibold text-brand-navy">Postcodes</h2>
         <ul className="mt-3 flex flex-wrap gap-2">
           {zone.districts.map((d) => (
-            <li key={d} className="rounded-md bg-brand-navy px-3 py-1 text-sm font-semibold text-white">
+            <li key={d} className="rounded-md bg-brand-navy px-3 py-1 text-sm font-semibold tabular-nums text-white">
               {d}
             </li>
           ))}

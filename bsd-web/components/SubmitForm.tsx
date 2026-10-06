@@ -47,7 +47,7 @@ function zoneForPostcode(input: string): { zone?: (typeof ZONES)[number]; proble
 type Errors = Record<string, string>;
 
 const inputClass =
-  "mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-blue focus:outline-none aria-[invalid=true]:border-red-600";
+  "mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-base focus:border-brand-blue focus:outline-none sm:text-sm aria-[invalid=true]:border-red-600";
 const labelClass = "block text-sm font-semibold text-brand-navy";
 const helpClass = "mt-1 text-xs text-slate-500";
 
@@ -62,7 +62,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <fieldset className="rounded-xl border border-slate-200 p-5 sm:p-6">
+    <fieldset className="rounded-2xl border border-slate-200 p-5 shadow-[0_1px_2px_rgba(12,46,66,0.05)] sm:p-6">
       <legend className="px-2 font-heading text-lg font-bold text-brand-navy">{title}</legend>
       <div className="space-y-5">{children}</div>
     </fieldset>
@@ -569,7 +569,7 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
         <button
           type="submit"
           disabled={status === "sending"}
-          className="inline-flex items-center gap-2 rounded-md bg-green-700 px-8 py-3 text-base font-semibold text-white hover:bg-green-800 disabled:opacity-70"
+          className="press inline-flex items-center gap-2 rounded-md bg-green-700 px-8 py-3 text-base font-semibold text-white hover:bg-green-800 disabled:opacity-70"
         >
           {status === "sending" && <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />}
           {status === "sending" ? "Submitting..." : "Submit My Listing"}

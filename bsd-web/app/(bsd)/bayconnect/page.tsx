@@ -16,7 +16,7 @@ export default function BayConnectPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">About BayConnect</h1>
-      <p className="mt-4 text-slate-600">
+      <p className="mt-4 max-w-prose leading-relaxed text-slate-600">
         BayConnect is a regional community development, technology, and networking platform operating across the
         Swansea Bay City Region. Serving as an umbrella platform, BayConnect empowers local social projects, cultural
         initiatives, and digital resources with the structural, legal, and operational foundation needed to thrive.
@@ -24,7 +24,7 @@ export default function BayConnectPage() {
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-brand-navy">Governance, Compliance & Standards</h2>
-        <p className="mt-3 text-slate-600">
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           The Bangladeshi Business & Service Directory (BSD) operates under the administrative framework and
           governance of BayConnect. This parent partnership ensures that BSD operates with complete transparency and
           adhering to UK institutional standards:
@@ -51,10 +51,10 @@ export default function BayConnectPage() {
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-brand-navy">The BayConnect Ecosystem</h2>
-        <p className="mt-3 text-slate-600">
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           Beyond the BSD directory project, BayConnect supports wider regional initiatives focused on:
         </p>
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
+        <ul className="mt-3 max-w-prose list-disc space-y-1 pl-5 leading-relaxed text-slate-600">
           <li>Digital inclusion and technology workshops for local business owners.</li>
           <li>Community storytelling, media, and creative studio production (BayCreative Studio).</li>
           <li>
@@ -66,11 +66,11 @@ export default function BayConnectPage() {
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-brand-navy">Contact BayConnect Operations</h2>
-        <p className="mt-3 text-slate-600">
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           For corporate partnerships, institutional inquiries, or governance questions regarding BSD or other
           BayConnect initiatives:
         </p>
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
+        <ul className="mt-3 max-w-prose list-disc space-y-1 pl-5 leading-relaxed text-slate-600">
           <li>Platform Portal: bsd.wales</li>
           <li>Parent Organization: BayConnect</li>
           <li>

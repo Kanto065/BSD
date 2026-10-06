@@ -14,7 +14,7 @@ export default function FreeAccessPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">Open, Barrier-Free Access for Everyone</h1>
-      <p className="mt-4 text-slate-600">
+      <p className="mt-4 max-w-prose leading-relaxed text-slate-600">
         The Bangladeshi Business & Service Directory (BSD) was created with a clear mission: to ensure every
         resident, visitor, and business across South West Wales can easily find and connect with local
         Bangladeshi-owned businesses, professionals, and essential services without financial barriers.
@@ -46,10 +46,10 @@ export default function FreeAccessPage() {
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-brand-navy">What is Included in a Free Listing?</h2>
-        <p className="mt-3 text-slate-600">
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           All verified businesses receive a comprehensive standard profile that includes:
         </p>
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
+        <ul className="mt-3 max-w-prose list-disc space-y-1 pl-5 leading-relaxed text-slate-600">
           <li>Business Name & Official Category</li>
           <li>Full Operating Address & Postcode</li>
           <li>Direct Telephone & WhatsApp Contact Numbers</li>
@@ -60,7 +60,7 @@ export default function FreeAccessPage() {
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-brand-navy">How We Sustain This Platform</h2>
-        <p className="mt-3 text-slate-600">
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           BSD is an open-access community resource. Operational costs—such as web hosting, server security, domain
           maintenance, and print production—are covered through voluntary micro-contributions, regional business
           sponsorships, and community fundraising initiatives managed under the BayConnect umbrella.

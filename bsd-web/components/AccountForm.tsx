@@ -6,6 +6,9 @@ import { ErrorNote, inputClass } from "@/components/admin/ui";
 import { ApiError } from "@/lib/admin-session";
 import { memberCall as call, type Member } from "@/lib/member-api";
 
+// 16px on phones so iOS does not zoom into the field, back to the compact size from sm up.
+const fieldClass = inputClass.replace("text-sm", "text-base sm:text-sm");
+
 // Sign in, create an account, or see who you are signed in as. The API sets one httpOnly cookie on the parent
 // domain, so the same sign-in works on the Privilege Pass and Marketplace sites. The page never sees the token.
 
@@ -96,7 +99,7 @@ export default function AccountForm({ apiBase }: { apiBase: string }) {
             <label htmlFor="name" className={label}>
               Name
             </label>
-            <input id="name" autoComplete="name" required value={f.name} onChange={set("name")} className={inputClass} />
+            <input id="name" autoComplete="name" required value={f.name} onChange={set("name")} className={fieldClass} />
             {fieldError(error, "name") && <p className="mt-1 text-sm text-red-700">{fieldError(error, "name")}</p>}
           </div>
         )}
@@ -104,7 +107,7 @@ export default function AccountForm({ apiBase }: { apiBase: string }) {
           <label htmlFor="email" className={label}>
             Email
           </label>
-          <input id="email" type="email" autoComplete="email" required value={f.email} onChange={set("email")} className={inputClass} />
+          <input id="email" type="email" autoComplete="email" required value={f.email} onChange={set("email")} className={fieldClass} />
           {fieldError(error, "email") && <p className="mt-1 text-sm text-red-700">{fieldError(error, "email")}</p>}
         </div>
         <div>
@@ -118,7 +121,7 @@ export default function AccountForm({ apiBase }: { apiBase: string }) {
             required
             value={f.password}
             onChange={set("password")}
-            className={inputClass}
+            className={fieldClass}
           />
           {mode === "register" && <p className="mt-1 text-xs text-slate-600">At least 12 characters. Avoid easy words and sequences.</p>}
           {fieldError(error, "password") && <p className="mt-1 text-sm text-red-700">{fieldError(error, "password")}</p>}
@@ -128,7 +131,7 @@ export default function AccountForm({ apiBase }: { apiBase: string }) {
             <label htmlFor="postcode" className={label}>
               Postcode
             </label>
-            <input id="postcode" autoComplete="postal-code" required placeholder="SA1 4PE" value={f.postcode} onChange={set("postcode")} className={inputClass} />
+            <input id="postcode" autoComplete="postal-code" required placeholder="SA1 4PE" value={f.postcode} onChange={set("postcode")} className={fieldClass} />
             {fieldError(error, "postcode") && <p className="mt-1 text-sm text-red-700">{fieldError(error, "postcode")}</p>}
           </div>
         )}

@@ -19,7 +19,7 @@ export default function ContactPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <h1 className="text-2xl font-bold text-brand-navy sm:text-3xl">Contact BSD – Bangladeshi Business & Service Directory</h1>
-      <p className="mt-4 text-slate-600">
+      <p className="mt-4 max-w-prose leading-relaxed text-slate-600">
         If you have questions, need support, want to update your listing, or wish to submit a new business/service,
         you can reach the BSD team through the following channels.
       </p>
@@ -45,7 +45,7 @@ export default function ContactPage() {
 
       <section id="submit-or-update" className="mt-12 scroll-mt-24">
         <h2 className={h2}>Submit or Update a Listing</h2>
-        <p className="mt-3 text-slate-600">If you want to add your business/service or update an existing listing:</p>
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">If you want to add your business/service or update an existing listing:</p>
         <ul className="mt-3 space-y-2 text-slate-600">
           <li>
             <span className="font-semibold text-slate-800">Submission Form:</span>{" "}
@@ -67,7 +67,7 @@ export default function ContactPage() {
 
       <section className="mt-12">
         <h2 className={h2}>Postal / Physical Correspondence</h2>
-        <p className="mt-3 text-slate-600">Now unavailable. We will add address later.</p>
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">Now unavailable. We will add address later.</p>
       </section>
 
       <section className="mt-12">
@@ -84,7 +84,7 @@ export default function ContactPage() {
 
       <section className="mt-12">
         <h2 className={h2}>Important Notes</h2>
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
+        <ul className="mt-3 max-w-prose list-disc space-y-1 pl-5 leading-relaxed text-slate-600">
           <li>BSD is a free community initiative until 30 June 2027</li>
           {/* CLIENT-REVIEW (L3): "No sponsorships" became "No website sponsorships" so this stays consistent with
               print edition sponsorship being allowed. */}
@@ -97,7 +97,7 @@ export default function ContactPage() {
 
       <section className="mt-12">
         <h2 className={h2}>Powered By BayConnect</h2>
-        <p className="mt-3 text-slate-600">BSD is operated under the BayConnect community ecosystem.</p>
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">BSD is operated under the BayConnect community ecosystem.</p>
         <p className="mt-2 font-medium text-slate-800">BayConnect — Connect. Celebrate. Empower.</p>
       </section>
     </div>

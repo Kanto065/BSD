@@ -15,7 +15,7 @@ export default function CommunityInitiativePage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">Empowering Local Businesses, Connecting Communities</h1>
-      <p className="mt-4 text-slate-600">
+      <p className="mt-4 max-w-prose leading-relaxed text-slate-600">
         The Bangladeshi Business & Service Directory (BSD) is a community-led, volunteer-driven initiative designed
         to bridge the digital gap for local Bangladeshi entrepreneurs, professionals, and community organizations
         across the Swansea Bay Region and South West Wales.
@@ -23,12 +23,12 @@ export default function CommunityInitiativePage() {
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-brand-navy">Why We Started BSD</h2>
-        <p className="mt-3 text-slate-600">
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           The Bangladeshi community has long been a vital pillar of South West Wales&apos;s economy and social
           fabric—from renowned restaurants and takeaways to solicitors, accountants, healthcare professionals,
           skilled tradespeople, and cultural organizations.
         </p>
-        <p className="mt-3 text-slate-600">
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           However, many established and emerging businesses lacked a single, unified digital platform and printed
           directory that brought all these services together under one trusted umbrella. BSD was founded to solve
           this challenge.
@@ -59,12 +59,12 @@ export default function CommunityInitiativePage() {
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-brand-navy">Our Regional Footprint</h2>
-        <p className="mt-3 text-slate-600">
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           BSD covers the complete SA Postcode Area (SA1 to SA34), organized into three strategic zones:
         </p>
         {/* CLIENT-REVIEW: reproduced verbatim. Zone 3 is given here as SA14 – SA34, while the Regional
             Coverage Factsheet gives SA14–SA20 and SA31–SA34. */}
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
+        <ul className="mt-3 max-w-prose list-disc space-y-1 pl-5 leading-relaxed text-slate-600">
           <li>Zone 1: Greater Swansea & Gower (SA1 – SA7)</li>
           <li>Zone 2: Neath Port Talbot & Swansea Valley (SA8 – SA13)</li>
           <li>Zone 3: Carmarthenshire & West Wales (SA14 – SA34)</li>
@@ -73,7 +73,7 @@ export default function CommunityInitiativePage() {
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-brand-navy">Get Involved</h2>
-        <p className="mt-3 text-slate-600">
+        <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
           BSD is built by the community, for the community. Whether you want to volunteer as a field representative,
           assist with data verification, or support our outreach events, we welcome your involvement.
         </p>

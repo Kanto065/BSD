@@ -15,20 +15,20 @@ export default function CoverageAreaPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">Coverage Area</h1>
-      <p className="mt-4 text-slate-600">
+      <p className="mt-4 max-w-prose leading-relaxed text-slate-600">
         BSD covers the Swansea Bay region and South West Wales across postcodes SA1 to SA34, organised into three
         operational zones.
       </p>
 
       <div className="mt-10 space-y-8">
         {ZONES.map((z) => (
-          <section key={z.slug} className="rounded-xl border border-slate-200 p-6">
+          <section key={z.slug} className="rounded-2xl border border-slate-200 p-6 shadow-[0_1px_2px_rgba(12,46,66,0.05)]">
             <h2 className="text-xl font-bold text-brand-navy">
               <Link href={`/${z.slug}`} className="hover:text-brand-blue hover:underline">
                 Zone {z.number}: {z.name}
               </Link>
             </h2>
-            <p className="mt-1 text-sm font-semibold text-brand-teal-dark">Postcodes {z.postcodeLabel}</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-brand-teal-dark">Postcodes {z.postcodeLabel}</p>
             <ul className="mt-4 flex flex-wrap gap-2">
               {z.localities.map((l) => (
                 <li
@@ -49,12 +49,12 @@ export default function CoverageAreaPage() {
         ))}
       </div>
 
-      <p className="mt-8 text-slate-600">Additional nearby areas may be included as the directory expands.</p>
+      <p className="mt-8 max-w-prose leading-relaxed text-slate-600">Additional nearby areas may be included as the directory expands.</p>
 
       {/* The homepage "View Verified Info" step sends visitors to this page, so it carries a short summary. */}
       <section className="mt-10 rounded-xl bg-slate-50 p-6">
         <h2 className="text-lg font-semibold text-brand-navy">Verified information</h2>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 max-w-prose leading-relaxed text-slate-600">
           Every entry goes through a 3-tier community verification check, and the badge on each listing shows how far
           along that check is.
         </p>

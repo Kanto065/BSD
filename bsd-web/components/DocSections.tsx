@@ -13,17 +13,17 @@ export function DocSections({ sections }: { sections: DocSection[] }) {
           <h2 className="text-lg font-semibold text-brand-navy">{s.title}</h2>
           {s.body.map((b, i) =>
             typeof b === "string" ? (
-              <p key={i} className="mt-2 text-slate-600">
+              <p key={i} className="mt-2 max-w-prose leading-relaxed text-slate-600">
                 {b}
               </p>
             ) : "list" in b ? (
-              <ul key={i} className="mt-2 list-disc space-y-1 pl-6 text-slate-600 marker:text-brand-teal">
+              <ul key={i} className="mt-2 max-w-prose list-disc space-y-1 pl-6 leading-relaxed text-slate-600 marker:text-brand-teal">
                 {b.list.map((item, j) => (
                   <li key={j}>{item}</li>
                 ))}
               </ul>
             ) : (
-              <div key={i} className="mt-2 text-slate-600">
+              <div key={i} className="mt-2 max-w-prose leading-relaxed text-slate-600">
                 {b.node}
               </div>
             ),

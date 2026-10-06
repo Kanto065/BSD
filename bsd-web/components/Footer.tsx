@@ -23,7 +23,7 @@ const LEGAL_LINKS = [
   { href: "/bayconnect", label: "Powered by BayConnect" },
 ];
 
-const linkClass = "text-slate-600 hover:text-brand-blue hover:underline";
+const linkClass = "inline-block py-1 text-slate-600 transition-colors hover:text-brand-blue hover:underline";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -31,7 +31,7 @@ export default function Footer() {
   return (
     <footer>
       {/* Pre-footer call-to-action banner */}
-      <section className="bg-brand-navy px-4 py-12 text-center text-white sm:px-6">
+      <section className="on-dark bg-brand-navy px-4 py-12 text-center text-white sm:px-6">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-2xl font-bold sm:text-3xl">Grow Your Business Across South West Wales</h2>
           <p className="mt-3 text-slate-200">
@@ -40,14 +40,14 @@ export default function Footer() {
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               href="/submit"
-              className="inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-brand-navy hover:bg-slate-100"
+              className="press inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-brand-navy shadow-sm hover:bg-slate-100"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               Add Your Business Free
             </Link>
             <Link
               href="/download-pdf"
-              className="inline-flex items-center gap-2 rounded-md border border-white px-6 py-3 font-semibold text-white hover:bg-white/10"
+              className="press inline-flex items-center gap-2 rounded-md border border-white px-6 py-3 font-semibold text-white hover:bg-white/10"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
               Download Print Guide (PDF)
@@ -88,7 +88,7 @@ export default function Footer() {
           {/* Column 2: quick links */}
           <nav aria-label="Quick links">
             <h2 className="text-base font-bold text-brand-navy">Quick Links</h2>
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-3 space-y-0.5 text-sm">
               {QUICK_LINKS.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className={linkClass}>
@@ -102,7 +102,7 @@ export default function Footer() {
           {/* Column 3: coverage zones */}
           <nav aria-label="Coverage zones">
             <h2 className="text-base font-bold text-brand-navy">Coverage Zones</h2>
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-3 space-y-0.5 text-sm">
               {ZONES.map((z) => (
                 <li key={z.slug}>
                   <Link href={`/${z.slug}`} className={linkClass}>
@@ -126,7 +126,7 @@ export default function Footer() {
           {/* Column 4: legal and governance */}
           <nav aria-label="Legal and governance">
             <h2 className="text-base font-bold text-brand-navy">Legal & Governance</h2>
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-3 space-y-0.5 text-sm">
               {LEGAL_LINKS.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className={linkClass}>

@@ -32,13 +32,13 @@ export default function Header() {
   return (
     <header className="bg-white">
       {/* On phones these links move into the menu (below), where they are easier to tap. */}
-      <div className="hidden bg-brand-navy text-white sm:block">
+      <div className="on-dark hidden bg-brand-navy text-white sm:block">
         <nav
           aria-label="Utility"
           className="mx-auto flex max-w-6xl flex-wrap items-center justify-end gap-x-6 gap-y-1 px-6 py-2 text-xs font-medium"
         >
           {UTILITY.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className="inline-flex items-center gap-1.5 hover:underline">
+            <Link key={href} href={href} className="inline-flex items-center gap-1.5 py-0.5 hover:underline">
               <Icon className="h-3.5 w-3.5" aria-hidden="true" />
               {label}
             </Link>
@@ -58,7 +58,7 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
-                className={`border-b-2 py-1 hover:text-brand-blue ${
+                className={`border-b-2 py-1 transition-colors hover:text-brand-blue ${
                   isActive(item.href) ? "border-brand-teal text-brand-blue" : "border-transparent"
                 }`}
               >
@@ -68,12 +68,12 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link href="/account" className="hidden px-2 py-2 text-sm font-semibold text-brand-navy hover:text-brand-blue sm:inline">
+            <Link href="/account" className="hidden px-2 py-2 text-sm font-semibold text-brand-navy transition-colors hover:text-brand-blue active:text-brand-teal-dark sm:inline">
               Sign in
             </Link>
             <Link
               href="/submit"
-              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-brand-blue px-3 py-2 text-sm font-semibold text-white hover:bg-brand-navy sm:px-4"
+              className="press inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-brand-blue px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-navy sm:px-4"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               Submit Listing
@@ -84,7 +84,7 @@ export default function Header() {
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
               aria-controls="mobile-menu"
-              className="rounded-md p-2.5 text-brand-navy hover:bg-slate-100 lg:hidden"
+              className="press rounded-md p-2.5 text-brand-navy hover:bg-slate-100 active:bg-slate-200 lg:hidden"
             >
               {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>

@@ -41,3 +41,13 @@ api.bsd.wales {
 	encode gzip
 	reverse_proxy bsd-api:4000
 }
+
+card.bsd.wales {
+	encode gzip
+	reverse_proxy bsd-web:3000
+}
+
+marketplace.bsd.wales {
+	encode gzip
+	reverse_proxy bsd-web:3000
+}

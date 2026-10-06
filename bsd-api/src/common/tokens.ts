@@ -10,7 +10,12 @@ export const ACCESS_TTL_SECONDS = 15 * 60;
 export const REFRESH_TTL_SECONDS = 7 * 24 * 60 * 60;
 export const REFRESH_COOKIE = "bsd_refresh";
 
-export type TokenClaims = { sub: string; tv: number; typ: "access" | "refresh" };
+// Member sessions (the shared login on bsd.wales, card.bsd.wales, marketplace.bsd.wales) are one httpOnly cookie
+// valid for 30 days, checked against the member's tokenVersion on every request.
+export const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
+export const SESSION_COOKIE = "bsd_session";
+
+export type TokenClaims = { sub: string; tv: number; typ: "access" | "refresh" | "session" };
 
 function secret(): string {
   const s = process.env.JWT_SECRET;
@@ -18,10 +23,10 @@ function secret(): string {
   return s;
 }
 
-export function signToken(typ: TokenClaims["typ"], adminId: string, tokenVersion: number): string {
+export function signToken(typ: TokenClaims["typ"], subjectId: string, tokenVersion: number): string {
   return jwt.sign({ tv: tokenVersion, typ }, secret(), {
-    subject: adminId,
-    expiresIn: typ === "access" ? ACCESS_TTL_SECONDS : REFRESH_TTL_SECONDS,
+    subject: subjectId,
+    expiresIn: typ === "access" ? ACCESS_TTL_SECONDS : typ === "session" ? SESSION_TTL_SECONDS : REFRESH_TTL_SECONDS,
     algorithm: "HS256",
     issuer: "bsd-api",
   });

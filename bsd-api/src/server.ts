@@ -9,6 +9,7 @@ import healthRoutes from "./modules/health/health.routes.js";
 import categoriesRoutes from "./modules/categories/categories.routes.js";
 import businessesRoutes from "./modules/businesses/businesses.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
+import membersRoutes from "./modules/members/members.routes.js";
 import contactRoutes from "./modules/contact/contact.routes.js";
 import zonesRoutes from "./modules/zones/zones.routes.js";
 import { loggerOptions } from "./common/logging.js";
@@ -61,6 +62,7 @@ export function buildApp(opts: AppOptions = {}) {
   app.register(zonesRoutes, { prefix: "/zones" });
   app.register(adminRoutes, { prefix: "/admin" });
   app.register(contactRoutes, { prefix: "/contact" });
+  app.register(membersRoutes, { prefix: "/auth" });
 
   return app;
 }

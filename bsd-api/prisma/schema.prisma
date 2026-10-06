@@ -275,3 +275,52 @@ model AuditLog {
   details    Json?
   createdAt  DateTime  @default(now())
 }
+
+// Phase 2 shared login. One account (User.id is the central_sso_id) works on bsd.wales, card.bsd.wales and
+// marketplace.bsd.wales. Separate from AdminUser, which stays the team login.
+enum SiteModule {
+  DIRECTORY
+  CARD
+  MARKETPLACE
+}
+
+enum MemberBadge {
+  STUDENT
+  VOLUNTEER
+  MEMBER
+}
+
+model User {
+  id               String       @id @default(cuid())
+  name             String
+  email            String       @unique
+  passwordHash     String
+  postcode         String
+  postcodeDistrict String
+  createdAt        DateTime     @default(now())
+  lastLoginAt      DateTime?
+  failedLoginCount Int          @default(0)
+  lockedUntil      DateTime?
+  tokenVersion     Int          @default(0) // bumped on password change, which ends every session
+  modules          UserModule[]
+  badges           UserBadge[]
+}
+
+// Which of the three sites a person has joined.
+model UserModule {
+  userId    String
+  module    SiteModule
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, module])
+}
+
+model UserBadge {
+  userId    String
+  badge     MemberBadge
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badge])
+}

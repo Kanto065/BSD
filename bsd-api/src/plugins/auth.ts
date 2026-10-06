@@ -1,7 +1,7 @@
 import fp from "fastify-plugin";
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 import type { AdminRole } from "@prisma/client";
-import { verifyToken } from "../common/tokens.js";
+import { SESSION_COOKIE, verifyToken } from "../common/tokens.js";
 
 // Admin authentication and role checks. The real security boundary: the admin web pages only hide links.
 //
@@ -10,13 +10,18 @@ import { verifyToken } from "../common/tokens.js";
 
 export type AuthedAdmin = { id: string; name: string; email: string; role: AdminRole; mustChangePassword: boolean };
 
+export type AuthedUser = { id: string; name: string; email: string };
+
 declare module "fastify" {
   interface FastifyInstance {
+    /** preHandler: requires a signed-in member (the shared login). */
+    requireUser: () => (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
     /** preHandler: requires a signed-in admin with one of these roles. No roles means any admin. */
     requireRole: (...roles: AdminRole[]) => (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
   interface FastifyRequest {
     admin?: AuthedAdmin;
+    user?: AuthedUser;
   }
   interface FastifyContextConfig {
     /** Routes a person with a temporary password may still use (to see who they are and change it). */
@@ -29,6 +34,13 @@ const RANK: Record<AdminRole, number> = { VOLUNTEER: 1, MODERATOR: 2, ADMIN: 3, 
 export const atLeast = (role: AdminRole, minimum: AdminRole) => RANK[role] >= RANK[minimum];
 
 const authPlugin: FastifyPluginAsync = async (app) => {
+  app.decorate("requireUser", () => async (req: FastifyRequest, reply: FastifyReply) => {
+    const claims = verifyToken(req.cookies[SESSION_COOKIE] ?? "", "session");
+    const user = claims ? await app.prisma.user.findUnique({ where: { id: claims.sub }, select: { id: true, name: true, email: true, tokenVersion: true } }) : null;
+    if (!claims || !user || user.tokenVersion !== claims.tv) return reply.code(401).send({ error: "Please sign in." });
+    req.user = { id: user.id, name: user.name, email: user.email };
+  });
+
   app.decorate("requireRole", (...roles: AdminRole[]) => {
     return async (req: FastifyRequest, reply: FastifyReply) => {
       const header = req.headers.authorization;

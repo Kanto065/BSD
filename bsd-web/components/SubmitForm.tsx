@@ -214,7 +214,7 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
 
   if (status === "done") {
     return (
-      <div role="status" className="rounded-xl border border-green-200 bg-green-50 p-8 text-center">
+      <div role="status" className="rounded-xl border border-green-200 bg-green-50 p-8 text-center motion-safe:animate-swap-in">
         <CheckCircle2 className="mx-auto h-10 w-10 text-green-700" aria-hidden="true" />
         <p className="mt-4 text-lg font-semibold text-green-900">{CONFIRMATION_MESSAGE}</p>
       </div>
@@ -227,7 +227,7 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-8">
       {(errorList.length > 0 || formError) && (
-        <div ref={summaryRef} tabIndex={-1} role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800 focus:outline-none">
+        <div ref={summaryRef} tabIndex={-1} role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800 focus:outline-none motion-safe:animate-swap-in">
           {formError ? (
             <p className="font-semibold">{formError}</p>
           ) : (

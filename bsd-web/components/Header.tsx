@@ -95,7 +95,7 @@ export default function Header() {
           <nav
             id="mobile-menu"
             aria-label="Mobile"
-            className="flex flex-col gap-1 border-t border-slate-200 px-4 py-3 text-sm font-semibold text-brand-navy lg:hidden"
+            className="flex flex-col gap-1 border-t border-slate-200 px-4 py-3 text-sm font-semibold text-brand-navy motion-safe:animate-menu-in lg:hidden"
           >
             {NAV.map((item) => (
               <Link

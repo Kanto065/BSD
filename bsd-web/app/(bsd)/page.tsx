@@ -303,7 +303,7 @@ export default async function HomePage() {
               <details key={item.question} className="group px-5 py-4">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-brand-navy marker:content-none">
                   {item.question}
-                  <ChevronDown className="h-5 w-5 shrink-0 text-brand-teal-dark transition-transform group-open:rotate-180" aria-hidden="true" />
+                  <ChevronDown className="h-5 w-5 shrink-0 text-brand-teal-dark transition-transform duration-200 ease-out group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
                 </summary>
                 <p className="mt-3 text-slate-600">{item.answer}</p>
               </details>

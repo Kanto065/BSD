@@ -133,10 +133,8 @@ export default function SitePlaceholder({ site, apiBase }: { site: SiteInfo; api
           <div className="mt-8">
             <SiteLinks />
           </div>
-          <div className="mt-6 rounded-3xl bg-white/5 p-1.5 ring-1 ring-white/10">
-            <div className="rounded-[1.25rem] bg-white p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)]">
-              <SiteSession site={key} apiBase={apiBase} />
-            </div>
+          <div className="mt-6 rounded-2xl bg-white/[0.06] px-5 py-4 ring-1 ring-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+            <SiteSession site={key} apiBase={apiBase} />
           </div>
         </div>
         <div className="motion-safe:animate-rise">{key === "card" ? <PassArt /> : <MarketArt />}</div>

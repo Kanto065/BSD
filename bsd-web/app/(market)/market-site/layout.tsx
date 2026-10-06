@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import "../../globals.css";
 import { SITES } from "@/lib/site";
+import BottomNav from "@/components/BottomNav";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 const montserrat = Montserrat({ subsets: ["latin"], display: "swap", variable: "--font-montserrat" });
@@ -17,10 +18,15 @@ export const metadata: Metadata = {
   icons: { icon: "/pwa-icon/192", apple: "/pwa-icon/192" },
 };
 
+export const viewport: Viewport = { viewportFit: "cover" };
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${montserrat.variable}`}>
-      <body className="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900 antialiased">{children}</body>
+      <body className="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900 antialiased">
+        {children}
+        <BottomNav site="market" />
+      </body>
     </html>
   );
 }

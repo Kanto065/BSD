@@ -16,6 +16,15 @@ const config: Config = {
           "teal-dark": "#167A69",
           red: "#C42B26",
         },
+        // Client package palette, separate from brand. Only bc-bar is used so far.
+        bc: {
+          shell: "#0F172A",
+          bar: "#005A8C",
+          teal: "#0D9488",
+          amber: "#D97706",
+          green: "#16A34A",
+          canvas: "#F8FAFC",
+        },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],

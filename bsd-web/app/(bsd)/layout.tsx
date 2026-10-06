@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import "../globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SiteChrome from "@/components/SiteChrome";
+import BottomNav from "@/components/BottomNav";
 import { EMAILS, SITE_DESCRIPTION, SITE_NAME, SITE_URL, ZONES } from "@/lib/content";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
@@ -33,6 +34,9 @@ export const metadata: Metadata = {
     canonical: "/",
   },
 };
+
+// viewportFit cover makes env(safe-area-inset-bottom) real on iPhones, for the bottom nav.
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const organizationJsonLd = {
@@ -66,6 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SiteChrome>
           <Footer />
         </SiteChrome>
+        <BottomNav site="bsd" />
       </body>
     </html>
   );

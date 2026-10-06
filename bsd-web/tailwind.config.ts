@@ -26,6 +26,10 @@ const config: Config = {
           canvas: "#F8FAFC",
         },
       },
+      keyframes: {
+        rise: { from: { opacity: "0", transform: "translateY(8px)" }, to: { opacity: "1", transform: "translateY(0)" } },
+      },
+      animation: { rise: "rise 300ms cubic-bezier(0.16, 1, 0.3, 1) backwards" },
       fontFamily: {
         sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
         heading: ["var(--font-montserrat)", "var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],

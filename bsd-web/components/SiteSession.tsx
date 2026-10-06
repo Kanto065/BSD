@@ -8,8 +8,11 @@ import { SITES } from "@/lib/site";
 // Shows who is signed in on the Pass and Marketplace placeholders. Signing in itself happens on bsd.wales/account.
 
 const ACCOUNT = "https://bsd.wales/account";
-const solid = "min-h-[44px] rounded-md px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60";
-const outline = "inline-flex min-h-[44px] items-center rounded-md border border-slate-300 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50";
+const press = "touch-manipulation select-none motion-safe:transition-transform motion-safe:duration-150 active:scale-[0.98]";
+const solid = `min-h-[44px] rounded-full px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 ${press}`;
+const outline = `inline-flex min-h-[44px] items-center rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold hover:bg-slate-50 ${press}`;
+// Darker shade of the site colour so white button text passes AA (teal #0D9488 is only 3.7:1 on white).
+const BUTTON = { card: "#0F766E", market: "#005A8C" } as const;
 
 export default function SiteSession({ site, apiBase }: { site: "card" | "market"; apiBase: string }) {
   const info = SITES[site];
@@ -52,7 +55,7 @@ export default function SiteSession({ site, apiBase }: { site: "card" | "market"
       ) : (
         <div aria-live="polite">
           {view === "out" && (
-            <a href={ACCOUNT} className={`${solid} inline-flex items-center`} style={{ background: info.themeColor }}>
+            <a href={ACCOUNT} className={`${solid} inline-flex items-center`} style={{ background: BUTTON[site] }}>
               Sign in
             </a>
           )}
@@ -61,7 +64,7 @@ export default function SiteSession({ site, apiBase }: { site: "card" | "market"
               <p className="text-slate-700">
                 Hello, {member.name}. You have not joined {info.name} yet.
               </p>
-              <button type="button" onClick={join} disabled={busy} className={`${solid} mt-3`} style={{ background: info.themeColor }}>
+              <button type="button" onClick={join} disabled={busy} className={`${solid} mt-3`} style={{ background: BUTTON[site] }}>
                 {busy ? "Joining..." : `Join ${info.shortName}`}
               </button>
               {failed && <p className="mt-2 text-sm text-red-700">Could not join. Please try again.</p>}

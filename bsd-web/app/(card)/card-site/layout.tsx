@@ -23,7 +23,7 @@ export const viewport: Viewport = { viewportFit: "cover" };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${montserrat.variable}`}>
-      <body className="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900 antialiased">
+      <body className="flex min-h-[100dvh] flex-col bg-bc-shell font-sans text-slate-900 antialiased [-webkit-tap-highlight-color:transparent]">
         {children}
         <BottomNav site="card" />
       </body>

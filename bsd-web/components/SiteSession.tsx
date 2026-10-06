@@ -52,7 +52,7 @@ export default function SiteSession({ site, apiBase }: { site: "card" | "market"
   return (
     <div className="flex min-h-[88px] flex-col justify-center" aria-live="polite">
       {checking ? (
-        <div className="h-4 w-48 animate-pulse rounded bg-white/15" aria-hidden="true" />
+        <div className="h-4 w-48 motion-safe:animate-pulse rounded bg-white/15" aria-hidden="true" />
       ) : (
         // Keyed by state so each change (join, signed in, signed out) fades in. The live region above stays mounted.
         <div key={view} className="motion-safe:animate-swap-in">

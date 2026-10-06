@@ -158,8 +158,6 @@ bullet("Enquiries for Print Sponsorship:", "Email support@bsd.wales for details 
 heading("5. DIRECTORY CONTACT & SUPPORT");
 bullet("Web Portal:", "https://bsd.wales");
 bullet("General Enquiries:", "support@bsd.wales");
-bullet("Data Privacy / GDPR:", "compliance@bsd.wales");
-bullet("Community Outreach:", "community@bsd.wales");
 bullet("Parent Platform:", "BayConnect Operations Team, Swansea Bay Area, United Kingdom");
 
 // ---- Footer on every page
@@ -176,7 +174,7 @@ for (let i = 0; i < range.count; i++) {
     y,
     { width: W, align: "center", lineBreak: false }
   );
-  doc.text("Powered by BayConnect | Creative Partner: Kanta Bhattacharjee", doc.page.margins.left, y + 11, {
+  doc.text("Powered by BayConnect | Creative Partner: CREOVA Studio", doc.page.margins.left, y + 11, {
     width: W,
     align: "center",
     lineBreak: false,

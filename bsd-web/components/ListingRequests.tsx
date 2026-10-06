@@ -107,9 +107,9 @@ export default function ListingRequests({ apiBase, slug, businessName }: { apiBa
               if (res.ok) setDone(data.message ?? "Thank you. We have received your request.");
               else if (res.status === 429) setFormError("You have sent several requests in a short time. Please try again in an hour.");
               else if (data.fieldErrors) setErrors(data.fieldErrors);
-              else setFormError("Something went wrong. Please try again, or email support@bsd.wales.");
+              else setFormError("Something went wrong. Please try again, or use the email address shown in the footer.");
             } catch {
-              setFormError("We could not reach the server. Please try again, or email support@bsd.wales.");
+              setFormError("We could not reach the server. Please try again, or use the email address shown in the footer.");
             } finally {
               setBusy(false);
             }

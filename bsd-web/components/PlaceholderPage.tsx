@@ -1,4 +1,5 @@
 import { Mail } from "lucide-react";
+import { CONTACT_FOOTER_NOTE } from "@/lib/content";
 import { ArrowLink } from "@/components/ArrowLink";
 
 // CLIENT-REVIEW: the client did not supply copy for this page. It exists so the footer links resolve, with a
@@ -6,11 +7,9 @@ import { ArrowLink } from "@/components/ArrowLink";
 export default function PlaceholderPage({
   title,
   message,
-  email,
 }: {
   title: string;
   message: string;
-  email: string;
 }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
@@ -18,9 +17,7 @@ export default function PlaceholderPage({
       <p className="mt-4 text-slate-600">{message}</p>
       <p className="mt-6 inline-flex items-center gap-2 text-slate-700">
         <Mail className="h-4 w-4 text-brand-teal-dark" aria-hidden="true" />
-        <a href={`mailto:${email}`} className="font-semibold text-brand-teal-dark hover:underline">
-          {email}
-        </a>
+        <span>{CONTACT_FOOTER_NOTE}</span>
       </p>
       <div className="mt-10">
         <ArrowLink href="/" direction="left" className="justify-center">

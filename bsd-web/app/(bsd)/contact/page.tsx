@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CONTACT_CHANNELS, EMAILS, OPERATING_HOURS } from "@/lib/content";
+import { CONTACT_CHANNELS, CONTACT_FOOTER_NOTE, OPERATING_HOURS } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Contact BSD",
@@ -23,10 +23,11 @@ export default function ContactPage() {
         If you have questions, need support, want to update your listing, or wish to submit a new business/service,
         you can reach the BSD team through the following channels.
       </p>
+      <p className="mt-3 max-w-prose leading-relaxed text-slate-600">{CONTACT_FOOTER_NOTE}</p>
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2">
         {CONTACT_CHANNELS.map((c) => (
-          <div key={c.email} className="rounded-lg border border-slate-200 p-5">
+          <div key={c.title} className="rounded-lg border border-slate-200 p-5">
             <h2 className="font-semibold text-brand-navy">{c.title}</h2>
             <p className="mt-2 text-sm text-slate-600">{c.description}</p>
             {c.points && (
@@ -36,9 +37,6 @@ export default function ContactPage() {
                 ))}
               </ul>
             )}
-            <a href={`mailto:${c.email}`} className="mt-3 inline-block font-medium text-brand-teal-dark hover:underline">
-              {c.email}
-            </a>
           </div>
         ))}
       </div>
@@ -55,11 +53,8 @@ export default function ContactPage() {
           </li>
           <li>
             <span className="font-semibold text-slate-800">Update Request:</span>{" "}
-            <a href={`mailto:${EMAILS.support}?subject=Listing%20update%20request`} className={link}>
-              Request Listing Update
-            </a>
-            <span className="mt-1 block text-sm text-slate-500">
-              You can also open your listing&apos;s page and use the &ldquo;Request an update&rdquo; form there.
+            <span className="block text-sm text-slate-500">
+              You can open your listing&apos;s page and use the &ldquo;Request an update&rdquo; form there.
             </span>
           </li>
         </ul>

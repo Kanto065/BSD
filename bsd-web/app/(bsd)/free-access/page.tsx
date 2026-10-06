@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Mail } from "lucide-react";
-import { EMAILS } from "@/lib/content";
+import { CONTACT_FOOTER_NOTE } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: { absolute: "Free Access Policy | BSD Wales" },
@@ -73,12 +73,7 @@ export default function FreeAccessPage() {
         </p>
         <p className="mt-3 flex items-center gap-2 text-slate-700">
           <Mail className="h-4 w-4 text-brand-teal-dark" aria-hidden="true" />
-          <span>
-            Contact Us:{" "}
-            <a href={`mailto:${EMAILS.support}`} className="font-semibold text-brand-teal-dark hover:underline">
-              {EMAILS.support}
-            </a>
-          </span>
+          <span>{CONTACT_FOOTER_NOTE}</span>
         </p>
       </section>
     </div>

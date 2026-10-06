@@ -155,12 +155,8 @@ const SECTIONS: DocSection[] = [
       {
         node: (
           <>
-            {/* CLIENT-REVIEW (L4): v1 gave privacy@bsd.wales. The v2 mailbox set uses compliance@bsd.wales for privacy and GDPR. */}
             <p>
-              <span className="font-semibold text-slate-800">Email:</span>{" "}
-              <a href="mailto:compliance@bsd.wales" className={docLink}>
-                compliance@bsd.wales
-              </a>
+              <span className="font-semibold text-slate-800">Email:</span> the address shown in the footer.
             </p>
             <p className="mt-1">
               <span className="font-semibold text-slate-800">Contact Page:</span> {contactPage}

@@ -6,6 +6,8 @@ import type { Config } from "tailwindcss";
 // text use brand.teal-dark (about 5.2:1, passes AA).
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+  // Hover styles apply only on devices that can hover, so they do not stick after a tap on phones.
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     extend: {
       colors: {

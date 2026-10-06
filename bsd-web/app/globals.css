@@ -2,8 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth anchor scrolling only for people who have not asked for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 html {
-  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -20,5 +27,40 @@ body {
 
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-brand-blue;
+  }
+
+  /* bsd.wales only (the class sits on the bsd layout body), so the card and marketplace sites are untouched. */
+  .bsd-site h1,
+  .bsd-site h2,
+  .bsd-site h3,
+  .bsd-site h4 {
+    text-wrap: balance;
+  }
+  .bsd-site h1 {
+    letter-spacing: -0.015em;
+  }
+  .bsd-site p {
+    text-wrap: pretty;
+  }
+  .bsd-site a,
+  .bsd-site button,
+  .bsd-site summary {
+    touch-action: manipulation;
+  }
+}
+
+/* Shared helpers, inert until a class is used. */
+@layer components {
+  /* Press feedback for buttons and button-like links. */
+  .press {
+    @apply transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98];
+  }
+  /* Restrained card hover: border picks up the brand blue and a soft navy tinted shadow appears. */
+  .card-lift {
+    @apply transition-[border-color,box-shadow] duration-200 ease-out hover:border-brand-blue/30 hover:shadow-[0_6px_20px_-8px_rgba(12,46,66,0.22)];
+  }
+  /* Light focus ring on navy surfaces, where the default blue ring is invisible. */
+  .on-dark :focus-visible {
+    outline-color: #fff;
   }
 }

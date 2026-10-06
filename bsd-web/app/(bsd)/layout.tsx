@@ -58,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en" className={`${inter.variable} ${montserrat.variable}`}>
-      <body className="flex min-h-screen flex-col bg-white font-sans text-slate-900 antialiased">
+      <body className="bsd-site flex min-h-dvh flex-col bg-white font-sans text-slate-900 antialiased">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}

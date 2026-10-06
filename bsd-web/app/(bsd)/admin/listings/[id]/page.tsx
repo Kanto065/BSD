@@ -24,6 +24,7 @@ type Listing = {
   phone: string;
   whatsapp: string | null;
   email: string | null;
+  showEmail: boolean;
   websiteOrSocial: string | null;
   address: string | null;
   postcode: string;
@@ -211,7 +212,7 @@ export default function ListingDetailPage() {
           <Row label="Owner / provider">{l.ownerName}</Row>
           <Row label="Phone">{l.phone}</Row>
           <Row label="WhatsApp">{l.whatsapp}</Row>
-          <Row label="Email">{l.email}</Row>
+          <Row label="Email">{l.email ? `${l.email} (${l.showEmail ? "shown publicly" : "hidden from public"})` : null}</Row>
           <Row label="Website / social">{l.websiteOrSocial}</Row>
           <Row label="Address">{l.address}</Row>
           <Row label="Postcode">
@@ -327,6 +328,7 @@ function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => vo
     openingHours: l.openingHours ?? "",
     specialNotes: l.specialNotes ?? "",
   });
+  const [showEmail, setShowEmail] = useState(l.showEmail);
   const [zones, setZones] = useState(l.servedZones.map((z) => z.zone.slug));
   const [localities, setLocalities] = useState(l.localities.map((x) => x.locality.slug));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -372,6 +374,7 @@ function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => vo
                 phone: f.phone,
                 whatsapp: f.whatsapp || null,
                 email: f.email || null,
+                showEmail,
                 websiteOrSocial: f.websiteOrSocial || null,
                 address: f.address || null,
                 postcode: f.postcode,
@@ -427,7 +430,14 @@ function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => vo
         {text("ownerName", "Owner / Service Provider Name")}
         {text("phone", "Phone Number")}
         {text("whatsapp", "WhatsApp Number")}
-        {text("email", "Email Address")}
+        <div>
+          {text("email", "Email Address")}
+          <label className="mt-2 flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" checked={showEmail} onChange={(e) => setShowEmail(e.target.checked)} className="accent-brand-blue" />
+            Show this email on the public listing
+          </label>
+          {errors.showEmail && <p className="mt-1 text-sm font-medium text-red-700">{errors.showEmail}</p>}
+        </div>
         {text("websiteOrSocial", "Website / Social Media")}
         {text("openingHours", "Opening Hours", 2)}
         {text("address", "Address")}

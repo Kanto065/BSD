@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import SubmitForm from "@/components/SubmitForm";
 import { publicApiBase } from "@/lib/api";
-import { EMAILS } from "@/lib/content";
+import { CONTACT_FOOTER_NOTE } from "@/lib/content";
 import { getCategories, toOptions } from "@/lib/taxonomy";
 
 export const metadata: Metadata = {
@@ -23,11 +23,7 @@ export default async function SubmitPage() {
         including Independent Professionals who work without a physical office.
       </p>
       <p className="mt-2 text-sm text-slate-500">
-        Every listing is checked by the BSD team before it is published. Questions? Email{" "}
-        <a href={`mailto:${EMAILS.support}`} className="font-semibold text-brand-teal-dark hover:underline">
-          {EMAILS.support}
-        </a>
-        .
+        Every listing is checked by the BSD team before it is published. Questions? {CONTACT_FOOTER_NOTE}
       </p>
       <div className="mt-10">
         <SubmitForm apiBase={publicApiBase()} categories={toOptions(categories)} />

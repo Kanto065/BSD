@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SiteChrome from "@/components/SiteChrome";
 import BottomNav from "@/components/BottomNav";
-import { EMAILS, SITE_DESCRIPTION, SITE_NAME, SITE_URL, ZONES } from "@/lib/content";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SUPPORT_EMAIL, ZONES } from "@/lib/content";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 // Montserrat is the heading face from the client's brand (see the logo).
@@ -49,10 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     parentOrganization: { "@type": "Organization", name: "BayConnect" },
     areaServed: ZONES.map((z) => `${z.name} (${z.postcodeLabel})`),
     contactPoint: [
-      { "@type": "ContactPoint", contactType: "customer support", email: EMAILS.support },
-      { "@type": "ContactPoint", contactType: "privacy and data protection", email: EMAILS.compliance },
-      { "@type": "ContactPoint", contactType: "community outreach", email: EMAILS.community },
-      { "@type": "ContactPoint", contactType: "partnerships and governance", email: EMAILS.admin },
+      { "@type": "ContactPoint", contactType: "customer support", email: SUPPORT_EMAIL },
     ],
   };
 

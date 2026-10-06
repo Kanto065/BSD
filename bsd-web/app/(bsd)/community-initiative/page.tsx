@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Globe, Mail } from "lucide-react";
-import { EMAILS } from "@/lib/content";
+import { CONTACT_FOOTER_NOTE } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: { absolute: "Our Community Initiative | BSD Wales" },
@@ -80,12 +80,7 @@ export default function CommunityInitiativePage() {
         <ul className="mt-4 space-y-2 text-slate-700">
           <li className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-brand-teal-dark" aria-hidden="true" />
-            <span>
-              Email:{" "}
-              <a href={`mailto:${EMAILS.community}`} className="font-semibold text-brand-teal-dark hover:underline">
-                {EMAILS.community}
-              </a>
-            </span>
+            <span>{CONTACT_FOOTER_NOTE}</span>
           </li>
           <li className="flex items-center gap-2">
             <Globe className="h-4 w-4 text-brand-teal-dark" aria-hidden="true" />

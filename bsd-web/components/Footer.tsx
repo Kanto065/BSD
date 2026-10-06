@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BadgeCheck, Download, Globe, Lock, Plus } from "lucide-react";
 import Logo from "@/components/Logo";
-import { CREATIVE_PARTNER, EMAILS, ZONES, zoneLabel } from "@/lib/content";
+import { CREATIVE_PARTNER, SUPPORT_EMAIL, ZONES, creativePartnerHref, zoneLabel } from "@/lib/content";
 
 // Column 2 to 4 links follow "Website Footer Structural Layout". The Coverage Area link points at
 // /coverage-area directly, which is where /coverage redirects to.
@@ -23,10 +23,11 @@ const LEGAL_LINKS = [
   { href: "/bayconnect", label: "Powered by BayConnect" },
 ];
 
-const linkClass = "inline-block py-1 text-slate-600 transition-colors hover:text-brand-blue hover:underline";
+const linkClass = "inline-flex min-h-11 items-center text-slate-600 transition-colors hover:text-brand-blue hover:underline";
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const studioHref = creativePartnerHref();
 
   return (
     <footer>
@@ -63,21 +64,21 @@ export default function Footer() {
             <Logo className="h-14" />
             <h2 className="mt-4 text-base font-bold text-brand-navy">BSD Swansea Bay</h2>
             <p className="mt-2 text-sm text-slate-600">Connecting local businesses across South West Wales</p>
-            <ul className="mt-4 space-y-2 text-sm font-medium">
+            <ul className="mt-2 text-sm font-medium">
               <li>
-                <Link href="/verification-policy" className="inline-flex items-center gap-2 text-brand-teal-dark hover:underline">
+                <Link href="/verification-policy" className="inline-flex min-h-11 items-center gap-2 text-brand-teal-dark hover:underline">
                   <BadgeCheck className="h-4 w-4" aria-hidden="true" />
                   Community Verified
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="inline-flex items-center gap-2 text-brand-teal-dark hover:underline">
+                <Link href="/privacy" className="inline-flex min-h-11 items-center gap-2 text-brand-teal-dark hover:underline">
                   <Lock className="h-4 w-4" aria-hidden="true" />
                   UK GDPR Compliant
                 </Link>
               </li>
               <li>
-                <Link href="/free-access" className="inline-flex items-center gap-2 text-brand-teal-dark hover:underline">
+                <Link href="/free-access" className="inline-flex min-h-11 items-center gap-2 text-brand-teal-dark hover:underline">
                   <Globe className="h-4 w-4" aria-hidden="true" />
                   100% Free Access
                 </Link>
@@ -88,7 +89,7 @@ export default function Footer() {
           {/* Column 2: quick links */}
           <nav aria-label="Quick links">
             <h2 className="text-base font-bold text-brand-navy">Quick Links</h2>
-            <ul className="mt-3 space-y-0.5 text-sm">
+            <ul className="mt-3 text-sm">
               {QUICK_LINKS.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className={linkClass}>
@@ -102,7 +103,7 @@ export default function Footer() {
           {/* Column 3: coverage zones */}
           <nav aria-label="Coverage zones">
             <h2 className="text-base font-bold text-brand-navy">Coverage Zones</h2>
-            <ul className="mt-3 space-y-0.5 text-sm">
+            <ul className="mt-3 text-sm">
               {ZONES.map((z) => (
                 <li key={z.slug}>
                   <Link href={`/${z.slug}`} className={linkClass}>
@@ -126,7 +127,7 @@ export default function Footer() {
           {/* Column 4: legal and governance */}
           <nav aria-label="Legal and governance">
             <h2 className="text-base font-bold text-brand-navy">Legal & Governance</h2>
-            <ul className="mt-3 space-y-0.5 text-sm">
+            <ul className="mt-3 text-sm">
               {LEGAL_LINKS.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className={linkClass}>
@@ -143,20 +144,8 @@ export default function Footer() {
           <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-4 text-sm text-slate-600 sm:px-6 md:flex-row md:flex-wrap md:items-center md:gap-x-6">
             <span>
               Support:{" "}
-              <a href={`mailto:${EMAILS.support}`} className="font-medium text-brand-teal-dark hover:underline">
-                {EMAILS.support}
-              </a>
-            </span>
-            <span>
-              Privacy:{" "}
-              <a href={`mailto:${EMAILS.compliance}`} className="font-medium text-brand-teal-dark hover:underline">
-                {EMAILS.compliance}
-              </a>
-            </span>
-            <span>
-              Outreach:{" "}
-              <a href={`mailto:${EMAILS.community}`} className="font-medium text-brand-teal-dark hover:underline">
-                {EMAILS.community}
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="inline-flex min-h-11 items-center font-medium text-brand-teal-dark hover:underline">
+                {SUPPORT_EMAIL}
               </a>
             </span>
             <span>Operations: BayConnect Team, Swansea Bay, UK</span>
@@ -170,23 +159,27 @@ export default function Footer() {
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
               {/* CLIENT-REVIEW: the Legal Disclaimer link is not in the v2 footer link list. It is added here so
                   the disclaimer page stays reachable from every page. */}
-              <Link href="/legal" className="hover:text-brand-blue hover:underline">
+              <Link href="/legal" className="inline-flex min-h-11 items-center hover:text-brand-blue hover:underline">
                 Legal Disclaimer
               </Link>
               <span aria-hidden="true">|</span>
               <span>
-                <Link href="/bayconnect" className="hover:text-brand-blue hover:underline">
+                <Link href="/bayconnect" className="inline-flex min-h-11 items-center hover:text-brand-blue hover:underline">
                   Powered by BayConnect
                 </Link>{" "}
                 | Creative Partner:{" "}
-                <a
-                  href={CREATIVE_PARTNER.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-brand-blue hover:underline"
-                >
-                  {CREATIVE_PARTNER.name}
-                </a>
+                {studioHref ? (
+                  <a
+                    href={studioHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center hover:text-brand-blue hover:underline"
+                  >
+                    {CREATIVE_PARTNER.name}
+                  </a>
+                ) : (
+                  CREATIVE_PARTNER.name
+                )}
               </span>
             </p>
           </div>

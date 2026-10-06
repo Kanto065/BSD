@@ -34,20 +34,26 @@ export const SITE_DESCRIPTION =
   "Find trusted Bangladeshi businesses, services and professionals across Swansea, Neath Port Talbot and Carmarthenshire (SA1 to SA34). A free community directory powered by BayConnect.";
 
 // The "Creative Partner" credit in the footer, on /bayconnect and in the Factsheet PDF.
-// CLIENT-REVIEW: the client docs name "CREOVA Studio" here. At the developer's request the credit shows the
-// developer's own name and LinkedIn profile instead.
+// studioUrl stays empty until the studio site is known, so the name renders as plain text (never a dead link).
 export const CREATIVE_PARTNER = {
-  name: "Kanta Bhattacharjee",
-  url: "https://www.linkedin.com/in/kanta-bhattacharjee/",
-} as const;
+  name: "CREOVA Studio",
+  studioUrl: "",
+};
 
-// The v2 mailbox set. info@, partnership@, urgent@ and privacy@ no longer exist.
-export const EMAILS = {
-  support: "support@bsd.wales",
-  compliance: "compliance@bsd.wales",
-  community: "community@bsd.wales",
-  admin: "admin@bsd.wales",
-} as const;
+// Returns the studio URL only when it parses as https, else null.
+export function creativePartnerHref(url: string = CREATIVE_PARTNER.studioUrl): string | null {
+  try {
+    return new URL(url).protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+// The one public email address. The client revision of 2026-10-07 supersedes the four mailbox model.
+export const SUPPORT_EMAIL = "support@bsd.wales";
+
+// Shown wherever a page used to give another address. Needs client sign-off (the Contact page has no form).
+export const CONTACT_FOOTER_NOTE = "Please contact us using the email address shown in the footer.";
 
 // ---------------------------------------------------------------------------
 // Coverage: 3 zones covering SA1 to SA34, names and localities from the
@@ -322,14 +328,12 @@ export function findCategory(slug: string | undefined): Category | undefined {
 
 export const CONTACT_CHANNELS: {
   title: string;
-  email: string;
   description: string;
   points?: string[];
   response?: string;
 }[] = [
   {
     title: "Support and General Enquiries",
-    email: EMAILS.support,
     description:
       "For general questions about the directory, categories, coverage area, or community initiative. Also for help adding or updating a listing, and for any listing that contains incorrect or sensitive information that needs urgent correction.",
     points: [
@@ -340,13 +344,11 @@ export const CONTACT_CHANNELS: {
   },
   {
     title: "Privacy and GDPR",
-    email: EMAILS.compliance,
     description:
       "For privacy-related questions or requests, including how your data is used and your rights under UK data protection law.",
   },
   {
     title: "Community Outreach and Feedback",
-    email: EMAILS.community,
     description:
       "For feedback, suggestions, corrections, or community collaboration. Also if you want to volunteer as a field representative, help with data verification, or support outreach events.",
     points: [
@@ -358,7 +360,6 @@ export const CONTACT_CHANNELS: {
   },
   {
     title: "Partnerships and Governance",
-    email: EMAILS.admin,
     description:
       // CLIENT-REVIEW (L3): "sponsorships" became "website sponsorships" so this stays consistent with print edition sponsorship being allowed.
       "BSD does not accept website sponsorships or advertisements, but community organisations may collaborate for non-commercial purposes such as community events, cultural programmes, student support initiatives, and welfare projects. Also for corporate partnerships, institutional inquiries, or governance questions.",
@@ -558,7 +559,7 @@ export const HOME_FAQ: { question: string; answer: string }[] = [
   {
     question: "How can I update or claim an existing listing?",
     answer:
-      'If your business is already listed and you wish to update contact details, upload a logo, or claim ownership, simply click the "Claim This Listing" button on the business profile page or email us at support@bsd.wales with proof of ownership.',
+      'If your business is already listed and you wish to update contact details, upload a logo, or claim ownership, simply click the "Claim This Listing" button on the business profile page or contact us with proof of ownership using the email address shown in the footer.',
   },
 ];
 

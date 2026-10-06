@@ -174,6 +174,31 @@ describe("a valid submission", () => {
   });
 });
 
+describe("email visibility", () => {
+  const stored = async (fields: Field[]) => {
+    expect((await submit(fields)).status).toBe(201);
+    return (await latestBusiness())!;
+  };
+
+  it("keeps the email but hides it when the form sends no flag", async () => {
+    const b = await stored(validFields());
+    expect(b.email).toBe("hello@example.com");
+    expect(b.showEmail).toBe(false);
+  });
+
+  it("shows it only when the flag is the string true", async () => {
+    expect((await stored(validFields({ showEmail: "true" }))).showEmail).toBe(true);
+    expect((await stored(validFields({ showEmail: "false" }))).showEmail).toBe(false);
+    expect((await stored(validFields({ showEmail: "yes" }))).showEmail).toBe(false);
+  });
+
+  it("forces the flag off when there is no email", async () => {
+    const b = await stored(validFields({ email: null, showEmail: "true" }));
+    expect(b.email).toBeNull();
+    expect(b.showEmail).toBe(false);
+  });
+});
+
 describe("the rules from the submission form", () => {
   const expectError = async (fields: Field[], field: string, files: FileField[] = [], status = 400) => {
     const before = await prisma.business.count();

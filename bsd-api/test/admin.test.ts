@@ -347,6 +347,36 @@ describe("editing a listing", () => {
     expect((await edit({ category: "independent-professionals", ownerName: "Rupa Begum" })).status).toBe(200);
   });
 
+  it("shows the email to admin even when hidden, lets the flag be flipped with an audit row, and refuses it without an email", async () => {
+    const l = await makeListing({ email: "hidden@example.com" });
+    const edit = (body: object) => call("PATCH", `/admin/listings/${l.id}`, { token: tokens.MODERATOR, body });
+    const detail = async () => (await call("GET", `/admin/listings/${l.id}`, { token: tokens.MODERATOR })).body.listing;
+
+    expect(await detail()).toMatchObject({ email: "hidden@example.com", showEmail: false });
+
+    const on = await edit({ showEmail: true });
+    expect(on.status).toBe(200);
+    expect(on.body.changed).toEqual(["showEmail"]);
+    expect(await detail()).toMatchObject({ email: "hidden@example.com", showEmail: true });
+    const entry = await prisma.auditLog.findFirstOrThrow({ where: { entityId: l.id, action: "EDIT_LISTING" }, orderBy: { createdAt: "desc" } });
+    expect((entry.details as Record<string, { from: unknown; to: unknown }>).showEmail).toEqual({ from: false, to: true });
+
+    expect((await edit({ showEmail: false })).body.changed).toEqual(["showEmail"]);
+    expect(await detail()).toMatchObject({ email: "hidden@example.com", showEmail: false });
+
+    // removing the address switches a shown flag off with it
+    await edit({ showEmail: true });
+    expect((await edit({ email: "" })).body.changed.sort()).toEqual(["email", "showEmail"]);
+    expect(await detail()).toMatchObject({ email: null, showEmail: false });
+
+    // no address, so nothing to show
+    const refused = await edit({ showEmail: true });
+    expect(refused.status).toBe(400);
+    expect(refused.body.fieldErrors.showEmail).toMatch(/email address/);
+    expect((await edit({ email: "", showEmail: true })).status).toBe(400);
+    expect((await detail()).showEmail).toBe(false);
+  });
+
   it("removing a photo deletes the row and the stored files", async () => {
     const l = await makeListing();
     storage.objects.set("businesses/x/a.jpg", { body: Buffer.from("a"), contentType: "image/jpeg" });

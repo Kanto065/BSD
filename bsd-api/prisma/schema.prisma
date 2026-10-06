@@ -127,6 +127,7 @@ model Business {
   phone              String
   whatsapp           String?
   email              String?
+  showEmail          Boolean              @default(false) // public pages show the email only when true, admin always sees it
   websiteOrSocial    String?
   address            String?
   postcode           String // normalised full UK postcode, e.g. "SA1 4PE"

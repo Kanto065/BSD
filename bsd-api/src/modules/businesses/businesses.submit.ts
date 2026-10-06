@@ -120,6 +120,8 @@ export const submissionSchema = z.object({
   phone,
   whatsapp: phone.optional().or(z.literal("")).transform((v) => v || undefined),
   email: z.string().trim().max(200).email("Enter a valid email address.").optional().or(z.literal("")).transform((v) => v || undefined),
+  // Multipart string "true" or "false". Anything else counts as false. Forced false later when there is no email.
+  showEmail: z.string().optional().transform((v) => v?.trim().toLowerCase() === "true"),
   websiteOrSocial: optionalText(300),
   address: optionalText(300),
   postcode: text(12).min(1, "Enter the postcode."),
@@ -295,6 +297,7 @@ export async function saveSubmission(
         phone: s.phone,
         whatsapp: s.whatsapp ?? null,
         email: s.email ?? null,
+        showEmail: Boolean(s.email) && s.showEmail,
         websiteOrSocial: s.websiteOrSocial ? sanitizeText(s.websiteOrSocial) : null,
         address: s.address ? sanitizeText(s.address) : "HomeBased",
         postcode: coverage.postcode,

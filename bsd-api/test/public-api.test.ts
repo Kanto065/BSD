@@ -12,10 +12,13 @@ vi.setConfig({ testTimeout: 60_000, hookTimeout: 240_000 });
 const STATUSES = ["PENDING", "APPROVED", "REJECTED", "REMOVED"] as const;
 const VERIFICATIONS = ["NEWLY_LISTED", "PENDING_VERIFICATION", "COMMUNITY_VERIFIED"] as const;
 
-const SECRETS = ["SECRET-REJECTION-REASON", "Private Owner Name"];
+const HIDDEN_EMAIL = "hidden-owner@example.com";
+const SHOWN_EMAIL = "shop@example.com";
+const SECRETS = ["SECRET-REJECTION-REASON", "Private Owner Name", HIDDEN_EMAIL];
 const FORBIDDEN_KEYS = [
   "id",
   "ownerName",
+  "showEmail",
   "rejectionReason",
   "reviewedById",
   "reviewedAt",
@@ -83,7 +86,7 @@ beforeAll(async () => {
     description: "A friendly local shop with a wide range of products and helpful staff for the whole community.",
     servicesOffered: ["Groceries", "Halal meat"],
     ownerName: "Private Owner Name",
-    email: "shop@example.com", // public by design: the submission form says the email will be publicly displayed
+    email: HIDDEN_EMAIL, // stored for admin, hidden from the public unless showEmail is true
     consentAccurateInfo: true,
     consentPublishPermission: true,
     consentNoLiability: true,
@@ -142,6 +145,8 @@ beforeAll(async () => {
       ...base,
       slug: "cross-zone-caterers",
       name: "Cross Zone Caterers",
+      email: SHOWN_EMAIL,
+      showEmail: true,
       description: "Event catering based in Swansea and travelling across South West Wales for weddings and celebrations.",
       servicesOffered: ["Wedding catering"],
       phone: "01792 222222",
@@ -298,13 +303,58 @@ describe("private data never appears in a public response", () => {
 describe("what a detail page does show", () => {
   it("includes the public contact details, and the list view stays lighter", async () => {
     const detail = (await get("/businesses/cross-zone-caterers")).json();
-    expect(detail.email).toBe("shop@example.com");
+    expect(detail.email).toBe(SHOWN_EMAIL);
+    expect(detail).not.toHaveProperty("showEmail");
     expect(detail.phone).toBe("01792 222222");
     expect(detail.servicesOffered).toEqual(["Wedding catering"]);
     expect(detail.servedZones).toEqual([{ name: "Carmarthenshire & West Wales", slug: "zone-3" }]);
     const listed = (await get("/businesses/search?q=caterers")).json().items[0];
     expect(listed).not.toHaveProperty("email");
     expect(listed).not.toHaveProperty("servicesOffered");
+  });
+});
+
+describe("business email visibility", () => {
+  const urls = [
+    "/businesses/search?pageSize=50",
+    "/businesses/search?q=chef",
+    "/businesses/featured?limit=24",
+    "/businesses/sitemap",
+    "/categories",
+    "/categories/groceries-and-halal?pageSize=50",
+    "/categories/restaurants-and-takeaways?pageSize=50",
+    "/zones",
+    "/zones/zone-1?pageSize=50",
+    "/zones/zone-2?pageSize=50",
+    "/businesses/home-chef-kitchen",
+    "/businesses/cross-zone-caterers",
+    "/businesses/matrix-approved-newly-listed",
+  ];
+
+  it("a hidden address is null on the detail and appears nowhere in any public body", async () => {
+    expect((await get("/businesses/home-chef-kitchen")).json().email).toBeNull();
+    for (const url of urls) {
+      const r = await get(url);
+      expect(r.status, url).toBe(200);
+      expect(r.body, url).not.toContain(HIDDEN_EMAIL);
+      expect(r.body, url).not.toContain("hidden-owner");
+      if (url !== "/businesses/cross-zone-caterers") expect(r.body, url).not.toContain(SHOWN_EMAIL);
+    }
+  });
+
+  it("a shown address is on the detail only, and turning the flag off hides it again", async () => {
+    expect((await get("/businesses/cross-zone-caterers")).json().email).toBe(SHOWN_EMAIL);
+    await prisma.business.update({ where: { slug: "home-chef-kitchen" }, data: { showEmail: true } });
+    expect((await get("/businesses/home-chef-kitchen")).json().email).toBe(HIDDEN_EMAIL);
+    await prisma.business.update({ where: { slug: "home-chef-kitchen" }, data: { showEmail: false } });
+    expect((await get("/businesses/home-chef-kitchen")).json().email).toBeNull();
+  });
+
+  it("publicEmail never returns an address without the flag, or a missing one with it", async () => {
+    const { publicEmail } = await import("../src/common/public.js");
+    expect(publicEmail({ email: "a@b.co", showEmail: false })).toBeNull();
+    expect(publicEmail({ email: "a@b.co", showEmail: true })).toBe("a@b.co");
+    expect(publicEmail({ email: null, showEmail: true })).toBeNull();
   });
 });
 

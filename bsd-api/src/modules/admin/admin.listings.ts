@@ -38,6 +38,7 @@ const editBody = z
     phone,
     whatsapp: z.union([phone, z.literal(""), z.null()]),
     email: z.union([z.string().trim().max(200).email("Enter a valid email address."), z.literal(""), z.null()]),
+    showEmail: z.boolean(),
     websiteOrSocial: z.union([optionalText(300), z.null()]),
     address: z.union([optionalText(300), z.null()]),
     postcode: text(12),
@@ -244,6 +245,14 @@ const listingsRoutes: FastifyPluginAsync = async (app) => {
     if (e.phone !== undefined) data.phone = e.phone;
     if (e.whatsapp !== undefined) data.whatsapp = e.whatsapp || null;
     if (e.email !== undefined) data.email = e.email || null;
+    // An address is always kept for admin. The flag only controls the public page, and needs an address to point at.
+    const finalEmail = e.email !== undefined ? e.email || null : current.email;
+    if (e.showEmail !== undefined) {
+      if (e.showEmail && !finalEmail) errors.showEmail = "Add an email address before showing it publicly.";
+      data.showEmail = e.showEmail;
+    } else if (!finalEmail && current.showEmail) {
+      data.showEmail = false; // removing the address also switches the flag off
+    }
     for (const key of ["websiteOrSocial", "otherAreaText", "openingHours", "specialNotes"] as const) {
       if (e[key] !== undefined) data[key] = clean(e[key]);
     }

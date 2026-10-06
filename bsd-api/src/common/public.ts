@@ -35,6 +35,7 @@ export const publicBusinessListSelect = {
 export const publicBusinessDetailSelect = {
   ...publicBusinessListSelect,
   email: true,
+  showEmail: true,
   websiteOrSocial: true,
   servicesOffered: true,
   openingHours: true,
@@ -50,6 +51,11 @@ type DetailRow = Prisma.BusinessGetPayload<{ select: typeof publicBusinessDetail
 /** Home-based listings hide the full postcode. Public pages show only the district and the locality. */
 export function isHomeBased(address: string | null): boolean {
   return !address || /home[\s-]?based/i.test(address);
+}
+
+/** The only way an email reaches a public response: the owner's choice (showEmail) decides, and showEmail is never sent itself. */
+export function publicEmail(row: { email: string | null; showEmail: boolean }): string | null {
+  return row.showEmail && row.email ? row.email : null;
 }
 
 const SUMMARY_LENGTH = 200;
@@ -86,7 +92,7 @@ export function toPublicDetail(row: DetailRow) {
   return {
     ...base,
     description: row.description,
-    email: row.email,
+    email: publicEmail(row),
     websiteOrSocial: row.websiteOrSocial,
     servicesOffered: row.servicesOffered,
     openingHours: row.openingHours,

@@ -141,3 +141,30 @@ describe("5_subcategory_order", () => {
     await db.close();
   });
 });
+
+describe("7_business_email_visibility", () => {
+  it("keeps today's behaviour for listings that show an email, and hides new ones by default", async () => {
+    const db = await prodLikeDb();
+    for (const m of ["1_v2_schema", "2_photo_variants", "3_admin_auth", "4_request_contacts", "5_subcategory_order", "6_member_accounts"]) await db.exec(sql(m));
+    await db.exec(`insert into "CoverageZone"(id,name,slug,"postcodeDistricts") values ('z1','Zone','zone-1',ARRAY['SA1'])`);
+    const insert = (id: string, email: string | null) =>
+      db.query(
+        `insert into "Business"(id,slug,name,"categoryId",description,phone,postcode,"postcodeDistrict","zoneId",email) values ($1,$1,'B','c1','d','1','SA1 4PE','SA1','z1',$2)`,
+        [id, email]
+      );
+    await insert("with-email", "owner@example.com");
+    await insert("null-email", null);
+    await insert("empty-email", "");
+
+    await db.exec(sql("7_business_email_visibility"));
+
+    const rows = (await db.query<{ id: string; showEmail: boolean }>(`select id, "showEmail" from "Business" order by id`)).rows;
+    expect(Object.fromEntries(rows.map((r) => [r.id, r.showEmail]))).toEqual({ "with-email": true, "null-email": false, "empty-email": false });
+
+    await insert("fresh", "new@example.com");
+    expect((await db.query<{ s: boolean }>(`select "showEmail" s from "Business" where id='fresh'`)).rows[0]!.s).toBe(false);
+    // the addresses themselves are untouched
+    expect((await db.query<{ n: number }>(`select count(*)::int n from "Business" where email is not null and email <> ''`)).rows[0]!.n).toBe(2);
+    await db.close();
+  });
+});

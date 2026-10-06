@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "copy:snapshot": "node scripts/copy-snapshot.mjs",
+    "copy:diff": "node --experimental-strip-types --no-warnings scripts/copy-diff.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.45.0",

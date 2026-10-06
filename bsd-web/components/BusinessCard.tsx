@@ -12,7 +12,7 @@ export function locationLine(b: Pick<PublicListItem, "postcode" | "postcodeDistr
 
 export default function BusinessCard({ business: b }: { business: PublicListItem }) {
   return (
-    <article className="flex flex-col rounded-xl border border-slate-200 bg-white p-5">
+    <article className="card-lift flex flex-col rounded-2xl border border-slate-200 bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         {b.logoUrl ? (
           // Owner supplied logo. Plain img on purpose: the host is our own uploads, and it is small.
@@ -36,7 +36,7 @@ export default function BusinessCard({ business: b }: { business: PublicListItem
       </p>
       <p className="mt-2 flex-1 text-sm text-slate-600">{b.summary}</p>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
-        <a href={`tel:${b.phone.replace(/\s+/g, "")}`} className="-my-2 inline-flex items-center gap-1.5 py-2 text-sm font-semibold text-brand-navy hover:text-brand-blue">
+        <a href={`tel:${b.phone.replace(/\s+/g, "")}`} className="-my-2 inline-flex items-center gap-1.5 py-2 text-sm font-semibold tabular-nums text-brand-navy hover:text-brand-blue">
           <Phone className="h-4 w-4" aria-hidden="true" />
           {b.phone}
         </a>

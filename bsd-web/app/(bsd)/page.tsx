@@ -44,7 +44,7 @@ const OWNER_STEPS: Step[] = [
 
 function StepList({ title, steps }: { title: string; steps: Step[] }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6">
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(12,46,66,0.05)]">
       <h3 className="text-sm font-bold uppercase tracking-wide text-brand-teal-dark">{title}</h3>
       <ol className="mt-4 space-y-3">
         {steps.map((s, i) => (
@@ -74,7 +74,7 @@ export default async function HomePage() {
   return (
     <>
       {/* Hero: exact copy per "Exact Copy & Field Specifications" in the Homepage Header doc */}
-      <section className="bg-gradient-to-b from-sky-50 to-white px-4 py-14 text-center sm:px-6 sm:py-20">
+      <section className="bg-gradient-to-b from-brand-navy/[0.07] via-brand-blue/[0.03] to-white px-4 py-14 text-center sm:px-6 sm:py-20">
         <div className="mx-auto max-w-4xl">
           <span className="inline-block rounded-full bg-sky-100 px-4 py-1 text-sm font-semibold text-brand-blue">
             Swansea Bay & South West Wales Edition
@@ -91,7 +91,7 @@ export default async function HomePage() {
             action="/search"
             method="GET"
             role="search"
-            className="mx-auto mt-8 flex max-w-4xl flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row"
+            className="mx-auto mt-8 flex max-w-4xl flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-[0_8px_24px_-12px_rgba(12,46,66,0.25)] md:flex-row"
           >
             <div className="relative flex-1">
               <label htmlFor="hero-q" className="sr-only">
@@ -103,7 +103,7 @@ export default async function HomePage() {
                 type="text"
                 name="q"
                 placeholder="Search restaurants, solicitors, trades, accountants..."
-                className="w-full rounded-md border border-slate-300 py-3 pl-9 pr-3 text-sm focus:border-brand-blue focus:outline-none"
+                className="w-full rounded-md border border-slate-300 py-3 pl-9 pr-3 text-base focus:border-brand-blue md:text-sm focus:outline-none"
               />
             </div>
             <div className="relative md:w-72">
@@ -115,7 +115,7 @@ export default async function HomePage() {
                 id="hero-zone"
                 name="zone"
                 defaultValue=""
-                className="w-full rounded-md border border-slate-300 bg-white py-3 pl-9 pr-3 text-sm focus:border-brand-blue focus:outline-none"
+                className="w-full rounded-md border border-slate-300 bg-white py-3 pl-9 pr-3 text-base focus:border-brand-blue md:text-sm focus:outline-none"
               >
                 <option value="">{ALL_ZONES_LABEL}</option>
                 {ZONES.map((z) => (
@@ -127,7 +127,7 @@ export default async function HomePage() {
             </div>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-brand-blue px-6 py-3 text-sm font-semibold text-white hover:bg-brand-navy"
+              className="press inline-flex items-center justify-center gap-2 rounded-md bg-brand-blue px-6 py-3 text-sm font-semibold text-white hover:bg-brand-navy"
             >
               <Search className="h-4 w-4" aria-hidden="true" />
               Search Directory
@@ -137,13 +137,13 @@ export default async function HomePage() {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4">
             <Link
               href="/categories"
-              className="rounded-md border-2 text-center border-brand-blue px-6 py-3 font-semibold text-brand-blue hover:bg-brand-blue hover:text-white"
+              className="press rounded-md border-2 text-center border-brand-blue px-6 py-3 font-semibold text-brand-blue hover:bg-brand-blue hover:text-white"
             >
               Browse Directory
             </Link>
             <Link
               href="/submit"
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-green-700 px-6 py-3 font-semibold text-white hover:bg-green-800"
+              className="press inline-flex items-center justify-center gap-2 rounded-md bg-green-700 px-6 py-3 font-semibold text-white hover:bg-green-800"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               Add Business Free
@@ -172,7 +172,7 @@ export default async function HomePage() {
             <Link
               key={c.slug}
               href={`/categories/${c.slug}`}
-              className="rounded-lg border border-slate-200 p-4 text-center text-sm font-semibold text-brand-navy transition hover:border-brand-teal hover:shadow-sm"
+              className="card-lift press rounded-xl border border-slate-200 bg-white p-4 text-center text-sm font-semibold text-brand-navy"
             >
               <c.icon className="mx-auto h-7 w-7 text-brand-teal" aria-hidden="true" />
               <span className="mt-2 block">{c.name}</span>
@@ -182,7 +182,7 @@ export default async function HomePage() {
         <div className="mt-8 text-center">
           <Link
             href="/categories"
-            className="inline-flex items-center gap-2 rounded-md border-2 border-brand-blue px-6 py-3 font-semibold text-brand-blue hover:bg-brand-blue hover:text-white"
+            className="press inline-flex items-center gap-2 rounded-md border-2 border-brand-blue px-6 py-3 font-semibold text-brand-blue hover:bg-brand-blue hover:text-white"
           >
             <Search className="h-4 w-4" aria-hidden="true" />
             View All 20+ Categories
@@ -199,12 +199,12 @@ export default async function HomePage() {
           </div>
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {ZONES.map((z) => (
-              <div key={z.slug} className="flex flex-col rounded-xl border border-slate-200 bg-white p-6">
+              <div key={z.slug} className="card-lift flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 className="text-lg font-bold text-brand-navy">
                   Zone {z.number}: {z.name}
                 </h3>
                 <p className="mt-3 text-sm text-slate-600">
-                  <span className="font-semibold text-slate-800">Postcodes:</span> {z.postcodeLabel}
+                  <span className="font-semibold text-slate-800">Postcodes:</span> <span className="tabular-nums">{z.postcodeLabel}</span>
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
                   <span className="font-semibold text-slate-800">Key Areas:</span> {z.keyAreas}
@@ -212,7 +212,7 @@ export default async function HomePage() {
                 <div className="mt-auto pt-5">
                   <Link
                     href={`/${z.slug}`}
-                    className="inline-flex w-full items-center justify-center rounded-md bg-brand-blue px-4 py-2 text-sm font-semibold text-white hover:bg-brand-navy"
+                    className="press inline-flex w-full items-center justify-center rounded-md bg-brand-blue px-4 py-2 text-sm font-semibold text-white hover:bg-brand-navy"
                   >
                     Browse Zone {z.number}
                   </Link>
@@ -257,7 +257,7 @@ export default async function HomePage() {
       </section>
 
       {/* 4. Business owner */}
-      <section className="bg-brand-navy px-4 py-16 text-white sm:px-6">
+      <section className="on-dark bg-brand-navy px-4 py-16 text-white sm:px-6">
         <div className="mx-auto max-w-5xl text-center">
           <h2 className="text-2xl font-bold sm:text-3xl">Are You a Local Business Owner?</h2>
           <p className="mt-2 text-slate-200">
@@ -265,7 +265,7 @@ export default async function HomePage() {
           </p>
           <div className="mt-8 grid gap-6 text-left md:grid-cols-3">
             {OWNER_BENEFITS.map((b) => (
-              <div key={b.title} className="rounded-xl bg-white/10 p-6">
+              <div key={b.title} className="rounded-2xl bg-white/10 p-6 ring-1 ring-inset ring-white/10">
                 <b.icon className="h-7 w-7 text-brand-teal" aria-hidden="true" />
                 <h3 className="mt-3 text-lg font-bold">{b.title}</h3>
                 <p className="mt-1 text-sm text-slate-200">{b.text}</p>
@@ -274,7 +274,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/submit"
-            className="mt-8 inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-brand-navy hover:bg-slate-100"
+            className="press mt-8 inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-brand-navy shadow-sm hover:bg-slate-100"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Register Your Business Now (100% Free)
@@ -298,7 +298,7 @@ export default async function HomePage() {
       <section className="bg-slate-50 px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-center text-2xl font-bold text-brand-navy sm:text-3xl">Frequently Asked Questions</h2>
-          <div className="mt-8 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
+          <div className="mt-8 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(12,46,66,0.05)]">
             {HOME_FAQ.map((item) => (
               <details key={item.question} className="group px-5 py-4">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-brand-navy marker:content-none">

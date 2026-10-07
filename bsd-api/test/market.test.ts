@@ -203,6 +203,8 @@ describe("hidden address", () => {
     expect(detail.body.areaLabel).toBe("Location: SA5");
     expect(detail.body.postcodeDistrict).toBe("SA5");
     expect(detail.text).not.toContain("ownerUserId");
+    expect(typeof detail.body.id).toBe("string"); // the web needs it for Save and Report
+    expect(detail.text).not.toMatch(/4AB/i);
     // The owner still sees it.
     expect((await call(app, "GET", "/market/mine", { cookie: m.cookie })).text).toContain("SA5 4AB");
     // Ticking it off shows the postcode.

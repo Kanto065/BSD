@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { sanitizeText, sanitizeTextArray } from "../../common/sanitize.js";
+import { refreshListingGeoSoon } from "../../common/geocode.js";
 import { idParams, invalid } from "../admin/admin.service.js";
 import { ImageRejected, processImage } from "../../common/images.js";
 import { MAX_PHOTOS, MAX_UPLOAD_BYTES, descriptionProblem, fieldRules, putProcessedImage } from "../businesses/businesses.submit.js";
@@ -186,6 +187,8 @@ const ownerListingsRoutes: FastifyPluginAsync = async (app) => {
         if (localityIds.length) await tx.businessLocality.createMany({ data: localityIds.map((localityId) => ({ businessId: current.id, localityId })) });
       }
     });
+    // A changed address or hide switch re-decides the map point: cleared at once, looked up again only if the address is shown.
+    if (data.address !== undefined || data.hideFullAddress !== undefined) await refreshListingGeoSoon(app.prisma, current.id);
     const updated = await app.prisma.business.findUniqueOrThrow({ where: { id: current.id }, select: detailSelect });
     return { ok: true, listing: toDetail(updated) };
   });

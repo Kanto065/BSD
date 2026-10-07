@@ -33,8 +33,10 @@ const config: Config = {
         // Small state changes: opacity plus a few px of travel, always used under motion-safe.
         "menu-in": { from: { opacity: "0", transform: "translateY(-6px)" }, to: { opacity: "1", transform: "translateY(0)" } },
         "swap-in": { from: { opacity: "0", transform: "translateY(4px)" }, to: { opacity: "1", transform: "translateY(0)" } },
+        dismiss: { from: { transform: "scaleX(1)" }, to: { transform: "scaleX(0)" } },
       },
       animation: {
+        dismiss: "dismiss 4s linear forwards",
         rise: "rise 300ms cubic-bezier(0.16, 1, 0.3, 1) backwards",
         "menu-in": "menu-in 180ms cubic-bezier(0.23, 1, 0.32, 1) backwards",
         "swap-in": "swap-in 200ms cubic-bezier(0.23, 1, 0.32, 1) backwards",

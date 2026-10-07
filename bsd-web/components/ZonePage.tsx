@@ -65,6 +65,8 @@ export default function ZonePage({
         </ul>
       </section>
 
+      <NearMePanel apiBase={publicApiBase()} filters={{ zone: zone.slug }} />
+
       <section className="mt-12">
         <h2 className="text-lg font-semibold text-brand-navy">Businesses in this zone</h2>
         <div className="mt-4">

@@ -61,6 +61,8 @@ export default async function CategoryDetailPage({ params }: { params: Params })
         </div>
       )}
 
+      <NearMePanel apiBase={publicApiBase()} filters={{ category: category.slug }} />
+
       <div className="mt-12">
         <ListingGrid
           result={result}

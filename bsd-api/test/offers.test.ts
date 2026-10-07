@@ -102,13 +102,18 @@ describe("public badge and partners", () => {
     const paused = await c.shop("PAUSED");
     const pending = await c.shop("PENDING");
     const detail = await c.call("GET", `/businesses/${live.biz.slug}`);
-    expect(detail.body.offer).toEqual({ title: "10% off", percent: 10, terms: "Show your pass." });
+    expect(detail.body.offer).toEqual({ id: expect.any(String), title: "10% off", percent: 10, terms: "Show your pass." });
     for (const s of [paused, pending]) expect((await c.call("GET", `/businesses/${s.biz.slug}`)).body.offer).toBeNull();
     const partners = await c.call("GET", "/pass/partners?pageSize=50");
     expect(partners.raw).toContain(live.biz.slug);
     expect(partners.raw).not.toContain(paused.biz.slug);
     expect(partners.raw).not.toContain(pending.biz.slug);
     expect(partners.body.items.every((i: { offer: object | null }) => i.offer)).toBe(true);
+    // The member app needs the offer id to ask for a code.
+    const mine = partners.body.items.find((i: { slug: string }) => i.slug === live.biz.slug);
+    expect(mine.offer.id).toBe(detail.body.offer.id);
+    const list = await c.call("GET", `/businesses/search?q=${encodeURIComponent(live.biz.name)}&pageSize=50`);
+    expect(list.body.items.find((i: { slug: string }) => i.slug === live.biz.slug)?.offer.id).toBe(detail.body.offer.id);
   });
 
   it("partners hides the street of a hidden address listing and needs no sign in", async () => {

@@ -17,6 +17,8 @@ import passesAdminRoutes from "./modules/admin/admin.passes.js";
 import { startProofPurge } from "./common/proof-purge.js";
 import { startMarketExpiry } from "./common/market-expiry.js";
 import marketRoutes from "./modules/market/market.routes.js";
+import marketSafetyRoutes from "./modules/market/market.safety.js";
+import marketAdminRoutes from "./modules/admin/admin.market.js";
 import contactRoutes from "./modules/contact/contact.routes.js";
 import zonesRoutes from "./modules/zones/zones.routes.js";
 import siteRoutes from "./modules/site/site.routes.js";
@@ -78,6 +80,8 @@ export function buildApp(opts: AppOptions = {}) {
   app.register(passRoutes, { prefix: "/pass" });
   app.register(passesAdminRoutes, { prefix: "/admin/passes" });
   app.register(marketRoutes, { prefix: "/market" });
+  app.register(marketSafetyRoutes, { prefix: "/market" });
+  app.register(marketAdminRoutes, { prefix: "/admin/market" });
 
   return app;
 }

@@ -211,6 +211,7 @@ function ListingStepper({ apiBase, categories, accountPhone, onSignedOut }: { ap
     }
     if (v.website.trim()) data.set("websiteOrSocial", v.website.trim());
     if (v.address.trim()) data.set("address", v.address.trim());
+    data.set("hideFullAddress", String(v.hideFullAddress));
     data.set("postcode", v.postcode.trim());
     for (const z of v.serveZones) data.append("serveZones", z);
     for (const l of v.localities) data.append("localities", l);

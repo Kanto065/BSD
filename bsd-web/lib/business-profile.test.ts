@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { OTHERS, emptyValues, mergeProfile, profileHasData, serviceList, stepForErrors, toProfileData, validateStep, zoneForPostcode } from "./business-profile";
+import { HIDE_ADDRESS_LABEL, OTHERS, emptyValues, locationView, mergeProfile, profileHasData, serviceList, stepForErrors, toProfileData, validateStep, zoneForPostcode } from "./business-profile";
 import type { CategoryOption } from "./taxonomy";
 
 const categories: CategoryOption[] = [
@@ -56,6 +56,40 @@ describe("toProfileData", () => {
     expect(toProfileData({ ...emptyValues, showEmail: true })).toEqual({});
     const v = { ...emptyValues, name: "N", categorySlug: "food", services: "A\nB", phone: "01792 123 456", othersChecked: true, otherAreaText: "Here" };
     expect(mergeProfile(emptyValues, toProfileData(v))).toEqual({ ...v });
+  });
+});
+
+describe("hide full address", () => {
+  it("uses the client's wording exactly", () => {
+    expect(HIDE_ADDRESS_LABEL).toBe('Hide Full Address (Show Postcode Area/Neighborhood Only - e.g., "Manselton, SA5")');
+  });
+
+  it("is saved only when ticked, round trips, and does not count as typed details", () => {
+    expect(toProfileData(emptyValues)).toEqual({});
+    expect(toProfileData({ ...emptyValues, hideFullAddress: true })).toEqual({ hideFullAddress: true });
+    expect(mergeProfile(emptyValues, { hideFullAddress: true }).hideFullAddress).toBe(true);
+    expect(mergeProfile(emptyValues, { hideFullAddress: "yes" }).hideFullAddress).toBe(false);
+    expect(profileHasData({ hideFullAddress: true })).toBe(false);
+  });
+});
+
+describe("locationView", () => {
+  const base = { name: "Rina Bakes", address: "1 High Street", postcode: "SA5 4AA", postcodeDistrict: "SA5" };
+
+  it("shows the street, full postcode and a map link when nothing is hidden", () => {
+    const v = locationView({ ...base, areaLabel: null });
+    expect(v).toMatchObject({ hidden: false, street: "1 High Street", postcode: "SA5 4AA", postalCode: "SA5 4AA", streetAddress: "1 High Street" });
+    expect(v.mapUrl).toContain("google.com/maps");
+  });
+
+  it("prints only the area for a hidden listing, with no map link and only the district in JSON-LD", () => {
+    const v = locationView({ ...base, address: null, postcode: null, areaLabel: "Manselton, SA5" });
+    expect(v).toEqual({ hidden: true, area: "Manselton, SA5", street: null, postcode: null, postalCode: "SA5", streetAddress: null, mapUrl: null });
+    expect(JSON.stringify(v)).not.toContain("High Street");
+  });
+
+  it("treats a missing postcode without a label as hidden and falls back to the district", () => {
+    expect(locationView({ ...base, address: null, postcode: null })).toMatchObject({ hidden: true, area: "SA5", mapUrl: null });
   });
 });
 

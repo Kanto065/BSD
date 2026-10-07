@@ -10,6 +10,7 @@ import { Card, ErrorNote, StatusPill, buttonClass, fmtDate, inputClass, useAdmin
 import { ZONES } from "@/lib/content";
 import { localitySlug } from "@/lib/slug";
 import type { CategoryOption } from "@/lib/taxonomy";
+import { HIDE_ADDRESS_LABEL } from "@/lib/business-profile";
 
 type NameSlug = { name: string; slug: string };
 type Listing = {
@@ -25,6 +26,7 @@ type Listing = {
   whatsapp: string | null;
   email: string | null;
   showEmail: boolean;
+  hideFullAddress: boolean;
   websiteOrSocial: string | null;
   address: string | null;
   postcode: string;
@@ -247,7 +249,7 @@ export default function ListingDetailPage() {
           <Row label="WhatsApp">{l.whatsapp}</Row>
           <Row label="Email">{l.email ? `${l.email} (${l.showEmail ? "shown publicly" : "hidden from public"})` : null}</Row>
           <Row label="Website / social">{l.websiteOrSocial}</Row>
-          <Row label="Address">{l.address}</Row>
+          <Row label="Address">{l.hideFullAddress ? `${l.address ?? ""} (hidden from public, only the area shows)` : l.address}</Row>
           <Row label="Postcode">
             {l.postcode} ({l.zone.name})
           </Row>
@@ -362,6 +364,7 @@ function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => vo
     specialNotes: l.specialNotes ?? "",
   });
   const [showEmail, setShowEmail] = useState(l.showEmail);
+  const [hideFullAddress, setHideFullAddress] = useState(l.hideFullAddress);
   const [zones, setZones] = useState(l.servedZones.map((z) => z.zone.slug));
   const [localities, setLocalities] = useState(l.localities.map((x) => x.locality.slug));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -408,6 +411,7 @@ function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => vo
                 whatsapp: f.whatsapp || null,
                 email: f.email || null,
                 showEmail,
+                hideFullAddress,
                 websiteOrSocial: f.websiteOrSocial || null,
                 address: f.address || null,
                 postcode: f.postcode,
@@ -473,7 +477,14 @@ function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => vo
         </div>
         {text("websiteOrSocial", "Website / Social Media")}
         {text("openingHours", "Opening Hours", 2)}
-        {text("address", "Address")}
+        <div>
+          {text("address", "Address")}
+          <label className="mt-2 flex min-h-11 items-start gap-2 py-2 text-sm text-slate-700">
+            <input type="checkbox" checked={hideFullAddress} onChange={(e) => setHideFullAddress(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-brand-blue" />
+            {HIDE_ADDRESS_LABEL}
+          </label>
+          {errors.hideFullAddress && <p className="mt-1 text-sm font-medium text-red-700">{errors.hideFullAddress}</p>}
+        </div>
         {text("postcode", "Postcode")}
         <fieldset className="sm:col-span-2">
           <legend className="text-sm font-semibold text-brand-navy">Areas served</legend>

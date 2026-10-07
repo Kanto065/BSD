@@ -4,7 +4,9 @@ import VerificationBadge from "@/components/VerificationBadge";
 import { ArrowLink } from "@/components/ArrowLink";
 import type { ApiResult, Page, PublicListItem } from "@/lib/api";
 
-export function locationLine(b: Pick<PublicListItem, "postcode" | "postcodeDistrict" | "localities">): string {
+export function locationLine(b: Pick<PublicListItem, "postcode" | "postcodeDistrict" | "localities" | "areaLabel">): string {
+  // A listing that hides its full address shows only the area (the label already names a single locality).
+  if (b.areaLabel) return b.areaLabel;
   const where = b.localities.map((l) => l.name).join(", ");
   const code = b.postcode ?? b.postcodeDistrict;
   return where ? `${code} (${where})` : code;

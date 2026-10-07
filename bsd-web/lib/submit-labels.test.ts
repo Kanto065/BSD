@@ -90,6 +90,7 @@ describe("client wording of the Submit form", () => {
       "Section 3: Location Details",
       "Address",
       'If you have no office, write "HomeBased".',
+      'Hide Full Address (Show Postcode Area/Neighborhood Only - e.g., "Manselton, SA5")',
       "Postcode",
       "For example SA1 4PE.",
       "Areas you serve",

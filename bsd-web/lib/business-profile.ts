@@ -29,6 +29,7 @@ export type FormValues = {
   showEmail: boolean;
   website: string;
   address: string;
+  hideFullAddress: boolean;
   postcode: string;
   serveZones: string[];
   localities: string[];
@@ -52,6 +53,7 @@ export const emptyValues: FormValues = {
   showEmail: false,
   website: "",
   address: "",
+  hideFullAddress: false,
   postcode: "",
   serveZones: [],
   localities: [],
@@ -83,6 +85,7 @@ export function mergeProfile(defaults: FormValues, saved: Record<string, unknown
   if (typeof s.showEmail === "boolean") out.showEmail = s.showEmail;
   out.website = str(s.websiteOrSocial) ?? out.website;
   out.address = str(s.address) ?? out.address;
+  if (typeof s.hideFullAddress === "boolean") out.hideFullAddress = s.hideFullAddress;
   out.postcode = str(s.postcode) ?? out.postcode;
   out.serveZones = strList(s.serveZones) ?? out.serveZones;
   out.localities = strList(s.localities) ?? out.localities;
@@ -101,6 +104,20 @@ export const serviceList = (services: string) =>
     .split("\n")
     .map((s) => s.replace(/^[\s•*-]+/, "").trim())
     .filter(Boolean);
+
+/** The client's wording for the checkbox on Submit, the owner edit and the admin edit. Do not reword. */
+export const HIDE_ADDRESS_LABEL = 'Hide Full Address (Show Postcode Area/Neighborhood Only - e.g., "Manselton, SA5")';
+
+/**
+ * What the business page Location block shows. A listing that hides its address (areaLabel is set by the API) prints
+ * "Location: Manselton, SA5" and has no street, no full postcode, no map link and only the district in JSON-LD.
+ */
+export function locationView(b: { name: string; address: string | null; postcode: string | null; postcodeDistrict: string; areaLabel?: string | null }) {
+  const area = b.areaLabel ?? (b.postcode ? null : b.postcodeDistrict);
+  if (area) return { hidden: true as const, area, street: null, postcode: null, postalCode: b.postcodeDistrict, streetAddress: null, mapUrl: null };
+  const mapUrl = b.postcode ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([b.name, b.address, b.postcode].filter(Boolean).join(", "))}` : null;
+  return { hidden: false as const, area: null, street: b.address, postcode: b.postcode ?? b.postcodeDistrict, postalCode: b.postcode ?? b.postcodeDistrict, streetAddress: b.postcode && b.address ? b.address : null, mapUrl };
+}
 
 /** The body of PUT /auth/business-profile. Blank fields are left out. */
 export function toProfileData(v: FormValues): Record<string, string | boolean | string[]> {
@@ -122,6 +139,7 @@ export function toProfileData(v: FormValues): Record<string, string | boolean | 
   if (v.email.trim()) out.showEmail = v.showEmail;
   put("websiteOrSocial", v.website);
   put("address", v.address);
+  if (v.hideFullAddress) out.hideFullAddress = true;
   put("postcode", v.postcode);
   if (v.serveZones.length) out.serveZones = v.serveZones;
   if (v.localities.length) out.localities = v.localities;
@@ -134,7 +152,7 @@ export function toProfileData(v: FormValues): Record<string, string | boolean | 
 /** True when the saved details hold anything a person typed. The email switch alone does not count. */
 export function profileHasData(data: Record<string, unknown> | null | undefined): boolean {
   return Object.entries(data ?? {}).some(([key, v]) => {
-    if (key === "showEmail") return false;
+    if (key === "showEmail" || key === "hideFullAddress") return false;
     if (typeof v === "string") return v.trim().length > 0;
     if (Array.isArray(v)) return v.length > 0;
     return false;
@@ -145,7 +163,7 @@ export function profileHasData(data: Record<string, unknown> | null | undefined)
 const FIELD_STEP: Record<string, number> = {
   name: 0, category: 0, customCategory: 0, subcategory: 0, description: 0, servicesOffered: 0,
   ownerName: 1, phone: 1, whatsapp: 1, email: 1, websiteOrSocial: 1,
-  address: 2, postcode: 2, serveZones: 2, localities: 2, otherAreaText: 2,
+  address: 2, hideFullAddress: 2, postcode: 2, serveZones: 2, localities: 2, otherAreaText: 2,
   openingHours: 3, specialNotes: 3,
 };
 

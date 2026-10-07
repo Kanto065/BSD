@@ -46,6 +46,8 @@ const marketSafetyRoutes: FastifyPluginAsync = async (app) => {
     if (!listing) return reply.code(404).send({ error: "Not found." });
     if (listing.ownerUserId === req.user!.id) return reply.code(400).send({ error: "You cannot report your own listing." });
     if (!body.success) return invalid(reply, body.error);
+    // Checked first so the common repeat never raises a unique violation inside a transaction (also kills PGlite sockets in tests).
+    if (await app.prisma.marketReport.findUnique({ where: { listingId_reporterUserId: { listingId: listing.id, reporterUserId: req.user!.id } }, select: { id: true } })) return { ok: true, already: true };
     try {
       const hidden = await app.prisma.$transaction(async (tx) => {
         await tx.marketReport.create({ data: { listingId: listing.id, reporterUserId: req.user!.id, reason: body.data.reason, note: body.data.note ? sanitizeText(body.data.note) : null } });

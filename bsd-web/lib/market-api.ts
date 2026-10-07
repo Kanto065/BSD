@@ -253,6 +253,9 @@ export function stepForField(field: string): number {
   return 2;
 }
 
+/** The earliest step that owns any of the fields the API complained about, or null when there are none. */
+export const earliestStep = (fields: string[]): number | null => (fields.length ? Math.min(...fields.map(stepForField)) : null);
+
 /** The multipart body the API expects. Giveaways send no price. B2B fields go only on business listings. */
 export function buildPostForm(v: PostValues, files: File[]): FormData {
   const f = new FormData();
@@ -307,3 +310,19 @@ export const saveListing = (apiBase: string, id: string) => apiCall<{ saved: boo
 export const unsaveListing = (apiBase: string, id: string) => apiCall<{ saved: boolean }>(apiBase, `market/saves/${encodeURIComponent(id)}`, { method: "DELETE" });
 export const reportListing = (apiBase: string, id: string, reason: string, note?: string) =>
   apiCall<{ ok: true; already?: boolean; underReview?: boolean }>(apiBase, `market/listings/${encodeURIComponent(id)}/report`, { method: "POST", body: { reason, ...(note?.trim() ? { note: note.trim() } : {}) } });
+
+/** True when a page of the member's saved listings holds this listing. */
+export const isSavedIn = (items: { id: string }[], id: string) => items.some((i) => i.id === id);
+/** The button's state after a click: a saved listing is removed, anything else is saved. */
+export const toggleSaved = (saved: boolean) => ({ saved: !saved, method: saved ? ("DELETE" as const) : ("PUT" as const) });
+const SAVES_PAGE = 24;
+const SAVES_PAGES_CHECKED = 5;
+/** Whether the signed in member has saved this listing. Reads their saved pages, up to 120 listings. */
+export async function loadSaved(apiBase: string, id: string): Promise<boolean> {
+  for (let page = 1; page <= SAVES_PAGES_CHECKED; page++) {
+    const r = await apiCall<{ items: { id: string }[] }>(apiBase, `market/saves?page=${page}`);
+    if (isSavedIn(r.items, id)) return true;
+    if (r.items.length < SAVES_PAGE) return false;
+  }
+  return false;
+}

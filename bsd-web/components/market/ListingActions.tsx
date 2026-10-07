@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Bookmark, Flag, MessageCircle, Phone, Share2 } from "lucide-react";
 import MarketGate from "@/components/market/MarketGate";
+import { memberCall } from "@/lib/member-api";
+import { sessionView } from "@/lib/member-session";
 import { ApiError } from "@/lib/admin-session";
-import { CONTACT_WAIT_SECONDS, REPORT_REASONS, contactReveal, contactStart, reportListing, saveListing, telHref, unsaveListing } from "@/lib/market-api";
+import { CONTACT_WAIT_SECONDS, REPORT_REASONS, contactReveal, contactStart, loadSaved, reportListing, saveListing, telHref, toggleSaved, unsaveListing } from "@/lib/market-api";
 
 // Contact buttons on a listing. WhatsApp is a plain link with the client's prefilled message. Call Seller follows the
 // API's cooldown flow: the first call returns a token, the number is asked for again after 10 seconds. Nothing about
@@ -20,6 +22,36 @@ export default function ListingActions({ apiBase, id, slug, title, whatsappHref,
   const [call, setCall] = useState<CallState>({ phase: "idle" });
   const [shareNote, setShareNote] = useState("");
   const [panel, setPanel] = useState<"save" | "report" | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveNote, setSaveNote] = useState("");
+
+  // Signed in members see their real saved state. Signed out visitors see an unsaved button that opens the gate.
+  useEffect(() => {
+    memberCall(apiBase, "me")
+      .then(async (r) => {
+        if (sessionView(r.user ?? null, "market") !== "in") return;
+        setSignedIn(true);
+        setSaved(await loadSaved(apiBase, id));
+      })
+      .catch(() => undefined);
+  }, [apiBase, id]);
+
+  async function toggleSave(current = saved) {
+    const next = toggleSaved(current);
+    setSaveBusy(true);
+    setSaveNote("");
+    try {
+      await (next.method === "PUT" ? saveListing(apiBase, id) : unsaveListing(apiBase, id));
+      setSaved(next.saved);
+      setSaveNote(next.saved ? "Saved to your listings." : "Removed from your saved listings.");
+    } catch (err) {
+      setSaveNote(err instanceof ApiError && err.status === 404 ? "This listing is no longer available." : "Could not update your saved listings. Please try again.");
+    } finally {
+      setSaveBusy(false);
+    }
+  }
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
 
@@ -59,6 +91,7 @@ export default function ListingActions({ apiBase, id, slug, title, whatsappHref,
       else {
         await navigator.clipboard.writeText(url);
         setShareNote("Link copied.");
+        setTimeout(() => setShareNote(""), 4000);
       }
     } catch {
       // The person closed the share sheet, nothing to report.
@@ -93,9 +126,9 @@ export default function ListingActions({ apiBase, id, slug, title, whatsappHref,
           <Share2 className="h-5 w-5" aria-hidden="true" />
           Share
         </button>
-        <button type="button" onClick={() => setPanel(panel === "save" ? null : "save")} aria-expanded={panel === "save"} className={outline}>
-          <Bookmark className="h-5 w-5" aria-hidden="true" />
-          Save
+        <button type="button" onClick={() => (signedIn ? void toggleSave() : setPanel(panel === "save" ? null : "save"))} aria-pressed={signedIn ? saved : undefined} aria-expanded={signedIn ? undefined : panel === "save"} disabled={saveBusy} className={outline}>
+          <Bookmark className="h-5 w-5" fill={saved ? "currentColor" : "none"} aria-hidden="true" />
+          {saved ? "Saved" : "Save"}
         </button>
         <button type="button" onClick={() => setPanel(panel === "report" ? null : "report")} aria-expanded={panel === "report"} className={outline}>
           <Flag className="h-5 w-5" aria-hidden="true" />
@@ -103,11 +136,11 @@ export default function ListingActions({ apiBase, id, slug, title, whatsappHref,
         </button>
       </div>
       <p role="status" aria-live="polite" className="min-h-5 text-sm text-slate-600">
-        {call.phase === "error" ? <span className="text-red-700">{call.message}</span> : call.phase === "wait" ? "The number is shown after a short wait to stop automated copying." : shareNote}
+        {call.phase === "error" ? <span className="text-red-700">{call.message}</span> : call.phase === "wait" ? "The number is shown after a short wait to stop automated copying." : shareNote || saveNote}
       </p>
       {panel && (
         <MarketGate apiBase={apiBase} title={panel === "save" ? "Sign in to save this listing" : "Sign in to report this listing"}>
-          {() => (panel === "save" ? <SavePanel apiBase={apiBase} id={id} /> : <ReportPanel apiBase={apiBase} id={id} onDone={() => setPanel(null)} />)}
+          {() => (panel === "save" ? <AfterSignIn onReady={() => { setSignedIn(true); setPanel(null); void toggleSave(false); }} /> : <ReportPanel apiBase={apiBase} id={id} onDone={() => setPanel(null)} />)}
         </MarketGate>
       )}
     </div>
@@ -116,41 +149,10 @@ export default function ListingActions({ apiBase, id, slug, title, whatsappHref,
 
 const box = "rounded-2xl border border-slate-200 bg-white p-4 sm:p-5";
 
-// Opening the panel while signed in saves the listing (the API call is idempotent). The button then toggles it.
-function SavePanel({ apiBase, id }: { apiBase: string; id: string }) {
-  const [saved, setSaved] = useState<boolean | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  async function set(next: boolean) {
-    setBusy(true);
-    setError("");
-    try {
-      const r = await (next ? saveListing(apiBase, id) : unsaveListing(apiBase, id));
-      setSaved(r.saved);
-    } catch (err) {
-      setError(err instanceof ApiError && err.status === 404 ? "This listing is no longer available." : "Could not update your saved listings. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-  useEffect(() => {
-    set(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <div className={box}>
-      <p role="status" aria-live="polite" className={`text-sm ${error ? "text-red-700" : "text-slate-700"}`}>
-        {error || (saved === null ? "Saving..." : saved ? "Saved to your listings." : "Removed from your saved listings.")}
-      </p>
-      {saved !== null && (
-        <button type="button" onClick={() => set(!saved)} disabled={busy} className={`${outline} mt-3`}>
-          {saved ? "Remove from saved" : "Save again"}
-        </button>
-      )}
-    </div>
-  );
+// Rendered by the gate once the visitor is signed in: hands control back so the listing is saved.
+function AfterSignIn({ onReady }: { onReady: () => void }) {
+  useEffect(onReady, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return <p role="status" className="text-sm text-slate-700">Saving...</p>;
 }
 
 function ReportPanel({ apiBase, id, onDone }: { apiBase: string; id: string; onDone: () => void }) {

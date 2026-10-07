@@ -6,7 +6,7 @@ import { SITES } from "@/lib/site";
 // Header, footer and page width for every Marketplace page. Server rendered. The light canvas sits inside the dark
 // body so the 404 page keeps its own look.
 
-const link = "inline-flex min-h-11 items-center rounded-md px-2 text-sm font-medium text-slate-700 hover:text-bc-bar";
+const link = "inline-flex min-h-11 items-center rounded-md px-1.5 text-sm sm:px-2 font-medium text-slate-700 hover:text-bc-bar";
 const footLink = "inline-flex min-h-11 items-center text-sm text-slate-300 hover:text-white focus-visible:outline-white";
 
 export function MarketFrame({ children }: { children: React.ReactNode }) {
@@ -23,18 +23,18 @@ export function MarketFrame({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 px-4 py-2">
           <Link href="/" className="flex min-h-11 items-center gap-2 font-heading text-base font-bold text-bc-shell">
             <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-lg bg-bc-bar text-sm text-white">M</span>
             {SITES.market.name}
           </Link>
-          <nav aria-label="Marketplace" className="flex items-center gap-1">
+          <nav aria-label="Marketplace" className="flex flex-wrap items-center">
             <Link href="/search" className={link}>Browse</Link>
             <Link href="/buyer-requests" className={link}>Wanted</Link>
             <Link href="/my-account" className={`${link} hidden sm:inline-flex`}>My Account</Link>
             <Link
               href="/post-listing"
-              className="press ml-1 inline-flex min-h-11 items-center rounded-full bg-bc-bar px-4 text-sm font-semibold text-white hover:bg-bc-shell"
+              className="press ml-1 inline-flex min-h-11 items-center rounded-full bg-bc-bar px-3 text-sm sm:px-4 font-semibold text-white hover:bg-bc-shell"
             >
               Post a Listing
             </Link>

@@ -9,7 +9,7 @@ import { ApiError } from "@/lib/admin-session";
 import { getBusinessProfile, type Member } from "@/lib/member-api";
 import {
   CONDITIONS, CONDITION_LABEL, KIND_OPTIONS, LEGAL_TEXT, MAX_IMAGES, POST_STEPS, SPOT_FALLBACK, createMarketListing, emptyPost, hasErrors,
-  priceLabel, stepForField, validatePostStep, type Errors, type MarketCategory, type MarketCondition, type MarketKind, type PostValues, type SafeSpot,
+  priceLabel, earliestStep, validatePostStep, type Errors, type MarketCategory, type MarketCondition, type MarketKind, type PostValues, type SafeSpot,
 } from "@/lib/market-api";
 
 // The 4 step post flow. Signed out visitors see the sign in gate. Account phone and the saved business profile give the
@@ -79,10 +79,10 @@ function Flow({ apiBase, member, categories, spots }: { apiBase: string; member:
     } catch (err) {
       if (err instanceof ApiError) {
         const fe = Object.fromEntries(Object.entries(err.fieldErrors ?? {}).map(([k, m]) => [k, String(m)]));
-        const first = Object.keys(fe)[0];
+        const step = earliestStep(Object.keys(fe));
         setErrors(fe);
-        if (first) setStep(stepForField(first));
-        setFormError(first ? "Please check the highlighted fields." : err.message);
+        if (step !== null) setStep(step);
+        setFormError(step !== null ? "Please check the highlighted fields." : err.message);
       } else setFormError("Could not post the listing. Please try again.");
     } finally {
       setBusy(false);
@@ -114,7 +114,7 @@ function Flow({ apiBase, member, categories, spots }: { apiBase: string; member:
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {KIND_OPTIONS.map((k) => (
                 <label key={k.kind} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 ${v.kind === k.kind ? "border-bc-bar bg-sky-50" : "border-slate-300"}`}>
-                  <input type="radio" name="kind" checked={v.kind === k.kind} onChange={() => set("kind", k.kind as MarketKind)} className="h-5 w-5" />
+                  <input type="radio" name="kind" checked={v.kind === k.kind} onChange={() => { set("kind", k.kind as MarketKind); setErrors((p) => ({ ...p, kind: undefined })); }} className="h-5 w-5" />
                   {k.label}
                 </label>
               ))}
@@ -195,7 +195,7 @@ function Flow({ apiBase, member, categories, spots }: { apiBase: string; member:
             )}
             <div>
               <label htmlFor="photos" className="text-sm font-medium text-slate-800">Photos (up to {MAX_IMAGES}, JPG, PNG or WebP)</label>
-              <input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))} className="mt-1 block min-h-11 w-full text-sm" />
+              <input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => { const all = Array.from(e.target.files ?? []); setFiles(all); setErrors((p) => ({ ...p, images: all.length > MAX_IMAGES ? `Upload up to ${MAX_IMAGES} images.` : undefined })); }} className="mt-1 block min-h-11 w-full text-sm" />
               <Err id="photos-err" msg={errors.images} />
               {previews.length > 0 && (
                 <ul role="list" className="mt-2 flex flex-wrap gap-2">
@@ -245,9 +245,17 @@ function Flow({ apiBase, member, categories, spots }: { apiBase: string; member:
               <p className="mt-1 font-semibold">{v.title}</p>
               <p className="mt-1 font-bold text-bc-shell">{priceLabel({ free: isGive, kind: v.kind || "SELL", pricePence: v.price.trim() ? Math.round(parseFloat(v.price) * 100) : null })}</p>
               <p className="mt-1 whitespace-pre-line text-sm text-slate-700">{v.description}</p>
+              {previews.length > 0 && (
+                <ul role="list" className="mt-2 flex flex-wrap gap-2">
+                  {previews.map((u, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <li key={u}><img src={u} alt={`Photo ${i + 1}`} className="h-16 w-16 rounded-lg object-cover" /></li>
+                  ))}
+                </ul>
+              )}
               <p className="mt-2 text-sm text-slate-600">{files.length} {files.length === 1 ? "photo" : "photos"}. {v.hideFullAddress ? "The full address will be hidden." : "The full postcode will be shown."}</p>
             </div>
-            <label className="flex items-start gap-3">
+            <label className="flex min-h-11 items-start gap-3">
               <input type="checkbox" checked={v.legalAcknowledged} onChange={(e) => set("legalAcknowledged", e.target.checked)} aria-invalid={Boolean(errors.legalAcknowledged)} className="mt-1 h-5 w-5 shrink-0" />
               <span>{LEGAL_TEXT}</span>
             </label>

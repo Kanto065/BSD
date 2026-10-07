@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   B2B_BANNER, BUYER_DEMAND, COPYRIGHT, FALLBACK_CATEGORIES, HERO_SUBTITLE, KIND_OPTIONS, LEGAL_TEXT, SAFETY_WARNING, WANTED_BOARD,
-  emptyPost, listingView, placeLabel, priceLabel, searchHref, validatePostStep, whatsappLink, buildPostForm, type MarketDetail,
+  earliestStep, isSavedIn, toggleSaved, emptyPost, listingView, placeLabel, priceLabel, searchHref, validatePostStep, whatsappLink, buildPostForm, type MarketDetail,
 } from "./market-api";
 
 // Locks the client's Marketplace wording (layout 3.2 and the post flow). Do not edit a string here to make the test
@@ -82,5 +82,24 @@ describe("post validators", () => {
     const f = buildPostForm({ ...ok, kind: "GIVEAWAY", price: "5" }, []);
     expect(f.has("price")).toBe(false);
     expect(f.get("hideFullAddress")).toBe("true");
+  });
+});
+
+describe("post flow and save helpers", () => {
+  it("jumps to the earliest step that owns any error", () => {
+    expect(earliestStep(["title", "legalAcknowledged", "category"])).toBe(1);
+    expect(earliestStep(["legalAcknowledged", "title"])).toBe(2);
+    expect(earliestStep(["kind", "title"])).toBe(0);
+    expect(earliestStep([])).toBeNull();
+  });
+  it("maps the saved state to the next call", () => {
+    expect(toggleSaved(false)).toEqual({ saved: true, method: "PUT" });
+    expect(toggleSaved(true)).toEqual({ saved: false, method: "DELETE" });
+    expect(isSavedIn([{ id: "a" }, { id: "b" }], "b")).toBe(true);
+    expect(isSavedIn([{ id: "a" }], "z")).toBe(false);
+  });
+  it("flags more than 5 photos", () => {
+    const f = Array.from({ length: 6 }, () => ({ size: 10, type: "image/png" }));
+    expect(validatePostStep(2, { ...emptyPost, kind: "SELL" }, f).images).toBe("Upload up to 5 images.");
   });
 });

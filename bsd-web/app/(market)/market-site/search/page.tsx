@@ -50,8 +50,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<SP>
           </div>
           <fieldset className="flex flex-wrap items-end gap-x-5">
             <legend className="sr-only">Filters</legend>
-            <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" name="free" value="true" defaultChecked={f.free} className="h-5 w-5" />Free only</label>
-            <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" name="b2b" value="true" defaultChecked={f.b2b} className="h-5 w-5" />B2B only</label>
+            <label className="inline-flex min-h-11 min-w-11 cursor-pointer items-center gap-2 text-sm"><input type="checkbox" name="free" value="true" defaultChecked={f.free} className="h-5 w-5" />Free only</label>
+            <label className="inline-flex min-h-11 min-w-11 cursor-pointer items-center gap-2 text-sm"><input type="checkbox" name="b2b" value="true" defaultChecked={f.b2b} className="h-5 w-5" />B2B only</label>
           </fieldset>
           <button type="submit" className="press min-h-11 rounded-full bg-bc-bar px-6 text-base font-semibold text-white hover:bg-bc-shell sm:col-span-2 lg:col-span-4 lg:w-fit">Search</button>
         </form>
@@ -60,7 +60,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<SP>
           {!res.ok ? (
             <p className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-slate-600">Listings could not be loaded. Please try again shortly.</p>
           ) : res.data.items.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-slate-600">No listings match your search.</p>
+            <>
+              <p className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-slate-600">No listings match your search.</p>
+              {page > 1 && <Pager page={page} pageSize={res.data.pageSize} total={Math.max(res.data.total, page * res.data.pageSize)} href={(p) => searchHref({ ...f, page: p })} />}
+            </>
           ) : (
             <>
               <p className="mb-3 text-sm text-slate-600">{res.data.total} {res.data.total === 1 ? "listing" : "listings"}</p>

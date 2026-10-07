@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronsDownUp,
   ChevronsUpDown,
+  GitMerge,
   GripVertical,
   Home,
   Loader2,
@@ -35,11 +36,14 @@ type Cat = {
   icon: string | null;
   sortOrder: number;
   requiresOwnerName: boolean;
+  status: "APPROVED" | "PENDING" | "REJECTED";
+  submittedAt: string | null;
+  sampleListings: { id: string; name: string }[];
   listingCount: number;
   subcategories: Sub[];
 };
 type FormValues = { name: string; slug: string; description: string; icon: string; requiresOwnerName: boolean; subs: string[] };
-type Panel = { mode: "add" } | { mode: "edit"; cat: Cat } | null;
+type Panel = { mode: "add" } | { mode: "edit"; cat: Cat } | { mode: "merge"; cat: Cat } | null;
 type Run = (fn: () => Promise<unknown>, done?: string) => Promise<boolean>;
 
 const sameOrder = (a: { id: string }[], b: { id: string }[]) => a.length === b.length && a.every((x, i) => x.id === b[i]!.id);
@@ -71,7 +75,8 @@ export default function CategoriesPage() {
   const dragStart = useRef<Cat[]>([]);
 
   useEffect(() => {
-    if (data && !dragId) setOrder(data.categories);
+    // Only approved categories are on the site and in its order. Suggested ones sit in their own panel.
+    if (data && !dragId) setOrder(data.categories.filter((c) => c.status === "APPROVED"));
   }, [data, dragId]);
 
   // Every category starts collapsed, so the page opens as a short list. A search still opens the matches.
@@ -79,7 +84,7 @@ export default function CategoriesPage() {
   useEffect(() => {
     if (!data || collapsedOnce.current) return;
     collapsedOnce.current = true;
-    setCollapsed(new Set(data.categories.map((c) => c.id)));
+    setCollapsed(new Set(data.categories.filter((c) => c.status === "APPROVED").map((c) => c.id)));
   }, [data]);
 
   useEffect(() => {
@@ -199,6 +204,13 @@ export default function CategoriesPage() {
             <Summary label="Listings" value={totals.listings} />
           </dl>
 
+          <PendingPanel
+            pending={data?.categories.filter((c) => c.status === "PENDING") ?? []}
+            run={run}
+            onMerge={(cat) => setPanel({ mode: "merge", cat })}
+            api={api}
+          />
+
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <div className="relative w-full sm:w-80">
               <label htmlFor="cat-search" className="sr-only">
@@ -255,6 +267,7 @@ export default function CategoriesPage() {
                     onToggle={() => toggle(c.id)}
                     onMove={(dir) => move(i, dir)}
                     onEdit={() => setPanel({ mode: "edit", cat: c })}
+                    onMerge={() => setPanel({ mode: "merge", cat: c })}
                     onDelete={() => run(() => api(`/categories/${c.id}`, { method: "DELETE" }), `Deleted ${c.name}`)}
                     onDragStart={() => {
                       dragStart.current = order;
@@ -282,7 +295,20 @@ export default function CategoriesPage() {
         </>
       )}
 
-      {panel && (
+      {panel?.mode === "merge" && (
+        <Drawer title={`Merge ${panel.cat.name}`} onClose={() => setPanel(null)}>
+          <MergeForm
+            cat={panel.cat}
+            targets={order.filter((c) => c.id !== panel.cat.id)}
+            onCancel={() => setPanel(null)}
+            onMerge={async (body) => {
+              if (await run(() => api(`/categories/${panel.cat.id}/merge`, { method: "POST", body }), `Merged ${panel.cat.name}`)) setPanel(null);
+            }}
+          />
+        </Drawer>
+      )}
+
+      {panel && panel.mode !== "merge" && (
         <Drawer title={panel.mode === "add" ? "New category" : `Edit ${panel.cat.name}`} onClose={() => setPanel(null)}>
           <CategoryForm
             mode={panel.mode}
@@ -326,6 +352,164 @@ export default function CategoriesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Form controls in the new panels: 16px on phones (no zoom on focus) and a 44px tall tap target.
+const field = `${inputClass} min-h-11 !text-base sm:!text-sm`;
+const bigButton = `${buttonClass} min-h-11`;
+
+/** Categories typed in through "Others" on the Submit form. The admin approves, merges or rejects each one. */
+function PendingPanel({ pending, run, onMerge, api }: { pending: Cat[]; run: Run; onMerge: (c: Cat) => void; api: (path: string, init?: { method?: string; body?: unknown }) => Promise<unknown> }) {
+  if (!pending.length) return null;
+  return (
+    <section aria-labelledby="pending-title" className="mt-6 rounded-xl border border-amber-300 bg-amber-50/60 p-4 shadow-[0_1px_2px_rgba(12,46,66,0.05)] sm:p-5">
+      <h2 id="pending-title" className="font-heading text-base font-bold text-brand-navy">
+        Suggested by users ({pending.length})
+      </h2>
+      <p className="mt-1 text-sm text-slate-700">
+        People typed these under Others on the Submit form. They are hidden from the site, and their listings cannot be approved, until you decide.
+      </p>
+      <ul className="mt-4 space-y-3">
+        {pending.map((c) => (
+          <PendingRow key={c.id} cat={c} run={run} onMerge={onMerge} api={api} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function PendingRow({ cat: c, run, onMerge, api }: { cat: Cat; run: Run; onMerge: (c: Cat) => void; api: (path: string, init?: { method?: string; body?: unknown }) => Promise<unknown> }) {
+  const [name, setName] = useState(c.name);
+  const [armed, setArmed] = useState(false);
+  const [reason, setReason] = useState("");
+  const post = (action: string, body: unknown, done: string) => run(() => api(`/categories/${c.id}/${action}`, { method: "POST", body }), done);
+  return (
+    <li className="rounded-lg border border-slate-200 bg-white p-4">
+      <p className="font-semibold text-brand-navy">{c.name}</p>
+      <p className="text-xs text-slate-600">
+        {plural(c.listingCount, "listing", "listings")}
+        {c.submittedAt ? ` · suggested ${fmtDate(c.submittedAt)}` : ""}
+        {c.sampleListings.length ? ` · ${c.sampleListings.map((l) => l.name).join(", ")}` : ""}
+      </p>
+      <div className="mt-3 flex flex-wrap items-end gap-2">
+        <div className="min-w-0 flex-1 basis-48">
+          <label htmlFor={`pn-${c.id}`} className="text-xs font-semibold text-slate-700">
+            Category name
+          </label>
+          <input id={`pn-${c.id}`} value={name} maxLength={80} onChange={(e) => setName(e.target.value)} className={field} />
+        </div>
+        <button type="button" disabled={name.trim().length < 2} onClick={() => void post("approve", name.trim() === c.name ? {} : { name: name.trim() }, `Approved ${name.trim()}`)} className={`${bigButton} bg-brand-blue text-white hover:bg-brand-navy`}>
+          <Check className="h-4 w-4" aria-hidden="true" /> Approve as new category
+        </button>
+        <button type="button" onClick={() => onMerge(c)} className={`${bigButton} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`}>
+          <GitMerge className="h-4 w-4" aria-hidden="true" /> Merge or make a subcategory
+        </button>
+      </div>
+      <div className="mt-3 border-t border-slate-100 pt-3">
+        {armed ? (
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="min-w-0 flex-1 basis-48">
+              <label htmlFor={`pr-${c.id}`} className="text-xs font-semibold text-slate-700">
+                Reason shown with the rejected listings (optional)
+              </label>
+              <input id={`pr-${c.id}`} value={reason} maxLength={300} onChange={(e) => setReason(e.target.value)} className={field} />
+            </div>
+            <button type="button" onClick={() => void post("reject", reason.trim() ? { reason: reason.trim() } : {}, `Rejected ${c.name}`)} className={`${bigButton} bg-red-700 text-white hover:bg-red-800`}>
+              Confirm reject
+            </button>
+            <button type="button" onClick={() => setArmed(false)} className={`${bigButton} text-slate-700 hover:bg-slate-100`}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setArmed(true)} className={`${bigButton} text-red-700 hover:bg-red-50`}>
+            <X className="h-4 w-4" aria-hidden="true" /> Reject and its waiting listings
+          </button>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/** Moves all listings and subcategories of one category into another, then removes it. Also turns a suggestion into a subcategory. */
+function MergeForm({
+  cat,
+  targets,
+  onCancel,
+  onMerge,
+}: {
+  cat: Cat;
+  targets: Cat[];
+  onCancel: () => void;
+  onMerge: (body: { targetId: string; subcategoryId?: string; newSubcategoryName?: string }) => Promise<void>;
+}) {
+  const [targetId, setTargetId] = useState("");
+  const [sub, setSub] = useState(cat.status === "PENDING" ? "__new" : "");
+  const [newName, setNewName] = useState(cat.status === "PENDING" ? cat.name : "");
+  const [busy, setBusy] = useState(false);
+  const target = targets.find((t) => t.id === targetId);
+  const ready = Boolean(target) && (sub !== "__new" || newName.trim().length >= 2);
+  return (
+    <form
+      className="space-y-5 p-6"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!target) return;
+        setBusy(true);
+        await onMerge({ targetId, ...(sub === "__new" ? { newSubcategoryName: newName.trim() } : sub ? { subcategoryId: sub } : {}) });
+        setBusy(false);
+      }}
+    >
+      <p className="text-sm text-slate-700">
+        All {plural(cat.listingCount, "listing", "listings")} and {plural(cat.subcategories.length, "subcategory", "subcategories")} of <strong>{cat.name}</strong> move into the category you choose, then {cat.name} is deleted. A subcategory with the same name is joined, not duplicated.
+      </p>
+      <div>
+        <label htmlFor="merge-target" className="block text-sm font-semibold text-brand-navy">
+          Merge into
+        </label>
+        <select id="merge-target" value={targetId} onChange={(e) => { setTargetId(e.target.value); setSub(cat.status === "PENDING" ? "__new" : ""); }} className={field}>
+          <option value="">Choose a category</option>
+          {targets.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      {target && (
+        <div>
+          <label htmlFor="merge-sub" className="block text-sm font-semibold text-brand-navy">
+            Listings with no subcategory go to
+          </label>
+          <select id="merge-sub" value={sub} onChange={(e) => setSub(e.target.value)} className={field}>
+            <option value="">Leave them with no subcategory</option>
+            {target.subcategories.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+            <option value="__new">A new subcategory</option>
+          </select>
+          {sub === "__new" && (
+            <div className="mt-3">
+              <label htmlFor="merge-new" className="block text-sm font-semibold text-brand-navy">
+                New subcategory name
+              </label>
+              <input id="merge-new" value={newName} maxLength={80} onChange={(e) => setNewName(e.target.value)} className={field} />
+            </div>
+          )}
+        </div>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <button type="submit" disabled={!ready || busy} className={`${bigButton} bg-brand-blue text-white hover:bg-brand-navy`}>
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <GitMerge className="h-4 w-4" aria-hidden="true" />} Merge and delete {cat.name}
+        </button>
+        <button type="button" onClick={onCancel} className={`${bigButton} text-slate-700 hover:bg-slate-100`}>
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -414,6 +598,7 @@ function CategoryCard({
   onToggle,
   onMove,
   onEdit,
+  onMerge,
   onDelete,
   onDragStart,
   onDragEnter,
@@ -431,6 +616,7 @@ function CategoryCard({
   onToggle: () => void;
   onMove: (dir: -1 | 1) => void;
   onEdit: () => void;
+  onMerge: () => void;
   onDelete: () => Promise<boolean>;
   onDragStart: () => void;
   onDragEnter: () => void;
@@ -512,6 +698,10 @@ function CategoryCard({
           <button type="button" onClick={onEdit} className="rounded-lg p-2 text-slate-600 transition hover:bg-white hover:text-brand-navy active:scale-95" title="Edit category">
             <Pencil className="h-4 w-4" aria-hidden="true" />
             <span className="sr-only">Edit {c.name}</span>
+          </button>
+          <button type="button" onClick={onMerge} className="rounded-lg p-2 text-slate-600 transition hover:bg-white hover:text-brand-navy active:scale-95" title="Merge into another category">
+            <GitMerge className="h-4 w-4" aria-hidden="true" />
+            <span className="sr-only">Merge {c.name} into another category</span>
           </button>
           <DeleteButton label={c.name} locked={c.listingCount > 0} lockedReason={`${c.name} has listings. Move them to another category before deleting.`} onDelete={() => void onDelete()} />
           <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`subs-${c.id}`} className="rounded-lg p-2 text-slate-500 transition hover:bg-white" title={open ? "Hide subcategories" : "Show subcategories"}>

@@ -65,6 +65,14 @@ model AdminUser {
   auditLogs          AuditLog[]
 }
 
+// A category typed in through "Others" on the Submit form starts PENDING (hidden from the public site) until an
+// admin approves, merges or rejects it. REJECTED rows stay so the same text is not proposed again.
+enum CategoryStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
 model Category {
   id                String        @id @default(cuid())
   name              String        @unique
@@ -73,6 +81,8 @@ model Category {
   icon              String?
   sortOrder         Int           @default(0)
   requiresOwnerName Boolean       @default(false)
+  status            CategoryStatus @default(APPROVED)
+  submittedAt       DateTime? // set when the category came from the Others field
   subcategories     Subcategory[]
   businesses        Business[]
 }

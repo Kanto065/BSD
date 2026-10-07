@@ -42,12 +42,12 @@ function shape(row: CategoryRow) {
 }
 
 export async function listCategories(prisma: PrismaClient) {
-  const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" }, select: categorySelect });
+  const rows = await prisma.category.findMany({ where: { status: "APPROVED" }, orderBy: { sortOrder: "asc" }, select: categorySelect });
   return rows.map(shape);
 }
 
 export async function getCategory(prisma: PrismaClient, slug: string, f: Omit<Filters, "category">) {
-  const row = await prisma.category.findUnique({ where: { slug }, select: categorySelect });
+  const row = await prisma.category.findFirst({ where: { slug, status: "APPROVED" }, select: categorySelect });
   if (!row) return null;
   const businesses = await listPublicBusinesses(prisma, await filterConditions(prisma, { ...f, category: slug }), f);
   return { category: shape(row), businesses };

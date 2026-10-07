@@ -8,6 +8,7 @@ import { descriptionStatus } from "@/lib/description";
 import { allZonesState, toggleAllZones } from "@/lib/zones";
 import { CUSTOM_CATEGORY_MAX, HIDE_ADDRESS_LABEL, OTHERS, zoneForPostcode, type Errors, type FormValues } from "@/lib/business-profile";
 import type { CategoryOption } from "@/lib/taxonomy";
+import { ServiceTagPicker } from "@/components/ServiceTagPicker";
 
 // The listing form fields from the client's Submission Form doc, one component per step. Used by the Submit stepper and
 // by the business details page, so the wording, help text and ids stay in one place. The client's text is unchanged.
@@ -179,6 +180,7 @@ export function StepBusiness({ v, set, errors, categories }: StepProps) {
           className={inputClass}
           {...invalid(errors, "servicesOffered")}
         />
+        <ServiceTagPicker tags={category?.serviceTags ?? []} value={v.services} onChange={(services) => set({ services })} />
         <FieldError id="servicesOffered" message={errors.servicesOffered} />
       </div>
     </Section>

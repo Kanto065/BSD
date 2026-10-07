@@ -40,8 +40,8 @@ const config: Config = {
         "swap-in": "swap-in 200ms cubic-bezier(0.23, 1, 0.32, 1) backwards",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
-        heading: ["var(--font-montserrat)", "var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "Noto Sans Bengali", "Nirmala UI", "Bangla MN", "Kohinoor Bangla", "sans-serif"],
+        heading: ["var(--font-montserrat)", "var(--font-inter)", "ui-sans-serif", "system-ui", "Noto Sans Bengali", "Nirmala UI", "Bangla MN", "Kohinoor Bangla", "sans-serif"],
       },
     },
   },

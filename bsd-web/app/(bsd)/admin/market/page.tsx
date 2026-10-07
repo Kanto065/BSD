@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "@/lib/admin-session";
 import { Card, ErrorNote, PageTitle, Pager, buttonClass, fmtDate, inputClass, useAdminData } from "@/components/admin/ui";
 
@@ -19,8 +19,12 @@ type Paged<T> = { items: T[]; total: number; page: number; pageSize: number };
 
 const TABS = ["Queue", "Tickets", "Spots", "Categories"] as const;
 const STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
-const ghost = `${buttonClass} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`;
-const solid = `${buttonClass} bg-brand-navy text-white hover:bg-brand-navy/90`;
+const ghost = `${buttonClass} min-h-11 border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`;
+const solid = `${buttonClass} min-h-11 bg-brand-navy text-white hover:bg-brand-navy/90`;
+const pill = (on: boolean) => `min-h-11 rounded-full px-4 text-sm font-semibold ${on ? "bg-brand-navy text-white" : "bg-white text-slate-700 ring-1 ring-slate-200"}`;
+const statusLabel = (s: string) => s.charAt(0) + s.slice(1).replace("_", " ").toLowerCase();
+/** Tells the sidebar badge and the tab counts to reload. */
+const COUNTS_EVENT = "market-counts-changed";
 
 function useAct(reload: () => Promise<void>) {
   const { api } = useSession();
@@ -30,6 +34,7 @@ function useAct(reload: () => Promise<void>) {
       await api(path, { method, body });
       setError(null);
       await reload();
+      window.dispatchEvent(new Event(COUNTS_EVENT));
     } catch (e) {
       setError(e);
     }
@@ -46,7 +51,7 @@ function Queue() {
     <div>
       <div className="mb-4 flex gap-2">
         {["all", "pending", "reported"].map((f) => (
-          <button key={f} type="button" onClick={() => { setFilter(f); setPageNo(1); }} className={`rounded-full px-3 py-1.5 text-sm font-semibold ${f === filter ? "bg-brand-navy text-white" : "bg-white text-slate-700 ring-1 ring-slate-200"}`}>
+          <button key={f} type="button" onClick={() => { setFilter(f); setPageNo(1); }} className={pill(f === filter)}>
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
@@ -69,7 +74,6 @@ function Queue() {
               {l.status !== "REMOVED" && (
                 <button type="button" className={ghost} onClick={() => { const reason = window.prompt("Reason shown to the member"); if (reason) void a.act(`/market/listings/${l.id}/remove`, "POST", { reason }); }}>Remove</button>
               )}
-              {l.status === "REMOVED" && <button type="button" onClick={() => a.act(`/market/listings/${l.id}/restore`, "POST")} className={ghost}>Restore</button>}
               <button type="button" className={ghost} onClick={() => { const reason = window.prompt(`Remove every listing by ${l.owner.name}? Reason shown to the member`); if (reason) void a.act(`/market/users/${l.owner.id}/remove-listings`, "POST", { reason }); }}>Remove all by this member</button>
             </div>
           </Card>
@@ -85,7 +89,7 @@ function TicketCard({ t, act }: { t: TicketRow; act: (path: string, method: stri
   const [reply, setReply] = useState(t.adminReply ?? "");
   return (
     <Card>
-      <p className="text-sm text-slate-600">{t.number} · {t.category} · {fmtDate(t.createdAt)} · {t.status}</p>
+      <p className="text-sm text-slate-600">{t.number} · {t.category} · {fmtDate(t.createdAt)} · {statusLabel(t.status)}</p>
       <p className="mt-1 font-semibold text-brand-navy">{t.user.name} · {t.user.email}</p>
       {t.listing && <p className="text-sm text-slate-600">About {t.listing.title}</p>}
       <p className="mt-2 whitespace-pre-line text-sm text-slate-700">{t.message}</p>
@@ -94,7 +98,7 @@ function TicketCard({ t, act }: { t: TicketRow; act: (path: string, method: stri
       </label>
       <div className="mt-2 flex flex-wrap gap-2">
         <button type="button" disabled={!reply.trim()} onClick={() => act(`/market/tickets/${t.id}`, "PATCH", { adminReply: reply })} className={solid}>Send reply</button>
-        {STATUSES.filter((s) => s !== t.status).map((s) => <button key={s} type="button" onClick={() => act(`/market/tickets/${t.id}`, "PATCH", { status: s })} className={ghost}>Mark {s.replace("_", " ").toLowerCase()}</button>)}
+        {STATUSES.filter((s) => s !== t.status).map((s) => <button key={s} type="button" onClick={() => act(`/market/tickets/${t.id}`, "PATCH", { status: s })} className={ghost}>Mark {statusLabel(s).toLowerCase()}</button>)}
       </div>
     </Card>
   );
@@ -109,8 +113,8 @@ function Tickets() {
     <div>
       <div className="mb-4 flex flex-wrap gap-2">
         {STATUSES.map((s) => (
-          <button key={s} type="button" onClick={() => { setStatus(s); setPageNo(1); }} className={`rounded-full px-3 py-1.5 text-sm font-semibold ${s === status ? "bg-brand-navy text-white" : "bg-white text-slate-700 ring-1 ring-slate-200"}`}>
-            {s.replace("_", " ").charAt(0) + s.replace("_", " ").slice(1).toLowerCase()}
+          <button key={s} type="button" onClick={() => { setStatus(s); setPageNo(1); }} className={pill(s === status)}>
+            {statusLabel(s)}
           </button>
         ))}
       </div>
@@ -174,14 +178,19 @@ function Categories() {
 
 export default function MarketAdminPage() {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Queue");
-  const { data: counts } = useAdminData<{ pending: number; reported: number; openTickets: number }>("/market/counts");
+  const { data: counts, reload: reloadCounts } = useAdminData<{ pending: number; reported: number; openTickets: number }>("/market/counts");
+  useEffect(() => {
+    const f = () => void reloadCounts();
+    window.addEventListener(COUNTS_EVENT, f);
+    return () => window.removeEventListener(COUNTS_EVENT, f);
+  }, [reloadCounts]);
   const badge: Record<string, number | undefined> = { Queue: counts ? counts.pending + counts.reported : undefined, Tickets: counts?.openTickets };
   return (
     <div>
       <PageTitle sub="Review listings, answer support tickets and manage safe exchange spots and categories.">Market</PageTitle>
       <div role="tablist" aria-label="Market" className="mb-5 flex flex-wrap gap-2">
         {TABS.map((t) => (
-          <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`min-h-11 rounded-full px-4 text-sm font-semibold ${tab === t ? "bg-brand-navy text-white" : "bg-white text-slate-700 ring-1 ring-slate-200"}`}>
+          <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={pill(tab === t)}>
             {t}{badge[t] ? ` (${badge[t]})` : ""}
           </button>
         ))}

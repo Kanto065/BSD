@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import MarketGate from "@/components/market/MarketGate";
 import { ApiError } from "@/lib/admin-session";
 import { priceLabel } from "@/lib/market-api";
 import {
@@ -102,7 +103,12 @@ function Tickets({ items }: { items: Ticket[] }) {
   );
 }
 
-export default function AccountTabs({ apiBase }: { apiBase: string }) {
+// The gate lives here, in the client, so the server page passes only plain props.
+export default function AccountTabs({ apiBase, title }: { apiBase: string; title: string }) {
+  return <MarketGate apiBase={apiBase} title={title}>{() => <AccountBody apiBase={apiBase} />}</MarketGate>;
+}
+
+function AccountBody({ apiBase }: { apiBase: string }) {
   const [tab, setTab] = useState<AccountTab>("active");
   const [mine, setMine] = useState<MineListing[] | null>(null);
   const [saved, setSaved] = useState<MarketListItem[] | null>(null);

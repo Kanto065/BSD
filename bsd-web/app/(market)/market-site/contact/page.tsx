@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { MarketFrame, MarketMain } from "@/components/market/MarketFrame";
-import MarketGate from "@/components/market/MarketGate";
 import AccountContact from "@/components/market/AccountContact";
 import { publicApiBase } from "@/lib/api";
 
@@ -12,7 +11,7 @@ export default function Page() {
   return (
     <MarketFrame>
       <MarketMain title="Contact Support" intro="Send a ticket and the BSD team will reply on your account page.">
-        <MarketGate apiBase={apiBase} title="Sign in to contact support">{() => <AccountContact apiBase={apiBase} />}</MarketGate>
+        <AccountContact apiBase={apiBase} title="Sign in to contact support" />
       </MarketMain>
     </MarketFrame>
   );

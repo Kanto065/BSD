@@ -78,6 +78,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const { data: dash, reload } = useAdminData<Omit<Counts, "market">>(ready ? "/dashboard" : null);
   const { data: mk, reload: reloadMk } = useAdminData<{ pending: number; reported: number; openTickets: number }>(ready && atLeast(admin?.role, "MODERATOR") ? "/market/counts" : null);
   const counts: Counts | null = dash ? { ...dash, market: mk ? mk.pending + mk.reported + mk.openTickets : 0 } : null;
+  useEffect(() => {
+    const f = () => void reloadMk();
+    window.addEventListener("market-counts-changed", f);
+    return () => window.removeEventListener("market-counts-changed", f);
+  }, [reloadMk]);
   const lastPath = useRef(pathname);
   useEffect(() => {
     if (!ready || lastPath.current === pathname) return;

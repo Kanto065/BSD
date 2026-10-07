@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import MarketGate from "@/components/market/MarketGate";
 import { ApiError } from "@/lib/admin-session";
 import { TICKET_CATEGORIES, sendTicket } from "@/lib/market-account";
 
@@ -9,7 +10,11 @@ import { TICKET_CATEGORIES, sendTicket } from "@/lib/market-account";
 
 const field = "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base text-slate-900";
 
-export default function AccountContact({ apiBase }: { apiBase: string }) {
+export default function AccountContact({ apiBase, title }: { apiBase: string; title: string }) {
+  return <MarketGate apiBase={apiBase} title={title}>{() => <ContactBody apiBase={apiBase} />}</MarketGate>;
+}
+
+function ContactBody({ apiBase }: { apiBase: string }) {
   const [category, setCategory] = useState<string>(TICKET_CATEGORIES[0]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);

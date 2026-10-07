@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
+import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { SESSION_COOKIE } from "../../common/tokens.js";
 import { deviceHashOf, makePassToken, newCardSecret, passSecretConfigured, qrSeconds } from "../../common/pass-token.js";
@@ -10,24 +10,14 @@ import { deviceHashOf, makePassToken, newCardSecret, passSecretConfigured, qrSec
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const MAX_MOVES = 3;
 const MOVE_WINDOW_MS = 7 * DAY_MS;
-const DEVICE_ID = /^[A-Za-z0-9-]{16,64}$/;
-
-/** Signed in plus a CARD module row. Kept this small so it can be swapped for app.requireModule("CARD") (G0). */
-export function requireCardModule(app: FastifyInstance) {
-  return async (req: FastifyRequest, reply: FastifyReply) => {
-    await app.requireUser()(req, reply);
-    if (reply.sent) return;
-    const row = await app.prisma.userModule.findUnique({ where: { userId_module: { userId: req.user!.id, module: "CARD" } } });
-    if (!row) return reply.code(403).send({ error: "Join Privilege Pass to use this." });
-  };
-}
+export const DEVICE_ID = /^[A-Za-z0-9-]{16,64}$/;
 
 const cardNumber = () => `BC-${new Date().getUTCFullYear()}-${crypto.randomInt(100000, 1000000)}`;
 
 const claimBody = z.object({ agreeShare: z.literal(true, { errorMap: () => ({ message: "Please agree to show your name and member number to shops." }) }) });
 
 const membersPassRoutes: FastifyPluginAsync = async (app) => {
-  const guard = { preHandler: requireCardModule(app) };
+  const guard = { preHandler: app.requireModule("CARD") };
   app.addHook("onSend", async (_req, reply) => {
     reply.header("Cache-Control", "no-store");
   });

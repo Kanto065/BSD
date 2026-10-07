@@ -2,9 +2,7 @@ import { PrismaClient, type Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import {
   CATEGORIES,
-  CATEGORY_RENAMES,
   ZONES,
-  categorySlug,
   localitySlug,
   subcategorySlug,
 } from "./seed-data.js";
@@ -23,7 +21,7 @@ async function seedCategories(tx: Tx) {
   const existing = await tx.category.count();
   if (existing > 0 && process.env.SEED_TAXONOMY !== "reset") {
     for (const cat of CATEGORIES) {
-      if (cat.icon) await tx.category.updateMany({ where: { name: cat.name, icon: null }, data: { icon: cat.icon } });
+      if (cat.icon) await tx.category.updateMany({ where: { slug: cat.slug, icon: null }, data: { icon: cat.icon } });
     }
     console.log("categories already set up: kept as they are (missing icons filled in)");
     return;
@@ -31,29 +29,24 @@ async function seedCategories(tx: Tx) {
   await resetCategories(tx);
 }
 
+// A live database is moved to the 24 category directory by migration 14_category_service_tags, which keeps listings
+// attached. This reset only writes the approved list into an empty database, or on purpose with SEED_TAXONOMY=reset.
 async function resetCategories(tx: Tx) {
-  // 1. Straight renames keep the same row, so attached listings keep their link.
-  for (const [from, to] of Object.entries(CATEGORY_RENAMES)) {
-    const old = await tx.category.findUnique({ where: { name: from } });
-    const target = await tx.category.findUnique({ where: { name: to } });
-    if (old && !target) {
-      await tx.category.update({ where: { id: old.id }, data: { name: to, slug: categorySlug(to) } });
-      console.log(`renamed category "${from}" to "${to}"`);
-    }
-  }
-
-  // 2. Upsert the approved categories and subcategories.
+  // 1. Upsert the approved categories and subcategories. A category is matched by slug, so an existing row is renamed in
+  // place and its listings keep their link.
   for (const [index, cat] of CATEGORIES.entries()) {
+    const fields = {
+      name: cat.name,
+      icon: cat.icon ?? null,
+      sortOrder: index,
+      requiresOwnerName: cat.requiresOwnerName ?? false,
+      serviceTags: cat.serviceTags,
+      staged: cat.staged ?? false,
+    };
     const category = await tx.category.upsert({
-      where: { name: cat.name },
-      update: { slug: categorySlug(cat.name), sortOrder: index, requiresOwnerName: cat.requiresOwnerName ?? false, icon: cat.icon ?? null },
-      create: {
-        icon: cat.icon ?? null,
-        name: cat.name,
-        slug: categorySlug(cat.name),
-        sortOrder: index,
-        requiresOwnerName: cat.requiresOwnerName ?? false,
-      },
+      where: { slug: cat.slug },
+      update: fields,
+      create: { ...fields, slug: cat.slug },
     });
     // New subcategories start in the seed's order. Existing ones keep whatever order an admin has set.
     for (const [subIndex, sub] of cat.subcategories.entries()) {
@@ -65,7 +58,7 @@ async function resetCategories(tx: Tx) {
     }
   }
 
-  // 3. Remove anything that is no longer in the approved set, but only if nothing points at it.
+  // 2. Remove anything that is no longer in the approved set, but only if nothing points at it.
   const approved = new Map(CATEGORIES.map((c) => [c.name, new Set(c.subcategories)]));
   const categories = await tx.category.findMany({
     include: { subcategories: { include: { _count: { select: { businesses: true } } } }, _count: { select: { businesses: true } } },

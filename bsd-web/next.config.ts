@@ -9,6 +9,11 @@ const RENAMED_CATEGORY_SLUGS: [from: string, to: string][] = [
   ["community-and-religious-services", "community-and-faith"],
   ["electrician-plumber-handyman", "trades-and-contractors"],
   ["professional-services", "legal-and-financial"],
+  // M9-B: the Master Category Directory folded four categories into others. Every other category keeps its address.
+  ["taxi-and-private-hire", "car-services"],
+  ["business-consultants", "legal-and-financial"],
+  ["electrician-plumber", "trades-and-contractors"],
+  ["fitness-and-wellbeing", "health-and-care"],
 ];
 
 const nextConfig: NextConfig = {

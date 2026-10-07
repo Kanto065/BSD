@@ -52,7 +52,7 @@ function validFields(overrides: Record<string, string | string[] | null> = {}): 
   const base: Record<string, string | string[]> = {
     name: "Nasima's Kitchen & Sweets",
     category: "home-based-food-services",
-    subcategory: "home-based-food-services-home-chefs",
+    subcategory: "home-based-food-and-tiffin-services-home-chefs",
     description: DESCRIPTION,
     servicesOffered: ["Tiffin", "Party catering"],
     phone: "01639 123 456",
@@ -274,11 +274,11 @@ describe("the rules from the submission form", () => {
   });
 
   it("only accepts a subcategory of the chosen category", async () => {
-    await expectError(validFields({ subcategory: "car-services-car-wash" }), "subcategory");
+    await expectError(validFields({ subcategory: "automotive-garages-and-transport-car-wash-and-valeting" }), "subcategory");
   });
 
   it("requires the owner name for Independent Professionals (from the category row)", async () => {
-    const fields = validFields({ category: "independent-professionals", subcategory: "independent-professionals-translators" });
+    const fields = validFields({ category: "independent-professionals", subcategory: "independent-professionals-office-less-hub-individual-freelancers-translators-and-interpreters" });
     await expectError(fields, "ownerName");
     expect((await submit([...fields, ["ownerName", "Rupa Begum"]])).status).toBe(201);
   });

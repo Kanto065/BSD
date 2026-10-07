@@ -73,6 +73,26 @@ function Reveal({ apiBase, device, offerId }: { apiBase: string; device: string;
   );
 }
 
+export function OfferRow({ p, apiBase, device, canReveal }: { p: Partner; apiBase: string; device: string | null; canReveal: boolean }) {
+  const { name, areaLabel, postcodeDistrict, offer } = p;
+  return (
+    <li className="rounded-2xl bg-white/[0.06] px-4 py-4 ring-1 ring-white/15">
+      <p className="font-heading font-semibold text-white">{name}</p>
+      <p className="text-xs text-slate-300">{areaLabel ?? postcodeDistrict}</p>
+      {offer && (
+        <>
+          <p className="mt-2 text-sm font-semibold text-teal-200">
+            {offer.title}
+            {offer.percent !== null ? ` (${offer.percent}% off)` : ""}
+          </p>
+          <p className="text-sm text-slate-300">{offer.terms}</p>
+          {canReveal && device && offer.id && <Reveal apiBase={apiBase} device={device} offerId={offer.id} />}
+        </>
+      )}
+    </li>
+  );
+}
+
 export default function PassOffers({ apiBase, device, canReveal }: { apiBase: string; device: string | null; canReveal: boolean }) {
   const [items, setItems] = useState<Partner[]>([]);
   const [page, setPage] = useState(0);
@@ -106,21 +126,8 @@ export default function PassOffers({ apiBase, device, canReveal }: { apiBase: st
       {state === "failed" && <ErrorLine>{T.loadFailed}</ErrorLine>}
       {state === "ok" && items.length === 0 && <p className="text-sm text-slate-300">{T.offersEmpty}</p>}
       <ul className="space-y-3">
-        {items.map(({ slug, name, areaLabel, postcodeDistrict, offer }) => (
-          <li key={slug} className="rounded-2xl bg-white/[0.06] px-4 py-4 ring-1 ring-white/15">
-            <p className="font-heading font-semibold text-white">{name}</p>
-            <p className="text-xs text-slate-300">{areaLabel ?? postcodeDistrict}</p>
-            {offer && (
-              <>
-                <p className="mt-2 text-sm font-semibold text-teal-200">
-                  {offer.title}
-                  {offer.percent !== null ? ` (${offer.percent}% off)` : ""}
-                </p>
-                <p className="text-sm text-slate-300">{offer.terms}</p>
-                {canReveal && device && offer.id && <Reveal apiBase={apiBase} device={device} offerId={offer.id} />}
-              </>
-            )}
-          </li>
+        {items.map((p) => (
+          <OfferRow key={p.slug} p={p} apiBase={apiBase} device={device} canReveal={canReveal} />
         ))}
       </ul>
       {state === "ok" && page < pages && (

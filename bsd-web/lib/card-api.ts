@@ -13,7 +13,7 @@ export type PassSummary = {
 };
 export type PassToken = { token: string; expiresInSeconds: number; serverTime: number };
 export type Savings = { totalPence: number; count: number; shops: number; thisYearPence: number };
-/** `id` is needed to reveal a code. The public API does not send it yet (see the M11-C report). */
+/** `id` is needed to reveal a code. */
 export type PartnerOffer = { id?: string; title: string; percent: number | null; terms: string };
 export type Partner = { slug: string; name: string; areaLabel: string | null; postcodeDistrict: string; offer: PartnerOffer | null };
 export type PartnerPage = { items: Partner[]; page: number; totalPages: number };

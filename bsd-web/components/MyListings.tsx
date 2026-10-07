@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ImagePlus, Loader2 } from "lucide-react";
 import { FieldError, IMAGE_TYPES, MAX_FILE_BYTES, MAX_PHOTOS, helpClass, inputClass, labelClass } from "@/components/BusinessFields";
+import OfferEditor from "@/components/card/OfferEditor";
 import { ServiceTagPicker } from "@/components/ServiceTagPicker";
 import { ZONES, zoneShortLabel } from "@/lib/content";
 import { descriptionStatus } from "@/lib/description";
@@ -124,11 +125,11 @@ export default function MyListings({ apiBase }: { apiBase: string }) {
                 </button>
               )}
             </div>
+            {l.status === "APPROVED" && <OfferEditor apiBase={apiBase} listingId={l.id} />}
           </li>
         );
       })}
     </ul>
-    <OffersPanel />
     <p className="text-sm text-slate-600">
       Claiming a listing that is not yet linked to you?{" "}
       <Link href="/account/claims" className="inline-flex min-h-11 items-center font-semibold text-brand-teal-dark underline">
@@ -136,18 +137,6 @@ export default function MyListings({ apiBase }: { apiBase: string }) {
       </Link>
     </p>
     </div>
-  );
-}
-
-// A static note. Offers belong to the Privilege Pass, so there is nothing to fill in here yet.
-function OffersPanel() {
-  return (
-    <section aria-labelledby="offers-title" className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
-      <h2 id="offers-title" className="font-heading text-lg font-bold text-brand-navy">
-        Offers
-      </h2>
-      <p className="mt-1 text-sm text-slate-700">Offers are coming with the Privilege Pass. You will be able to add offers for Pass holders here later. There is nothing to set up yet.</p>
-    </section>
   );
 }
 

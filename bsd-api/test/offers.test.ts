@@ -51,6 +51,14 @@ describe("merchant offer", () => {
     expect((await c.call("GET", "/pass/partners")).raw).not.toContain(s.biz.slug);
   });
 
+  it("the public partner list has a short public cache and bad queries are not cached", async () => {
+    const ok = await c.call("GET", "/pass/partners");
+    expect(ok.headers["cache-control"]).toBe("public, max-age=60");
+    const bad = await c.call("GET", "/pass/partners?page=0");
+    expect(bad.status).toBe(400);
+    expect(bad.headers["cache-control"] ?? "").not.toContain("public");
+  });
+
   it("pause and resume only move between ACTIVE and PAUSED", async () => {
     const s = await c.shop("ACTIVE");
     expect((await c.call("POST", `/auth/listings/${s.biz.id}/offer/resume`, { cookie: s.owner.cookie })).body.offer.status).toBe("ACTIVE"); // nothing to resume, no change

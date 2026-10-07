@@ -49,10 +49,12 @@ const passVerifyRoutes: FastifyPluginAsync = async (app) => {
   // Per session in practice. ponytail: key by account if one account shares sessions.
   const perSession = { keyGenerator: (req: FastifyRequest) => req.cookies?.[SESSION_COOKIE] ?? req.ip };
 
-  // Public. Not cached by the shared proxy cache rule above: the list changes when an admin approves an offer.
+  // Public and the same for everyone, so a short cache is safe. 60 seconds is the longest an approved or paused offer
+  // can lag on the public Partner Shops page (same as the map pins).
   app.get("/partners", async (req, reply) => {
     const q = filterQuery.safeParse(req.query);
     if (!q.success) return reply.code(400).send(badQuery(q.error));
+    reply.header("Cache-Control", "public, max-age=60");
     const extra = [{ privilegeOffer: { status: "ACTIVE" as const } }, ...(await filterConditions(app.prisma, q.data))];
     return listPublicBusinesses(app.prisma, extra, q.data);
   });

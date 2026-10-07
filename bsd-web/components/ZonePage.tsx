@@ -5,6 +5,8 @@ import { ArrowLink } from "@/components/ArrowLink";
 import { ListingGrid } from "@/components/BusinessCard";
 import type { ApiResult, Page, PublicListItem } from "@/lib/api";
 import { ZONES, type Zone } from "@/lib/content";
+import { publicApiBase } from "@/lib/api";
+import NearMePanel from "@/components/search/NearMePanel";
 
 export function zoneMetadata(zone: Zone): Metadata {
   const title = `Zone ${zone.number}: ${zone.name}`;

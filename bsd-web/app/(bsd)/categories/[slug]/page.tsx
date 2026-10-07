@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLink } from "@/components/ArrowLink";
 import { ListingGrid } from "@/components/BusinessCard";
-import { listingsForCategory, type ApiResult, type Page, type PublicListItem } from "@/lib/api";
+import NearMePanel from "@/components/search/NearMePanel";
+import { listingsForCategory, publicApiBase, type ApiResult, type Page, type PublicListItem } from "@/lib/api";
 import { SITE_URL } from "@/lib/content";
 import { getCategories } from "@/lib/taxonomy";
 
@@ -59,6 +60,8 @@ export default async function CategoryDetailPage({ params }: { params: Params })
           ))}
         </div>
       )}
+
+      <NearMePanel apiBase={publicApiBase()} filters={{ category: category.slug }} />
 
       <div className="mt-12">
         <ListingGrid

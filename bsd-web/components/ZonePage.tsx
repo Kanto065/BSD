@@ -5,6 +5,8 @@ import { ArrowLink } from "@/components/ArrowLink";
 import { ListingGrid } from "@/components/BusinessCard";
 import type { ApiResult, Page, PublicListItem } from "@/lib/api";
 import { ZONES, type Zone } from "@/lib/content";
+import { publicApiBase } from "@/lib/api";
+import NearMePanel from "@/components/search/NearMePanel";
 
 export function zoneMetadata(zone: Zone): Metadata {
   const title = `Zone ${zone.number}: ${zone.name}`;
@@ -62,6 +64,8 @@ export default function ZonePage({
           ))}
         </ul>
       </section>
+
+      <NearMePanel apiBase={publicApiBase()} filters={{ zone: zone.slug }} />
 
       <section className="mt-12">
         <h2 className="text-lg font-semibold text-brand-navy">Businesses in this zone</h2>

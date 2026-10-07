@@ -99,6 +99,10 @@ const accepted = z
   .optional()
   .refine((v) => v === "true" || v === "on" || v === "yes", { message: "Please tick this box to continue." });
 
+export const CUSTOM_CATEGORY_MAX = 60;
+/** Safety cap on categories waiting for review, so the Others field cannot flood the admin queue. ponytail: global cap, per-account cap once Submit needs sign in (R-08). */
+export const MAX_PENDING_CATEGORIES = 30;
+
 export const countWords = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 
 /** Description rule: at least this many characters (after trim and sanitising) and at most 150 words. Mirrored in bsd-web lib/description.ts. */
@@ -120,7 +124,9 @@ export const fieldRules = { text, optionalText, slug, phone };
 
 export const submissionSchema = z.object({
   name: text(120).min(2, "Enter the business or service name."),
-  category: slug,
+  // Either a listed category (slug) or, when "Others" was chosen on the form, free text in customCategory.
+  category: slug.optional().or(z.literal("")).transform((v) => v || undefined),
+  customCategory: optionalText(CUSTOM_CATEGORY_MAX),
   subcategory: slug.optional().or(z.literal("")).transform((v) => v || undefined),
   description: text(2000), // the length and word rule runs after sanitising, see descriptionProblem
   servicesOffered: z
@@ -204,8 +210,31 @@ export async function saveSubmission(
   const errors: FieldErrors = {};
 
   // Category and subcategory, looked up by slug. Whether an owner name is needed comes from the category row.
-  const category = await prisma.category.findUnique({ where: { slug: s.category }, select: { id: true, requiresOwnerName: true } });
-  if (!category) errors.category = "Choose a category from the list.";
+  let category: { id: string; requiresOwnerName: boolean } | null = null;
+  let newCategory: { name: string; slug: string } | null = null;
+  if (s.customCategory && !s.category) {
+    // "Others": reuse a category with the same name (any case) or web address, otherwise propose a new PENDING one.
+    const typed = sanitizeText(s.customCategory);
+    const typedSlug = slugify(typed);
+    if (typed.length < 2 || !typedSlug) errors.customCategory = "Enter the category name, using letters or numbers.";
+    else {
+      const found = await prisma.category.findFirst({
+        where: { OR: [{ name: { equals: typed, mode: "insensitive" } }, { slug: typedSlug }] },
+        select: { id: true, requiresOwnerName: true, status: true },
+      });
+      if (found?.status === "REJECTED") errors.customCategory = "We could not accept that category. Please choose one from the list.";
+      else if (found) category = found;
+      else if ((await prisma.category.count({ where: { status: "PENDING" } })) >= MAX_PENDING_CATEGORIES) {
+        errors.customCategory = "We cannot take new category suggestions right now. Please choose one from the list.";
+      } else newCategory = { name: typed, slug: typedSlug };
+    }
+  } else {
+    const found = s.category
+      ? await prisma.category.findFirst({ where: { slug: s.category, status: "APPROVED" }, select: { id: true, requiresOwnerName: true } })
+      : null;
+    if (!found) errors.category = "Choose a category from the list.";
+    else category = found;
+  }
   let subcategoryId: string | undefined;
   if (category && s.subcategory) {
     const sub = await prisma.subcategory.findFirst({ where: { slug: s.subcategory, categoryId: category.id }, select: { id: true } });
@@ -248,7 +277,7 @@ export async function saveSubmission(
   }
 
   if (Object.keys(errors).length) throw new SubmissionError(400, errors);
-  if (!coverage.ok || !category) throw new Error("unreachable");
+  if (!coverage.ok || (!category && !newCategory)) throw new Error("unreachable");
 
   // Clean every free-text field before it touches the database.
   const description = sanitizeText(s.description);
@@ -264,6 +293,7 @@ export async function saveSubmission(
   // Store the images, then the listing. If saving the listing fails, the stored images are removed again.
   const folder = `businesses/${randomUUID()}`;
   const stored: string[] = [];
+  let createdCategoryId: string | null = null;
   const photoRows: {
     url: string;
     thumbUrl: string | null;
@@ -297,12 +327,19 @@ export async function saveSubmission(
       });
     }
 
+    if (newCategory) {
+      const last = await prisma.category.aggregate({ _max: { sortOrder: true } });
+      const made = await prisma.category.create({
+        data: { ...newCategory, icon: "package", status: "PENDING", submittedAt: new Date(), sortOrder: (last._max.sortOrder ?? -1) + 1 },
+      });
+      createdCategoryId = made.id;
+    }
     const slugValue = await uniqueSlug(prisma, name, coverage.outward);
     await prisma.business.create({
       data: {
         slug: slugValue,
         name,
-        categoryId: category.id,
+        categoryId: (createdCategoryId ?? category?.id)!,
         subcategoryId,
         description,
         servicesOffered,
@@ -335,6 +372,7 @@ export async function saveSubmission(
     return { slug: slugValue, photos: photoRows.length };
   } catch (err) {
     await Promise.allSettled(stored.map((key) => storage!.delete(key)));
+    if (createdCategoryId) await prisma.category.delete({ where: { id: createdCategoryId } }).catch(() => undefined);
     throw err;
   }
 }

@@ -7,7 +7,8 @@ import { z } from "zod";
 
 /** Restricts a Business query to what the public may see. Extra conditions are ANDed, never replace it. */
 export function publicWhere(extra: Prisma.BusinessWhereInput = {}): Prisma.BusinessWhereInput {
-  return { AND: [{ status: "APPROVED" }, extra] };
+  // A listing whose category is still pending (or rejected) stays out of public pages until an admin settles the category.
+  return { AND: [{ status: "APPROVED" }, { category: { status: "APPROVED" } }, extra] };
 }
 
 const nameSlug = { select: { name: true, slug: true } } as const;

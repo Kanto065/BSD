@@ -26,6 +26,14 @@ const createCategory = z
   .strict();
 const updateCategory = z.object({ name, slug, description, icon, requiresOwnerName: z.boolean() }).partial().strict();
 const reorder = z.object({ ids: z.array(z.string().min(1).max(64)).min(1).max(200) }).strict();
+const approveBody = z.object({ name: name.optional() }).strict();
+const rejectBody = z.object({ reason: z.string().trim().max(300).optional() }).strict();
+// Merge moves every listing and subcategory of the source into the target, then deletes the source. Listings that
+// had no subcategory can be put into an existing subcategory of the target, or into a new one (created if missing).
+const mergeBody = z
+  .object({ targetId: z.string().min(1).max(64), subcategoryId: z.string().min(1).max(64).optional(), newSubcategoryName: name.optional() })
+  .strict()
+  .refine((b) => !(b.subcategoryId && b.newSubcategoryName), { message: "Choose an existing subcategory or a new one, not both.", path: ["subcategoryId"] });
 const subBody = z.object({ name }).strict();
 
 const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
@@ -36,6 +44,7 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
       orderBy: { sortOrder: "asc" },
       include: {
         _count: { select: { businesses: true } },
+        businesses: { select: { id: true, name: true }, take: 5, orderBy: { submittedAt: "asc" } },
         subcategories: { orderBy: [{ sortOrder: "asc" }, { name: "asc" }], include: { _count: { select: { businesses: true } } } },
       },
     });
@@ -49,6 +58,10 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
         icon: c.icon,
         sortOrder: c.sortOrder,
         requiresOwnerName: c.requiresOwnerName,
+        status: c.status,
+        submittedAt: c.submittedAt,
+        // A few listings that use a category waiting for review, so the admin can judge the suggestion.
+        sampleListings: c.status === "APPROVED" ? [] : c.businesses.map((b) => ({ id: b.id, name: b.name })),
         listingCount: c._count.businesses,
         subcategories: c.subcategories.map((s) => ({ id: s.id, name: s.name, slug: s.slug, sortOrder: s.sortOrder, listingCount: s._count.businesses })),
       })),
@@ -128,7 +141,8 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
   app.post("/categories/reorder", admins, async (req, reply) => {
     const body = reorder.safeParse(req.body);
     if (!body.success) return invalid(reply, body.error);
-    const all = await app.prisma.category.findMany({ select: { id: true } });
+    // Suggested (pending or rejected) categories are not on the site, so they are not part of the order.
+    const all = await app.prisma.category.findMany({ where: { status: "APPROVED" }, select: { id: true } });
     const ids = new Set(all.map((c) => c.id));
     if (body.data.ids.length !== ids.size || new Set(body.data.ids).size !== ids.size || body.data.ids.some((id) => !ids.has(id))) {
       return reply.code(400).send({ error: "Send every category exactly once." });
@@ -138,6 +152,108 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
       audit(app.prisma, req.admin!.id, "REORDER_CATEGORIES", "Category", "all", { order: body.data.ids }),
     ]);
     return { ok: true };
+  });
+
+  // "Others" moderation and merge
+
+  // Approve a category that came from the Others field (optionally correcting its name). It then goes live on the site.
+  app.post("/categories/:id/approve", admins, async (req, reply) => {
+    const p = idParams.safeParse(req.params);
+    if (!p.success) return reply.code(404).send({ error: "Not found" });
+    const body = approveBody.safeParse(req.body ?? {});
+    if (!body.success) return invalid(reply, body.error);
+    const c = await app.prisma.category.findUnique({ where: { id: p.data.id } });
+    if (!c) return reply.code(404).send({ error: "Not found" });
+    if (c.status === "APPROVED") return reply.code(409).send({ error: "This category is already approved." });
+    const newName = body.data.name ? sanitizeText(body.data.name) : c.name;
+    const newSlug = newName === c.name ? c.slug : slugify(newName);
+    if (!newSlug) return reply.code(400).send({ error: "Please check the highlighted fields.", fieldErrors: { name: "Use letters or numbers in the name." } });
+    if (newName !== c.name) {
+      const clash = await app.prisma.category.findFirst({ where: { id: { not: c.id }, OR: [{ name: { equals: newName, mode: "insensitive" } }, { slug: newSlug }] } });
+      if (clash) return reply.code(409).send({ error: "Please check the highlighted fields.", fieldErrors: { name: "A category with this name already exists." } });
+    }
+    await app.prisma.$transaction([
+      app.prisma.category.update({ where: { id: c.id }, data: { status: "APPROVED", name: newName, slug: newSlug } }),
+      audit(app.prisma, req.admin!.id, "APPROVE_CATEGORY", "Category", c.id, { from: c.status, name: newName }),
+    ]);
+    return { ok: true };
+  });
+
+  // Reject a suggested category. Its waiting listings are rejected with the reason, and the category row stays (hidden)
+  // so the same text is not suggested again.
+  app.post("/categories/:id/reject", admins, async (req, reply) => {
+    const p = idParams.safeParse(req.params);
+    if (!p.success) return reply.code(404).send({ error: "Not found" });
+    const body = rejectBody.safeParse(req.body ?? {});
+    if (!body.success) return invalid(reply, body.error);
+    const c = await app.prisma.category.findUnique({ where: { id: p.data.id } });
+    if (!c) return reply.code(404).send({ error: "Not found" });
+    if (c.status !== "PENDING") return reply.code(409).send({ error: "Only a category waiting for review can be rejected." });
+    const reason = body.data.reason ? sanitizeText(body.data.reason) : "The category you suggested was not accepted.";
+    const [, moved] = await app.prisma.$transaction([
+      app.prisma.category.update({ where: { id: c.id }, data: { status: "REJECTED" } }),
+      app.prisma.business.updateMany({
+        where: { categoryId: c.id, status: "PENDING" },
+        data: { status: "REJECTED", reviewedAt: new Date(), reviewedById: req.admin!.id, rejectionReason: reason },
+      }),
+      audit(app.prisma, req.admin!.id, "REJECT_CATEGORY", "Category", c.id, { name: c.name, reason }),
+    ]);
+    return { ok: true, rejectedListings: moved.count };
+  });
+
+  // Move everything from this category into another one, then delete it. Works for suggested and normal categories.
+  app.post("/categories/:id/merge", admins, async (req, reply) => {
+    const p = idParams.safeParse(req.params);
+    if (!p.success) return reply.code(404).send({ error: "Not found" });
+    const body = mergeBody.safeParse(req.body);
+    if (!body.success) return invalid(reply, body.error);
+    if (body.data.targetId === p.data.id) return reply.code(400).send({ error: "Choose a different category to merge into." });
+    const [source, target] = await Promise.all([
+      app.prisma.category.findUnique({ where: { id: p.data.id }, include: { subcategories: true } }),
+      app.prisma.category.findUnique({ where: { id: body.data.targetId }, include: { subcategories: true } }),
+    ]);
+    if (!source || !target) return reply.code(404).send({ error: "Not found" });
+    if (target.status !== "APPROVED") return reply.code(409).send({ error: "Merge into an approved category." });
+    if (body.data.subcategoryId && !target.subcategories.some((s) => s.id === body.data.subcategoryId)) {
+      return reply.code(400).send({ error: "Please check the highlighted fields.", fieldErrors: { subcategoryId: "Choose a subcategory of the target category." } });
+    }
+    const result = await app.prisma.$transaction(async (tx) => {
+      const lower = (n: string) => n.toLowerCase();
+      let nextSort = Math.max(-1, ...target.subcategories.map((s) => s.sortOrder)) + 1;
+      // Subcategories: same name in the target means the listings join that one, otherwise the subcategory moves across.
+      for (const s of source.subcategories) {
+        const twin = target.subcategories.find((t) => lower(t.name) === lower(s.name));
+        if (twin) {
+          await tx.business.updateMany({ where: { subcategoryId: s.id }, data: { subcategoryId: twin.id } });
+          await tx.subcategory.delete({ where: { id: s.id } });
+        } else {
+          await tx.subcategory.update({ where: { id: s.id }, data: { categoryId: target.id, sortOrder: nextSort++ } });
+        }
+      }
+      // Listings with no subcategory optionally land in a chosen or new subcategory of the target.
+      let subId = body.data.subcategoryId;
+      if (body.data.newSubcategoryName) {
+        const subName = sanitizeText(body.data.newSubcategoryName);
+        const existing = target.subcategories.find((t) => lower(t.name) === lower(subName));
+        if (existing) subId = existing.id;
+        else {
+          let slugValue = slugify(`${target.name}-${subName}`);
+          if (await tx.subcategory.findUnique({ where: { slug: slugValue } })) slugValue = `${slugValue}-${Date.now().toString(36)}`;
+          subId = (await tx.subcategory.create({ data: { name: subName, slug: slugValue, categoryId: target.id, sortOrder: nextSort++ } })).id;
+        }
+      }
+      if (subId) await tx.business.updateMany({ where: { categoryId: source.id, subcategoryId: null }, data: { subcategoryId: subId } });
+      const moved = await tx.business.updateMany({ where: { categoryId: source.id }, data: { categoryId: target.id } });
+      await tx.category.delete({ where: { id: source.id } });
+      await audit(tx, req.admin!.id, "MERGE_CATEGORY", "Category", target.id, {
+        from: source.name,
+        into: target.name,
+        listings: moved.count,
+        ...(body.data.newSubcategoryName ? { newSubcategory: body.data.newSubcategoryName } : {}),
+      });
+      return moved.count;
+    });
+    return { ok: true, movedListings: result };
   });
 
   app.delete("/categories/:id", admins, async (req, reply) => {

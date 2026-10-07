@@ -69,10 +69,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+// The select value for the "Others" option. It is never sent to the server as a category.
+const OTHERS = "__others";
+const CUSTOM_CATEGORY_MAX = 60;
+
 export default function SubmitForm({ apiBase, categories }: { apiBase: string; categories: CategoryOption[] }) {
   const [name, setName] = useState("");
   const [categorySlug, setCategorySlug] = useState("");
   const [subcategory, setSubcategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
   const [description, setDescription] = useState("");
   const [services, setServices] = useState("");
   const [ownerName, setOwnerName] = useState("");
@@ -139,7 +144,9 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
   function validate(): Errors {
     const e: Errors = {};
     if (name.trim().length < 2) e.name = "Enter the business or service name.";
-    if (!category) e.category = "Choose a category.";
+    if (categorySlug === OTHERS) {
+      if (customCategory.trim().length < 2) e.customCategory = "Type the category you need.";
+    } else if (!category) e.category = "Choose a category.";
     if (!desc.ok) e.description = desc.message;
     if (!serviceList.length) e.servicesOffered = "List at least one service.";
     if (serviceList.length > 15) e.servicesOffered = "List up to 15 services.";
@@ -173,7 +180,8 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
 
     const data = new FormData();
     data.set("name", name.trim());
-    data.set("category", categorySlug);
+    if (categorySlug === OTHERS) data.set("customCategory", customCategory.trim());
+    else data.set("category", categorySlug);
     if (subcategory) data.set("subcategory", subcategory);
     data.set("description", description.trim());
     for (const s of serviceList) data.append("servicesOffered", s);
@@ -279,8 +287,26 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
                   {c.name}
                 </option>
               ))}
+              <option value={OTHERS}>Others (type your own)</option>
             </select>
             <FieldError id="category" message={errors.category} />
+            {categorySlug === OTHERS && (
+              <div className="mt-3">
+                <label htmlFor="customCategory" className={labelClass}>
+                  Your category
+                </label>
+                <p className={helpClass}>Tell us what kind of business or service this is. We check new categories before they appear on the site.</p>
+                <input
+                  id="customCategory"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  maxLength={CUSTOM_CATEGORY_MAX}
+                  className={`${inputClass} min-h-11`}
+                  {...invalid("customCategory")}
+                />
+                <FieldError id="customCategory" message={errors.customCategory} />
+              </div>
+            )}
           </div>
           <div>
             <label htmlFor="subcategory" className={labelClass}>
@@ -290,7 +316,7 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
               id="subcategory"
               value={subcategory}
               onChange={(e) => setSubcategory(e.target.value)}
-              disabled={!category || category.subcategories.length === 0}
+              disabled={!category || category.subcategories.length === 0 || categorySlug === OTHERS}
               className={`${inputClass} bg-white disabled:bg-slate-50`}
               {...invalid("subcategory")}
             >

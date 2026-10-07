@@ -168,3 +168,17 @@ describe("7_business_email_visibility", () => {
     await db.close();
   });
 });
+
+describe("9_category_others", () => {
+  it("marks every existing category APPROVED and defaults new ones to APPROVED", async () => {
+    const db = await prodLikeDb();
+    for (const m of ["1_v2_schema", "2_photo_variants", "3_admin_auth", "4_request_contacts", "5_subcategory_order", "6_member_accounts", "7_business_email_visibility"]) await db.exec(sql(m));
+    await db.exec(sql("9_category_others"));
+    expect(await enumLabels(db, "CategoryStatus")).toBe("APPROVED,PENDING,REJECTED");
+    const r = (await db.query<{ n: number; a: number; s: number }>(`select count(*)::int n, count(*) filter (where status='APPROVED')::int a, count("submittedAt")::int s from "Category"`)).rows[0]!;
+    expect(r).toEqual({ n: 17, a: 17, s: 0 });
+    await db.exec(`insert into "Category"(id,name,slug) values ('new','New','new')`);
+    expect((await db.query<{ status: string }>(`select status from "Category" where id='new'`)).rows[0]!.status).toBe("APPROVED");
+    await db.close();
+  });
+});

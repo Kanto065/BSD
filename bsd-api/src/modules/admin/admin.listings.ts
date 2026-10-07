@@ -139,9 +139,10 @@ const listingsRoutes: FastifyPluginAsync = async (app) => {
   app.patch("/listings/:id/approve", moderator, async (req, reply) => {
     const p = idParams.safeParse(req.params);
     if (!p.success) return reply.code(404).send({ error: "Not found" });
-    const found = await app.prisma.business.findUnique({ where: { id: p.data.id }, select: { status: true } });
+    const found = await app.prisma.business.findUnique({ where: { id: p.data.id }, select: { status: true, category: { select: { status: true } } } });
     if (!found) return reply.code(404).send({ error: "Not found" });
     if (found.status === "APPROVED") return reply.code(409).send({ error: "This listing is already approved." });
+    if (found.category.status !== "APPROVED") return reply.code(409).send({ error: "Settle this listing's category first (approve, merge or change it on the Categories page)." });
     await app.prisma.$transaction([
       app.prisma.business.update({
         where: { id: p.data.id },

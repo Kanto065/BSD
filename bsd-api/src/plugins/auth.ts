@@ -1,6 +1,6 @@
 import fp from "fastify-plugin";
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
-import type { AdminRole } from "@prisma/client";
+import type { AdminRole, SiteModule } from "@prisma/client";
 import { SESSION_COOKIE, verifyToken } from "../common/tokens.js";
 
 // Admin authentication and role checks. The real security boundary: the admin web pages only hide links.
@@ -16,6 +16,8 @@ declare module "fastify" {
   interface FastifyInstance {
     /** preHandler: requires a signed-in member (the shared login). */
     requireUser: (message?: string) => (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    /** preHandler: requireUser, then the person must have joined this module (a UserModule row), else 403. */
+    requireModule: (module: SiteModule) => (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
     /** preHandler: requires a signed-in admin with one of these roles. No roles means any admin. */
     requireRole: (...roles: AdminRole[]) => (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
@@ -39,6 +41,21 @@ const authPlugin: FastifyPluginAsync = async (app) => {
     const user = claims ? await app.prisma.user.findUnique({ where: { id: claims.sub }, select: { id: true, name: true, email: true, tokenVersion: true, deletedAt: true } }) : null;
     if (!claims || !user || user.deletedAt || user.tokenVersion !== claims.tv) return reply.code(401).send({ error: message });
     req.user = { id: user.id, name: user.name, email: user.email };
+  });
+
+  const MODULE_MESSAGE: Record<SiteModule, string> = {
+    DIRECTORY: "Join the Directory to use this.",
+    CARD: "Join Privilege Pass to use this.",
+    MARKETPLACE: "Join the Marketplace to use this.",
+  };
+  app.decorate("requireModule", (module: SiteModule) => {
+    const signedIn = app.requireUser();
+    return async (req: FastifyRequest, reply: FastifyReply) => {
+      await signedIn(req, reply);
+      if (reply.sent) return;
+      const joined = await app.prisma.userModule.findUnique({ where: { userId_module: { userId: req.user!.id, module } }, select: { module: true } });
+      if (!joined) return reply.code(403).send({ error: MODULE_MESSAGE[module] });
+    };
   });
 
   app.decorate("requireRole", (...roles: AdminRole[]) => {

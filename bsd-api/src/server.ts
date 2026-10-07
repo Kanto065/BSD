@@ -15,6 +15,8 @@ import claimsRoutes from "./modules/members/members.claims.js";
 import passRoutes from "./modules/members/members.pass.js";
 import passesAdminRoutes from "./modules/admin/admin.passes.js";
 import { startProofPurge } from "./common/proof-purge.js";
+import { startMarketExpiry } from "./common/market-expiry.js";
+import marketRoutes from "./modules/market/market.routes.js";
 import contactRoutes from "./modules/contact/contact.routes.js";
 import zonesRoutes from "./modules/zones/zones.routes.js";
 import siteRoutes from "./modules/site/site.routes.js";
@@ -75,6 +77,7 @@ export function buildApp(opts: AppOptions = {}) {
   app.register(claimsRoutes, { prefix: "/auth" });
   app.register(passRoutes, { prefix: "/pass" });
   app.register(passesAdminRoutes, { prefix: "/admin/passes" });
+  app.register(marketRoutes, { prefix: "/market" });
 
   return app;
 }
@@ -91,6 +94,7 @@ async function start() {
   }
   if (process.env.NODE_ENV === "production" && !passSecretConfigured()) app.log.warn("PASS_TOKEN_SECRET is missing or shorter than 32 characters. The Privilege Pass is disabled.");
   if (app.storage && process.env.NODE_ENV !== "test") startProofPurge(app.prisma, app.storage, app.log);
+  if (process.env.NODE_ENV !== "test") startMarketExpiry(app.prisma, app.storage, app.log);
 }
 
 // Start listening only when this file is the entry point (node dist/server.js, tsx src/server.ts), so tests

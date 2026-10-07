@@ -28,6 +28,7 @@ const profileData = z
     showEmail: z.boolean(),
     websiteOrSocial: text(300),
     address: text(300),
+    hideFullAddress: z.boolean(),
     postcode: text(12),
     serveZones: z.array(text(100)).max(3),
     localities: z.array(text(100)).max(60),

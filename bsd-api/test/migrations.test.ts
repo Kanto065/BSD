@@ -229,3 +229,30 @@ describe("11_student_verification", () => {
     await db.close();
   });
 });
+
+describe("13_hide_full_address", () => {
+  it("gives existing listings false and adds nothing else", async () => {
+    const db = await prodLikeDb();
+    for (const m of ["1_v2_schema", "2_photo_variants", "3_admin_auth", "4_request_contacts", "5_subcategory_order", "6_member_accounts", "7_business_email_visibility"]) await db.exec(sql(m));
+    await db.exec(`insert into "CoverageZone"(id,name,slug,"postcodeDistricts") values ('z1','Zone','zone-1',ARRAY['SA1'])`);
+    const insert = (id: string, address: string | null) =>
+      db.query(
+        `insert into "Business"(id,slug,name,"categoryId",description,phone,postcode,"postcodeDistrict","zoneId",address) values ($1,$1,'B','c1','d','1','SA1 4PE','SA1','z1',$2)`,
+        [id, address]
+      );
+    await insert("street", "1 High Street");
+    await insert("home", "HomeBased");
+    const before = await columns(db);
+
+    await db.exec(sql("13_hide_full_address"));
+
+    const rows = (await db.query<{ id: string; h: boolean }>(`select id, "hideFullAddress" h from "Business" order by id`)).rows;
+    expect(Object.fromEntries(rows.map((r) => [r.id, r.h]))).toEqual({ street: false, home: false });
+    await insert("fresh", "2 Low Road");
+    expect((await db.query<{ h: boolean }>(`select "hideFullAddress" h from "Business" where id='fresh'`)).rows[0]!.h).toBe(false);
+    expect((await db.query<{ a: string }>(`select address a from "Business" where id='street'`)).rows[0]!.a).toBe("1 High Street");
+    const added = (await columns(db)).filter((l) => !before.includes(l));
+    expect(added).toEqual(["Business|hideFullAddress|boolean|bool|NO|false"]);
+    await db.close();
+  });
+});

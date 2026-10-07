@@ -141,6 +141,7 @@ model Business {
   whatsapp           String?
   email              String?
   showEmail          Boolean              @default(false) // public pages show the email only when true, admin always sees it
+  hideFullAddress    Boolean              @default(false) // true hides the street and full postcode on public pages, admin and owner still see them
   websiteOrSocial    String?
   address            String?
   postcode           String // normalised full UK postcode, e.g. "SA1 4PE"

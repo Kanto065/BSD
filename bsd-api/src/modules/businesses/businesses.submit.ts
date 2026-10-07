@@ -238,7 +238,7 @@ export async function saveSubmission(
     }
   } else {
     const found = s.category
-      ? await prisma.category.findFirst({ where: { slug: s.category, status: "APPROVED" }, select: { id: true, requiresOwnerName: true } })
+      ? await prisma.category.findFirst({ where: { slug: s.category, status: "APPROVED", staged: false }, select: { id: true, requiresOwnerName: true } })
       : null;
     if (!found) errors.category = "Choose a category from the list.";
     else category = found;

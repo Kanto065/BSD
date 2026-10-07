@@ -253,6 +253,9 @@ describe("13_hide_full_address", () => {
     expect((await db.query<{ a: string }>(`select address a from "Business" where id='street'`)).rows[0]!.a).toBe("1 High Street");
     const added = (await columns(db)).filter((l) => !before.includes(l));
     expect(added).toEqual(["Business|hideFullAddress|boolean|bool|NO|false"]);
+    await db.close();
+  });
+});
 
 describe("15_owner_claims", () => {
   it("keeps anonymous claims, adds the member and file columns, and allows one waiting claim per member per listing", async () => {

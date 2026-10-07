@@ -42,13 +42,13 @@ const listSelect = {
 } satisfies Prisma.MarketListingSelect;
 const detailSelect = {
   ...listSelect,
-  description: true, whatsapp: true, offerPassDiscount: true, passDiscountNote: true, vatInvoice: true, bulkTerms: true, status: true,
+  id: true, description: true, whatsapp: true, offerPassDiscount: true, passDiscountNote: true, vatInvoice: true, bulkTerms: true, status: true,
   spot: { select: { name: true, address: true, postcodeDistrict: true } },
   images: imageSelect,
 } satisfies Prisma.MarketListingSelect;
 const mineSelect = {
   ...detailSelect,
-  id: true, phone: true, removalReason: true, reportCount: true, expiresAt: true,
+  phone: true, removalReason: true, reportCount: true, expiresAt: true,
 } satisfies Prisma.MarketListingSelect;
 
 type Row = Prisma.MarketListingGetPayload<{ select: typeof listSelect }>;
@@ -79,7 +79,7 @@ export function toListItem(r: Row) {
 export function toDetail(r: DetailRow) {
   const { image: _i, ...base } = toListItem(r);
   return {
-    ...base, status: r.status, description: r.description, whatsapp: r.whatsapp,
+    ...base, id: r.id, status: r.status, description: r.description, whatsapp: r.whatsapp,
     offerPassDiscount: r.offerPassDiscount, passDiscountNote: r.passDiscountNote, vatInvoice: r.vatInvoice, bulkTerms: r.bulkTerms,
     spot: r.spot, images: r.images.map(img),
   };
@@ -87,8 +87,8 @@ export function toDetail(r: DetailRow) {
 
 /** The owner sees their own full postcode and phone, plus status and the removal reason. */
 export function toMine(r: MineRow) {
-  const { id, phone, removalReason, reportCount, expiresAt, postcode } = r;
-  return { ...toDetail(r), id, phone, removalReason, reportCount, expiresAt, postcode };
+  const { phone, removalReason, reportCount, expiresAt, postcode } = r;
+  return { ...toDetail(r), phone, removalReason, reportCount, expiresAt, postcode };
 }
 
 export const SELECTS = { listSelect, detailSelect, mineSelect };

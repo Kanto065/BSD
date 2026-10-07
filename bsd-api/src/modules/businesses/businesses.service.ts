@@ -7,9 +7,12 @@ import {
   toPublicDetail,
   type Filters,
 } from "../../common/public.js";
+import { expandedFrom } from "../../common/search.js";
 
 export async function searchBusinesses(prisma: PrismaClient, f: Filters) {
-  return listPublicBusinesses(prisma, await filterConditions(prisma, f), f);
+  const page = await listPublicBusinesses(prisma, await filterConditions(prisma, f), f);
+  // What the synonym table added, so the page can say so. An empty list for a search with no synonym.
+  return { ...page, expandedFrom: f.q ? await expandedFrom(prisma, f.q) : [] };
 }
 
 /** Homepage "Featured & Verified": only Community Verified listings, most recently verified first. */

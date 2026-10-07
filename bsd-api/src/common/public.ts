@@ -1,5 +1,6 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { z } from "zod";
+import { searchClause } from "./search.js";
 
 // Everything the public API is allowed to show lives in this file, so the rule "only APPROVED listings, and
 // only these fields" has exactly one home. Every public query goes through publicWhere() and one of the
@@ -146,43 +147,6 @@ export type Filters = z.infer<typeof filterQuery>;
 /** Turns a zod failure into the 400 body every public route returns. */
 export function badQuery(error: z.ZodError) {
   return { error: "Invalid query", details: error.issues.map((i) => ({ path: i.path.join("."), message: i.message })) };
-}
-
-// LIKE wildcards in the search text would otherwise match far too much.
-const cleanWord = (w: string) => w.replace(/[%_\\]/g, "");
-
-/**
- * Ids of APPROVED listings with a service that contains the word, ignoring case. Prisma cannot do a
- * case-insensitive match on the elements of a text[] column, so this one field uses a parameterised query.
- * The ids are only ever used as one more condition inside publicWhere(), so this cannot widen what is public.
- */
-async function serviceMatchIds(prisma: PrismaClient, word: string): Promise<string[]> {
-  const rows = await prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
-    SELECT "id" FROM "Business"
-    WHERE "status" = 'APPROVED' AND array_to_string("servicesOffered", ' ') ILIKE ${"%" + word + "%"}`);
-  return rows.map((r) => r.id);
-}
-
-async function searchClause(prisma: PrismaClient, q: string): Promise<Prisma.BusinessWhereInput[]> {
-  const words = q
-    .split(/\s+/)
-    .map(cleanWord)
-    .filter((w) => w.length > 0)
-    .slice(0, 5);
-  // Search text made only of wildcard characters has no usable words, so it matches nothing.
-  if (words.length === 0) return [{ id: { in: [] } }];
-  // Every word must match somewhere, in any of these fields.
-  return Promise.all(
-    words.map(async (w) => ({
-      OR: [
-        { name: { contains: w, mode: "insensitive" as const } },
-        { description: { contains: w, mode: "insensitive" as const } },
-        { category: { name: { contains: w, mode: "insensitive" as const } } },
-        { subcategory: { name: { contains: w, mode: "insensitive" as const } } },
-        { id: { in: await serviceMatchIds(prisma, w) } },
-      ],
-    }))
-  );
 }
 
 /** Filters shared by search, category pages and zone pages. A zone matches where the business is or where it says it serves. */

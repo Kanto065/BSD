@@ -92,6 +92,7 @@ model Category {
   submittedBy       User?          @relation("CategorySubmitter", fields: [submittedByUserId], references: [id], onDelete: SetNull)
   subcategories     Subcategory[]
   businesses        Business[]
+  synonyms          SearchSynonym[]
 }
 
 model Subcategory {
@@ -428,4 +429,19 @@ model StudentVerification {
 
   @@index([status, submittedAt])
   @@index([purgeAt])
+}
+
+// M10-A. Admin-editable search synonyms. term is stored normalised (see common/search.ts). starter marks rows that came
+// from the shipped draft list and have not been edited by a person yet.
+model SearchSynonym {
+  id         String    @id @default(cuid())
+  term       String    @unique
+  expansions String[]
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  starter    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([categoryId])
 }

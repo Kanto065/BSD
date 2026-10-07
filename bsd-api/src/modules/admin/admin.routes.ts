@@ -10,6 +10,7 @@ import categoriesAdminRoutes from "./admin.categories.js";
 import requestsAdminRoutes from "./admin.requests.js";
 import siteAdminRoutes from "./admin.site.js";
 import studentsAdminRoutes from "./admin.students.js";
+import synonymsAdminRoutes from "./admin.synonyms.js";
 import { audit, idParams, invalid, page, pageQuery, statusCounts } from "./admin.service.js";
 
 class OwnerConflict extends Error {}
@@ -34,6 +35,7 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
   app.register(requestsAdminRoutes);
   app.register(siteAdminRoutes);
   app.register(studentsAdminRoutes, { prefix: "/students" });
+  app.register(synonymsAdminRoutes);
 
   const anyAdmin = { preHandler: app.requireRole() };
   const moderator = { preHandler: app.requireRole(...rolesFrom("MODERATOR")) };

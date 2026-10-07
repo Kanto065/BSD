@@ -6,6 +6,7 @@ import {
   localitySlug,
   subcategorySlug,
 } from "./seed-data.js";
+import { seedSynonyms } from "./seed-synonyms.js";
 
 // Idempotent v2 seed: categories and subcategories, the 3 coverage zones with their postcode districts,
 // all localities, and the initial super admin. It reconciles as well as upserting, so rows left over from
@@ -159,6 +160,9 @@ export async function runSeed(prisma: PrismaClient) {
     },
     { timeout: 120_000, maxWait: 30_000 }
   );
+  // Outside the transaction: the starter synonyms are optional and only fill an empty table.
+  const synonyms = await seedSynonyms(prisma);
+  if (synonyms > 0) console.log(`search synonyms: ${synonyms} starter rows added (draft, edit them in the admin screen)`);
   console.log("Seed complete.");
 }
 

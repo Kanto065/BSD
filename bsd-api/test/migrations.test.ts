@@ -288,3 +288,22 @@ describe("15_owner_claims", () => {
     await db.close();
   });
 });
+
+describe("16_search_synonyms", () => {
+  it("adds only the SearchSynonym table, with a unique term and the category link cleared when the category goes", async () => {
+    const db = new PGlite();
+    const folders = fs.readdirSync(MIGRATIONS, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+    for (const f of folders.slice(0, folders.indexOf("16_search_synonyms"))) await db.exec(sql(f));
+    const tables = async () => (await db.query<{ t: string }>(`select table_name t from information_schema.tables where table_schema='public' order by 1`)).rows.map((r) => r.t);
+    const before = await tables();
+    await db.exec(sql("16_search_synonyms"));
+    expect((await tables()).filter((x) => !before.includes(x))).toEqual(["SearchSynonym"]);
+    await db.exec(`insert into "Category"(id,name,slug) values ('c1','Cat','cat')`);
+    await db.exec(`insert into "SearchSynonym"(id,term,expansions,"categoryId","updatedAt") values ('s1','hijama',ARRAY['cupping'],'c1',now())`);
+    await expect(db.exec(`insert into "SearchSynonym"(id,term,expansions,"updatedAt") values ('s2','hijama',ARRAY['x'],now())`)).rejects.toThrow(/SearchSynonym_term_key/);
+    expect((await db.query(`select starter from "SearchSynonym" where id='s1'`)).rows[0]).toEqual({ starter: false });
+    await db.exec(`delete from "Category" where id='c1'`);
+    expect((await db.query<{ c: string | null }>(`select "categoryId" c from "SearchSynonym" where id='s1'`)).rows[0]!.c).toBeNull();
+    await db.close();
+  });
+});

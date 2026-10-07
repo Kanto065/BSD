@@ -64,6 +64,7 @@ model AdminUser {
   updateReviews      ListingUpdateRequest[]  @relation("UpdateReviewedBy")
   removalReviews     ListingRemovalRequest[] @relation("RemovalReviewedBy")
   auditLogs          AuditLog[]
+  decidedOffers      PrivilegeOffer[]
 }
 
 // A category typed in through "Others" on the Submit form starts PENDING (hidden from the public site) until an
@@ -185,6 +186,7 @@ model Business {
   updateRequests  ListingUpdateRequest[]
   removalRequests ListingRemovalRequest[]
   claimRequests   ListingClaimRequest[]
+  privilegeOffer  PrivilegeOffer?
 
   @@index([status, verificationStatus])
   @@index([zoneId])
@@ -369,6 +371,7 @@ model User {
   categories           Category[]            @relation("CategorySubmitter")
   studentVerifications StudentVerification[]
   claimRequests        ListingClaimRequest[]
+  privilegeCard        PrivilegeCard?
 }
 
 // The saved business details of one member, reused to prefill forms. Json until a field needs to be queried.
@@ -428,4 +431,91 @@ model StudentVerification {
 
   @@index([status, submittedAt])
   @@index([purgeAt])
+}
+
+// M11-A Privilege Pass. One card per member. `secret` never leaves the API. `deviceHash` is sha256(deviceId + card id),
+// the raw device id is never stored. Moves are counted per 7 day window (deviceMoves, deviceMovesResetAt).
+enum CardStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum OfferStatus {
+  PENDING
+  ACTIVE
+  PAUSED
+  REJECTED
+}
+
+enum RedeemMethod {
+  QR
+  CODE
+}
+
+model PrivilegeCard {
+  id                 String                @id @default(cuid())
+  userId             String                @unique
+  user               User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardNumber         String                @unique
+  level              Int                   @default(1)
+  status             CardStatus            @default(ACTIVE)
+  secret             String
+  deviceHash         String?
+  deviceBoundAt      DateTime?
+  deviceMoves        Int                   @default(0)
+  deviceMovesResetAt DateTime?
+  createdAt          DateTime              @default(now())
+  codes              PrivilegeCode[]
+  redemptions        PrivilegeRedemption[]
+}
+
+model PrivilegeOffer {
+  id              String                @id @default(cuid())
+  businessId      String                @unique
+  business        Business              @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title           String
+  percent         Decimal?              @db.Decimal(5, 2)
+  terms           String
+  featured        Boolean               @default(false)
+  status          OfferStatus           @default(PENDING)
+  decidedAt       DateTime?
+  decidedById     String?
+  decidedBy       AdminUser?            @relation(fields: [decidedById], references: [id])
+  rejectionReason String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  codes           PrivilegeCode[]
+  redemptions     PrivilegeRedemption[]
+}
+
+model PrivilegeCode {
+  id        String         @id @default(cuid())
+  cardId    String
+  card      PrivilegeCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  offerId   String
+  offer     PrivilegeOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  code      String
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  @@unique([offerId, code])
+  @@index([cardId])
+}
+
+model PrivilegeRedemption {
+  id              String         @id @default(cuid())
+  cardId          String
+  card            PrivilegeCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  offerId         String
+  offer           PrivilegeOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  businessId      String
+  scannedByUserId String
+  method          RedeemMethod
+  scannedAt       DateTime       @default(now())
+  confirmedAt     DateTime?
+  billPence       Int?
+  savingPence     Int?
+
+  @@index([businessId, scannedAt])
+  @@index([cardId, scannedAt])
 }

@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 // Placeholder shells (/community-guidelines, /complaints, /financial-transparency) and /search are noindex,
 // so they are left out on purpose.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const hidden = hiddenPaths(await getSiteConfig());
+  const hidden = hiddenPaths(await getSiteConfig(true));
   const staticRoutes = [
     "",
     "/categories",

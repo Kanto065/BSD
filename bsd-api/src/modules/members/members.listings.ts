@@ -1,9 +1,11 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { Prisma } from "@prisma/client";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { sanitizeText, sanitizeTextArray } from "../../common/sanitize.js";
 import { idParams, invalid } from "../admin/admin.service.js";
-import { descriptionProblem, fieldRules } from "../businesses/businesses.submit.js";
+import { ImageRejected, processImage } from "../../common/images.js";
+import { MAX_PHOTOS, MAX_UPLOAD_BYTES, descriptionProblem, fieldRules, putProcessedImage } from "../businesses/businesses.submit.js";
 
 // A member's own listings. The owner may change contact and descriptive fields and the email visibility switch at once.
 // Name, category, subcategory, postcode and zone, status and verification stay with the BSD team, because they change
@@ -57,7 +59,8 @@ const detailSelect = {
   otherAreaText: true,
   submittedAt: true,
   ownerEditedAt: true,
-  category: { select: { name: true, status: true, requiresOwnerName: true } },
+  category: { select: { name: true, status: true, requiresOwnerName: true, serviceTags: true } },
+  photos: { select: { id: true, url: true, thumbUrl: true, isLogo: true }, orderBy: { uploadedAt: "asc" as const } },
   subcategory: { select: { name: true } },
   zone: { select: { name: true } },
   servedZones: { select: { zone: { select: { slug: true } } } },
@@ -87,6 +90,8 @@ const ownerListingsRoutes: FastifyPluginAsync = async (app) => {
         verificationStatus: true,
         submittedAt: true,
         showEmail: true,
+        // Counts that already exist in the database. No visit statistics are recorded anywhere.
+        _count: { select: { photos: true, updateRequests: { where: { status: "PENDING" } }, claimRequests: { where: { status: "PENDING" } } } },
         category: { select: { name: true } }, // the name is shown even while the category is still waiting for review
       },
     });
@@ -183,6 +188,96 @@ const ownerListingsRoutes: FastifyPluginAsync = async (app) => {
     });
     const updated = await app.prisma.business.findUniqueOrThrow({ where: { id: current.id }, select: detailSelect });
     return { ok: true, listing: toDetail(updated) };
+  });
+
+  // --- photos ------------------------------------------------------------------------------------------------
+  // Same pipeline and public storage as Submit. One photo per request. The total is capped at the Submit limits
+  // (one logo plus MAX_PHOTOS photos). Another owner's listing, or one that is not PENDING or APPROVED, is refused.
+
+  const photoLimit = { rateLimit: { max: 30, timeWindow: "1 hour" } };
+  const photoParams = z.object({ id: z.string().max(64), photoId: z.string().max(64) });
+
+  async function editableListing(id: string, userId: string) {
+    const b = await app.prisma.business.findFirst({ where: { id, ownerUserId: userId }, select: { id: true, status: true } });
+    return b && (b.status === "PENDING" || b.status === "APPROVED") ? b : null;
+  }
+  const photoList = (businessId: string) =>
+    app.prisma.businessPhoto.findMany({ where: { businessId }, select: { id: true, url: true, thumbUrl: true, isLogo: true }, orderBy: { uploadedAt: "asc" } });
+  const touch = (businessId: string) => app.prisma.business.update({ where: { id: businessId }, data: { ownerEditedAt: new Date() } });
+
+  app.post("/listings/:id/photos", { ...auth, config: photoLimit }, async (req, reply) => {
+    const p = idParams.safeParse(req.params);
+    if (!p.success) return reply.code(404).send({ error: "Not found" });
+    const b = await editableListing(p.data.id, req.user!.id);
+    if (!b) return reply.code(404).send({ error: "Not found" });
+    const fail = (code: number, message: string) => reply.code(code).send({ error: message, fieldErrors: { photos: message } });
+    if (!app.storage) return fail(503, "Image uploads are temporarily unavailable. Please try again later.");
+    if (!req.isMultipart()) return fail(415, "The photo must be sent as multipart/form-data.");
+    if ((await app.prisma.businessPhoto.count({ where: { businessId: b.id } })) >= MAX_PHOTOS + 1) {
+      return fail(400, `A listing can have a logo and up to ${MAX_PHOTOS} photos. Remove one first.`);
+    }
+
+    let file: { buffer: Buffer; filename: string } | null = null;
+    try {
+      for await (const part of req.parts({ limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 3, fieldSize: 1_000, parts: 4 } })) {
+        if (part.type === "file") {
+          const buffer = await part.toBuffer(); // throws past the size limit
+          if (!file && buffer.length) file = { buffer, filename: part.filename };
+        }
+      }
+    } catch (err) {
+      const code = (err as { code?: string }).code;
+      if (code === "FST_REQ_FILE_TOO_LARGE") return fail(413, `Each image must be ${MAX_UPLOAD_BYTES / 1024 / 1024} MB or smaller.`);
+      return fail(400, "We could not read that upload. Please try again.");
+    }
+    if (!file) return fail(400, "Choose a photo to upload.");
+
+    let processed;
+    try {
+      processed = await processImage(file.buffer);
+    } catch (err) {
+      if (!(err instanceof ImageRejected)) throw err;
+      return fail(400, `${file.filename || "An image"}: ${err.message}.`);
+    }
+
+    const stored: string[] = [];
+    try {
+      const row = await putProcessedImage(app.storage, `businesses/${randomUUID()}`, processed, stored);
+      await app.prisma.$transaction([app.prisma.businessPhoto.create({ data: { ...row, businessId: b.id, isLogo: false } }), touch(b.id)]);
+    } catch (err) {
+      await Promise.allSettled(stored.map((k) => app.storage!.delete(k)));
+      throw err;
+    }
+    return reply.code(201).send({ ok: true, photos: await photoList(b.id) });
+  });
+
+  app.delete("/listings/:id/photos/:photoId", { ...auth, config: photoLimit }, async (req, reply) => {
+    const p = photoParams.safeParse(req.params);
+    if (!p.success) return reply.code(404).send({ error: "Not found" });
+    const b = await editableListing(p.data.id, req.user!.id);
+    const photo = b && (await app.prisma.businessPhoto.findFirst({ where: { id: p.data.photoId, businessId: b.id } }));
+    if (!b || !photo) return reply.code(404).send({ error: "Not found" });
+    await app.prisma.$transaction([app.prisma.businessPhoto.delete({ where: { id: photo.id } }), touch(b.id)]);
+    // The files go after the row, so a failure here leaves an unused file, never a broken image on a page.
+    if (app.storage) {
+      const keys = [photo.url, photo.thumbUrl].filter((u): u is string => Boolean(u)).map((u) => u.replace(/^\/uploads\//, ""));
+      await Promise.allSettled(keys.map((k) => app.storage!.delete(k)));
+    }
+    return { ok: true, photos: await photoList(b.id) };
+  });
+
+  app.put("/listings/:id/logo/:photoId", { ...auth, config: photoLimit }, async (req, reply) => {
+    const p = photoParams.safeParse(req.params);
+    if (!p.success) return reply.code(404).send({ error: "Not found" });
+    const b = await editableListing(p.data.id, req.user!.id);
+    const photo = b && (await app.prisma.businessPhoto.findFirst({ where: { id: p.data.photoId, businessId: b.id }, select: { id: true } }));
+    if (!b || !photo) return reply.code(404).send({ error: "Not found" });
+    await app.prisma.$transaction([
+      app.prisma.businessPhoto.updateMany({ where: { businessId: b.id, isLogo: true }, data: { isLogo: false } }),
+      app.prisma.businessPhoto.update({ where: { id: photo.id }, data: { isLogo: true } }),
+      touch(b.id),
+    ]);
+    return { ok: true, photos: await photoList(b.id) };
   });
 };
 

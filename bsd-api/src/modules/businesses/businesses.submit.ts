@@ -204,6 +204,33 @@ async function uniqueSlug(prisma: PrismaClient, name: string, district: string):
   return `${base}-${randomUUID().slice(0, 8)}`;
 }
 
+/**
+ * Stores one processed image and its thumbnail under the public prefix and returns the row fields. Every key written is
+ * pushed to `stored` as it goes, so the caller can delete them again if a later step fails. Shared by Submit and the
+ * owner photo route.
+ */
+export async function putProcessedImage(storage: ObjectStorage, folder: string, processed: ProcessedImage, stored: string[]) {
+  const id = randomUUID();
+  const key = `${folder}/${id}.${processed.master.ext}`;
+  await storage.put({ key, body: processed.master.buffer, contentType: processed.master.contentType });
+  stored.push(key);
+  let thumbUrl: string | null = null;
+  if (processed.thumb) {
+    const thumbKey = `${folder}/${id}-thumb.webp`;
+    await storage.put({ key: thumbKey, body: processed.thumb.buffer, contentType: processed.thumb.contentType });
+    stored.push(thumbKey);
+    thumbUrl = publicUrl(thumbKey);
+  }
+  return {
+    url: publicUrl(key),
+    thumbUrl,
+    mimeType: processed.master.contentType,
+    sizeBytes: processed.master.buffer.length,
+    width: processed.master.width,
+    height: processed.master.height,
+  };
+}
+
 export type SubmitResult = { slug: string; photos: number };
 
 export async function saveSubmission(
@@ -313,26 +340,8 @@ export async function saveSubmission(
   }[] = [];
   try {
     for (const { isLogo, processed } of images) {
-      const id = randomUUID();
-      const key = `${folder}/${id}.${processed.master.ext}`;
-      await storage!.put({ key, body: processed.master.buffer, contentType: processed.master.contentType });
-      stored.push(key);
-      let thumbUrl: string | null = null;
-      if (processed.thumb) {
-        const thumbKey = `${folder}/${id}-thumb.webp`;
-        await storage!.put({ key: thumbKey, body: processed.thumb.buffer, contentType: processed.thumb.contentType });
-        stored.push(thumbKey);
-        thumbUrl = publicUrl(thumbKey);
-      }
-      photoRows.push({
-        url: publicUrl(key),
-        thumbUrl,
-        mimeType: processed.master.contentType,
-        sizeBytes: processed.master.buffer.length,
-        width: processed.master.width,
-        height: processed.master.height,
-        isLogo,
-      });
+      const put = await putProcessedImage(storage!, folder, processed, stored);
+      photoRows.push({ ...put, isLogo });
     }
 
     if (newCategory) {

@@ -169,6 +169,35 @@ describe("7_business_email_visibility", () => {
   });
 });
 
+describe("10_member_profiles", () => {
+  it("keeps existing users and listings, defaults them to GENERAL with no owner, and adds the profile table", async () => {
+    const db = await prodLikeDb();
+    for (const m of ["1_v2_schema", "2_photo_variants", "3_admin_auth", "4_request_contacts", "5_subcategory_order", "6_member_accounts", "7_business_email_visibility", "8_site_settings", "9_category_others"]) await db.exec(sql(m));
+    await db.exec(`insert into "CoverageZone"(id,name,slug,"postcodeDistricts") values ('z1','Zone','zone-1',ARRAY['SA1'])`);
+    await db.exec(`insert into "User"(id,name,email,"passwordHash",postcode,"postcodeDistrict") values ('u1','Member','m@example.com','x','SA1 4PE','SA1')`);
+    await db.exec(
+      `insert into "Business"(id,slug,name,"categoryId",description,phone,postcode,"postcodeDistrict","zoneId") values ('b1','b1','B','c1','d','1','SA1 4PE','SA1','z1')`
+    );
+
+    await db.exec(sql("10_member_profiles"));
+
+    expect(await enumLabels(db, "AccountType")).toBe("GENERAL,STUDENT");
+    expect((await db.query<{ t: string; p: string | null }>(`select "accountType"::text t, phone p from "User" where id='u1'`)).rows[0]).toEqual({ t: "GENERAL", p: null });
+    expect((await db.query<{ o: string | null; e: string | null }>(`select "ownerUserId" o, "ownerEditedAt" e from "Business" where id='b1'`)).rows[0]).toEqual({ o: null, e: null });
+    expect((await db.query<{ s: string | null }>(`select "submittedByUserId" s from "Category" where id='c1'`)).rows[0]!.s).toBeNull();
+
+    // one profile row per user, removed with the user
+    await db.exec(`insert into "BusinessProfile"("userId",data,"updatedAt") values ('u1','{}',now())`);
+    await expect(db.exec(`insert into "BusinessProfile"("userId",data,"updatedAt") values ('u1','{}',now())`)).rejects.toThrow();
+    // deleting the owner keeps the listing and clears the link
+    await db.exec(`update "Business" set "ownerUserId"='u1' where id='b1'`);
+    await db.exec(`delete from "User" where id='u1'`);
+    expect((await db.query<{ n: number }>(`select count(*)::int n from "BusinessProfile"`)).rows[0]!.n).toBe(0);
+    expect((await db.query<{ o: string | null }>(`select "ownerUserId" o from "Business" where id='b1'`)).rows[0]!.o).toBeNull();
+    await db.close();
+  });
+});
+
 describe("9_category_others", () => {
   it("marks every existing category APPROVED and defaults new ones to APPROVED", async () => {
     const db = await prodLikeDb();

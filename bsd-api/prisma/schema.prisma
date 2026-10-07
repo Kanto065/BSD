@@ -83,6 +83,8 @@ model Category {
   requiresOwnerName Boolean       @default(false)
   status            CategoryStatus @default(APPROVED)
   submittedAt       DateTime? // set when the category came from the Others field
+  submittedByUserId String? // the member who proposed it, for the per-account cap
+  submittedBy       User?         @relation("CategorySubmitter", fields: [submittedByUserId], references: [id], onDelete: SetNull)
   subcategories     Subcategory[]
   businesses        Business[]
 }
@@ -168,6 +170,11 @@ model Business {
   reviewedBy      AdminUser? @relation("ReviewedBy", fields: [reviewedById], references: [id])
   rejectionReason String?
 
+  // The member who submitted it, or an admin linked them. Null for older anonymous listings (never matched by email).
+  ownerUserId   String?
+  owner         User?     @relation("BusinessOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  ownerEditedAt DateTime?
+
   photos          BusinessPhoto[]
   updateRequests  ListingUpdateRequest[]
   removalRequests ListingRemovalRequest[]
@@ -177,6 +184,7 @@ model Business {
   @@index([zoneId])
   @@index([postcodeDistrict])
   @@index([categoryId])
+  @@index([ownerUserId])
 }
 
 // Replaces BusinessCoverageArea.
@@ -312,6 +320,12 @@ enum MemberBadge {
   MEMBER
 }
 
+// A self-declared claim at sign-up. Only the STUDENT badge means verified.
+enum AccountType {
+  GENERAL
+  STUDENT
+}
+
 model User {
   id               String       @id @default(cuid())
   name             String
@@ -324,8 +338,22 @@ model User {
   failedLoginCount Int          @default(0)
   lockedUntil      DateTime?
   tokenVersion     Int          @default(0) // bumped on password change, which ends every session
+  accountType      AccountType  @default(GENERAL)
+  phone            String? // optional contact number, never used to sign in
   modules          UserModule[]
   badges           UserBadge[]
+  businessProfile  BusinessProfile?
+  businesses       Business[]   @relation("BusinessOwner")
+  categories       Category[]   @relation("CategorySubmitter")
+}
+
+// The saved business details of one member, reused to prefill forms. Json until a field needs to be queried.
+model BusinessProfile {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      Json
+  step      Int      @default(0)
+  updatedAt DateTime @updatedAt
 }
 
 // Which of the three sites a person has joined.

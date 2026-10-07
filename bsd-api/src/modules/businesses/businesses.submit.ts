@@ -100,8 +100,11 @@ const accepted = z
   .refine((v) => v === "true" || v === "on" || v === "yes", { message: "Please tick this box to continue." });
 
 export const CUSTOM_CATEGORY_MAX = 60;
-/** Safety cap on categories waiting for review, so the Others field cannot flood the admin queue. ponytail: global cap, per-account cap once Submit needs sign in (R-08). */
+/** Caps on categories waiting for review, so the Others field cannot flood the admin queue. Per account, plus a global backstop. */
+export const MAX_PENDING_CATEGORIES_PER_USER = 3;
 export const MAX_PENDING_CATEGORIES = 30;
+/** A signed-in member may create at most this many listings in a rolling 24 hours. */
+export const MAX_LISTINGS_PER_DAY = 5;
 
 export const countWords = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 
@@ -204,7 +207,8 @@ export type SubmitResult = { slug: string; photos: number };
 export async function saveSubmission(
   prisma: PrismaClient,
   storage: ObjectStorage | null,
-  raw: RawSubmission
+  raw: RawSubmission,
+  userId: string
 ): Promise<SubmitResult> {
   const s = parseFields(raw.fields);
   const errors: FieldErrors = {};
@@ -224,7 +228,9 @@ export async function saveSubmission(
       });
       if (found?.status === "REJECTED") errors.customCategory = "We could not accept that category. Please choose one from the list.";
       else if (found) category = found;
-      else if ((await prisma.category.count({ where: { status: "PENDING" } })) >= MAX_PENDING_CATEGORIES) {
+      else if ((await prisma.category.count({ where: { status: "PENDING", submittedByUserId: userId } })) >= MAX_PENDING_CATEGORIES_PER_USER) {
+        errors.customCategory = `You already have ${MAX_PENDING_CATEGORIES_PER_USER} category suggestions waiting for review. Please choose one from the list.`;
+      } else if ((await prisma.category.count({ where: { status: "PENDING" } })) >= MAX_PENDING_CATEGORIES) {
         errors.customCategory = "We cannot take new category suggestions right now. Please choose one from the list.";
       } else newCategory = { name: typed, slug: typedSlug };
     }
@@ -330,7 +336,7 @@ export async function saveSubmission(
     if (newCategory) {
       const last = await prisma.category.aggregate({ _max: { sortOrder: true } });
       const made = await prisma.category.create({
-        data: { ...newCategory, icon: "package", status: "PENDING", submittedAt: new Date(), sortOrder: (last._max.sortOrder ?? -1) + 1 },
+        data: { ...newCategory, icon: "package", status: "PENDING", submittedAt: new Date(), submittedByUserId: userId, sortOrder: (last._max.sortOrder ?? -1) + 1 },
       });
       createdCategoryId = made.id;
     }
@@ -356,6 +362,7 @@ export async function saveSubmission(
         otherAreaText: otherAreaText ?? null,
         openingHours: s.openingHours ? sanitizeText(s.openingHours) : null,
         specialNotes: s.specialNotes ? sanitizeText(s.specialNotes) : null,
+        ownerUserId: userId,
         status: "PENDING",
         verificationStatus: "NEWLY_LISTED",
         consentAccurateInfo: true,

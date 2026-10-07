@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { badQuery, publicWhere } from "../../common/public.js";
 import { featuredQuery, searchQuery, slugParams } from "./businesses.schema.js";
 import { featuredBusinesses, getPublicBusiness, searchBusinesses } from "./businesses.service.js";
-import { HONEYPOT_FIELD, SubmissionError, readSubmission, saveSubmission } from "./businesses.submit.js";
+import { HONEYPOT_FIELD, MAX_LISTINGS_PER_DAY, SubmissionError, readSubmission, saveSubmission } from "./businesses.submit.js";
 import requestsRoutes from "./businesses.requests.js";
 
 // The exact confirmation text from the client's Submission Form doc.
@@ -14,6 +14,7 @@ const SUBMIT_PER_HOUR = Number(process.env.SUBMIT_RATE_LIMIT ?? 5);
 // Public routes. Reads only ever return APPROVED listings (see src/common/public.ts). The one write is a new
 // submission, which is stored as PENDING and is not public until an admin approves it.
 const businessesRoutes: FastifyPluginAsync = async (app) => {
+  const signedIn = app.requireUser("Please sign in to submit a listing.");
   // Fixed paths are registered before the /:slug route so "search" and "featured" are never read as slugs.
   app.get("/featured", async (req, reply) => {
     const q = featuredQuery.safeParse(req.query);
@@ -27,14 +28,20 @@ const businessesRoutes: FastifyPluginAsync = async (app) => {
     return searchBusinesses(app.prisma, q.data);
   });
 
-  app.post("/submit", { config: { rateLimit: { max: SUBMIT_PER_HOUR, timeWindow: "1 hour" } } }, async (req, reply) => {
+  // Signing in is required, so every listing has an owner. The error text is the one the form shows.
+  app.post("/submit", { preHandler: signedIn, config: { rateLimit: { max: SUBMIT_PER_HOUR, timeWindow: "1 hour" } } }, async (req, reply) => {
     try {
+      const userId = req.user!.id;
+      const since = new Date(Date.now() - 24 * 60 * 60_000);
+      if ((await app.prisma.business.count({ where: { ownerUserId: userId, submittedAt: { gte: since } } })) >= MAX_LISTINGS_PER_DAY) {
+        return reply.code(429).send({ ok: false, error: `You can submit up to ${MAX_LISTINGS_PER_DAY} listings in 24 hours. Please try again later.`, fieldErrors: {} });
+      }
       const raw = await readSubmission(req);
       if ((raw.fields.get(HONEYPOT_FIELD)?.[0] ?? "").trim()) {
         req.log.info("submission dropped by the honeypot field");
         return reply.code(201).send({ ok: true, message: CONFIRMATION_MESSAGE });
       }
-      await saveSubmission(app.prisma, app.storage, raw);
+      await saveSubmission(app.prisma, app.storage, raw, userId);
       // The new listing's slug is not returned: it is not public yet, and nothing links to it.
       return reply.code(201).send({ ok: true, message: CONFIRMATION_MESSAGE });
     } catch (err) {

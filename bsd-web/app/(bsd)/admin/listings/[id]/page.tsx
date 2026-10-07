@@ -33,6 +33,8 @@ type Listing = {
   specialNotes: string | null;
   rejectionReason: string | null;
   submittedAt: string;
+  owner: { id: string; name: string; email: string } | null;
+  ownerEditedAt: string | null;
   reviewedAt: string | null;
   verifiedAt: string | null;
   consentAccurateInfo: boolean;
@@ -59,6 +61,7 @@ const ACTION_LABEL: Record<string, string> = {
   EDIT_LISTING: "Edited",
   SET_VERIFICATION: "Verification changed",
   REMOVE_PHOTO: "Photo removed",
+  "listing.owner_set": "Owner link changed",
 };
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -79,6 +82,7 @@ export default function ListingDetailPage() {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
   const [editing, setEditing] = useState(false);
+  const [ownerEmail, setOwnerEmail] = useState("");
 
   async function act(path: string, method: string, body?: unknown) {
     setBusy(true);
@@ -179,6 +183,35 @@ export default function ListingDetailPage() {
         <div className="mt-4">
           <ErrorNote error={actionError} />
         </div>
+      </Card>
+
+      <Card title="Owner">
+        <p className="text-sm text-slate-800">{l.owner ? `Owner: ${l.owner.name} (${l.owner.email})` : "No account linked"}</p>
+        {l.ownerEditedAt && <p className="mt-1 text-sm text-amber-800">Edited by owner on {fmtDate(l.ownerEditedAt)}</p>}
+        {atLeast(admin?.role, "ADMIN") && (
+          <form
+            className="mt-3 flex flex-wrap items-end gap-2"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (await act(`/listings/${l.id}/owner`, "PUT", { email: ownerEmail.trim() })) setOwnerEmail("");
+            }}
+          >
+            <div className="min-w-0 flex-1 sm:max-w-sm">
+              <label htmlFor="ownerEmail" className="text-sm font-semibold text-brand-navy">
+                Link a member account by email
+              </label>
+              <input id="ownerEmail" type="email" required value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} className={inputClass} />
+            </div>
+            <button type="submit" disabled={busy} className={`${buttonClass} bg-brand-navy text-white hover:bg-brand-blue`}>
+              Link owner
+            </button>
+            {l.owner && (
+              <button type="button" disabled={busy} onClick={() => act(`/listings/${l.id}/owner`, "PUT", { email: null })} className={`${buttonClass} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`}>
+                Remove link
+              </button>
+            )}
+          </form>
+        )}
       </Card>
 
       {l.status === "APPROVED" && (

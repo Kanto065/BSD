@@ -25,6 +25,8 @@ const removeBody = z.object({ reason: z.string().trim().max(500).optional() }).o
 const verificationBody = z.object({ status: z.enum(VERIFICATION) });
 
 // Every field is optional: only what is sent changes. The rules match the public submission form.
+const ownerBody = z.object({ email: z.union([z.string().trim().toLowerCase().email("Enter the member's email address."), z.literal(""), z.null()]) });
+
 const editBody = z
   .object({
     name: text(120).min(2, "Enter the business or service name."),
@@ -58,10 +60,12 @@ const detailInclude = {
   photos: { orderBy: { uploadedAt: "asc" as const } },
   reviewedBy: { select: { name: true } },
   verifiedBy: { select: { name: true } },
+  owner: { select: { id: true, name: true, email: true } },
 } satisfies Prisma.BusinessInclude;
 
 const listingsRoutes: FastifyPluginAsync = async (app) => {
   const moderator = { preHandler: app.requireRole(...rolesFrom("MODERATOR")) };
+  const admin = { preHandler: app.requireRole(...rolesFrom("ADMIN")) };
   const volunteer = { preHandler: app.requireRole(...rolesFrom("VOLUNTEER")) };
 
   app.get("/listings", moderator, async (req, reply) => {
@@ -132,6 +136,29 @@ const listingsRoutes: FastifyPluginAsync = async (app) => {
       include: { admin: { select: { name: true } } },
     });
     return { listing, history };
+  });
+
+  // Links an existing member account to a listing by exact email, or clears the link. The bridge for older anonymous
+  // listings, which are never matched to an account automatically because the account email is unverified.
+  app.put("/listings/:id/owner", admin, async (req, reply) => {
+    const p = idParams.safeParse(req.params);
+    if (!p.success) return reply.code(404).send({ error: "Not found" });
+    const body = ownerBody.safeParse(req.body);
+    if (!body.success) return invalid(reply, body.error);
+    const listing = await app.prisma.business.findUnique({ where: { id: p.data.id }, select: { ownerUserId: true } });
+    if (!listing) return reply.code(404).send({ error: "Not found" });
+    let ownerId: string | null = null;
+    if (body.data.email) {
+      const user = await app.prisma.user.findUnique({ where: { email: body.data.email }, select: { id: true } });
+      if (!user) return reply.code(404).send({ error: "No member account has that email address." });
+      ownerId = user.id;
+    }
+    await app.prisma.$transaction([
+      app.prisma.business.update({ where: { id: p.data.id }, data: { ownerUserId: ownerId } }),
+      audit(app.prisma, req.admin!.id, "listing.owner_set", "Business", p.data.id, { from: listing.ownerUserId, to: ownerId }),
+    ]);
+    const owner = ownerId ? await app.prisma.user.findUnique({ where: { id: ownerId }, select: { id: true, name: true, email: true } }) : null;
+    return { ok: true, owner };
   });
 
   // --- moderation -----------------------------------------------------------------------------------------------

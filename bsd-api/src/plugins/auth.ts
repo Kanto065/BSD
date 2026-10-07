@@ -15,7 +15,7 @@ export type AuthedUser = { id: string; name: string; email: string };
 declare module "fastify" {
   interface FastifyInstance {
     /** preHandler: requires a signed-in member (the shared login). */
-    requireUser: () => (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    requireUser: (message?: string) => (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
     /** preHandler: requires a signed-in admin with one of these roles. No roles means any admin. */
     requireRole: (...roles: AdminRole[]) => (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
@@ -34,10 +34,10 @@ const RANK: Record<AdminRole, number> = { VOLUNTEER: 1, MODERATOR: 2, ADMIN: 3, 
 export const atLeast = (role: AdminRole, minimum: AdminRole) => RANK[role] >= RANK[minimum];
 
 const authPlugin: FastifyPluginAsync = async (app) => {
-  app.decorate("requireUser", () => async (req: FastifyRequest, reply: FastifyReply) => {
+  app.decorate("requireUser", (message = "Please sign in.") => async (req: FastifyRequest, reply: FastifyReply) => {
     const claims = verifyToken(req.cookies[SESSION_COOKIE] ?? "", "session");
     const user = claims ? await app.prisma.user.findUnique({ where: { id: claims.sub }, select: { id: true, name: true, email: true, tokenVersion: true } }) : null;
-    if (!claims || !user || user.tokenVersion !== claims.tv) return reply.code(401).send({ error: "Please sign in." });
+    if (!claims || !user || user.tokenVersion !== claims.tv) return reply.code(401).send({ error: message });
     req.user = { id: user.id, name: user.name, email: user.email };
   });
 

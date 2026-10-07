@@ -17,12 +17,23 @@ let app: FastifyInstance;
 let token = "";
 let modToken = "";
 let ipCounter = 0;
+let memberCount = 0;
+
+/** A signed-in member created straight in the database. Returns its id and session cookie. */
+async function member() {
+  const { signToken } = await import("../src/common/tokens.js");
+  const user = await prisma.user.create({
+    data: { name: "Test Member", email: `member${++memberCount}@test.example`, passwordHash: "x", postcode: "SA1 4PE", postcodeDistrict: "SA1" },
+  });
+  return { id: user.id, cookie: `bsd_session=${signToken("session", user.id, user.tokenVersion)}` };
+}
 
 const PASSWORD = "Correct-Horse-Battery-77";
 const words = (n: number) => Array.from({ length: n }, (_, i) => `word${i}`).join(" ");
 const CONSENTS = ["consentAccurateInfo", "consentPublishPermission", "consentNoLiability", "consentDataStorage", "gdprConsentStorage", "gdprConsentRights"];
 
-async function submit(overrides: Record<string, string | null> = {}) {
+// Every call is a new member unless a cookie is given.
+async function submit(overrides: Record<string, string | null> = {}, cookie?: string) {
   const base: Record<string, string> = {
     name: "Rina Henna Art",
     description: `Bridal henna and party designs. ${words(40)}`,
@@ -44,7 +55,7 @@ async function submit(overrides: Record<string, string | null> = {}) {
     method: "POST",
     url: "/businesses/submit",
     payload,
-    headers: { "content-type": `multipart/form-data; boundary=${boundary}`, "x-forwarded-for": `10.9.0.${++ipCounter}` },
+    headers: { "content-type": `multipart/form-data; boundary=${boundary}`, "x-forwarded-for": `10.9.0.${++ipCounter}`, cookie: cookie ?? (await member()).cookie },
   });
   return { status: res.statusCode, body: JSON.parse(res.body) };
 }
@@ -214,5 +225,20 @@ describe("admin moderation of Others", () => {
     expect(again.status).toBe(400);
     expect(again.body.fieldErrors.customCategory).toBeTruthy();
     expect((await call("GET", "/categories", undefined, "")).body.categories.some((x: { slug: string }) => x.slug === "spam-stuff")).toBe(false);
+  });
+});
+
+describe("Others per account", () => {
+  it("records who proposed the category, caps one member at 3 waiting suggestions and leaves other members alone", async () => {
+    const a = await member();
+    for (const n of ["Alpha Crafts", "Beta Crafts", "Gamma Crafts"]) expect((await submit({ customCategory: n }, a.cookie)).status).toBe(201);
+    expect((await category("Alpha Crafts"))!.submittedByUserId).toBe(a.id);
+    const fourth = await submit({ customCategory: "Delta Crafts" }, a.cookie);
+    expect(fourth.status).toBe(400);
+    expect(fourth.body.fieldErrors.customCategory).toBe("You already have 3 category suggestions waiting for review. Please choose one from the list.");
+    expect(await category("Delta Crafts")).toBeNull();
+    // another member is not affected, and an already listed category does not count against the cap
+    expect((await submit({ customCategory: "Delta Crafts" })).status).toBe(201);
+    expect((await submit({ customCategory: "alpha crafts" }, a.cookie)).status).toBe(201);
   });
 });

@@ -9,6 +9,7 @@ import { MemoryStorage } from "../src/common/storage.js";
 // an in-memory image store in place of MinIO.
 
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 240_000 });
+process.env.JWT_SECRET = "test-secret-that-is-long-enough-for-hs256-signing";
 
 const CONFIRMATION = "Thank you! Your listing has been submitted for review. BSD Team will verify and publish it within 3–7 days.";
 
@@ -69,9 +70,22 @@ function validFields(overrides: Record<string, string | string[] | null> = {}): 
   return Object.entries(base).flatMap(([k, v]) => (Array.isArray(v) ? v.map((x) => [k, x] as Field) : [[k, v] as Field]));
 }
 
+let memberCount = 0;
+/** A signed-in member created straight in the database. Returns its session cookie. */
+async function memberCookie(): Promise<string> {
+  const { signToken } = await import("../src/common/tokens.js");
+  const user = await prisma.user.create({
+    data: { name: "Test Member", email: `member${++memberCount}@test.example`, passwordHash: "x", postcode: "SA1 4PE", postcodeDistrict: "SA1" },
+  });
+  return `bsd_session=${signToken("session", user.id, user.tokenVersion)}`;
+}
+
+// Every call is a new member unless a cookie is given (an empty cookie means signed out), so the daily cap of one
+// member never gets in the way of the other tests.
 async function submit(fields: Field[], files: FileField[] = [], headers: Record<string, string> = {}, target = app) {
   const body = multipart(fields, files);
-  const res = await target.inject({ method: "POST", url: "/businesses/submit", payload: body.payload, headers: { ...body.headers, ...headers } });
+  const cookie = headers.cookie ?? (await memberCookie());
+  const res = await target.inject({ method: "POST", url: "/businesses/submit", payload: body.payload, headers: { ...body.headers, ...headers, cookie } });
   return { status: res.statusCode, json: () => JSON.parse(res.body) };
 }
 
@@ -309,7 +323,46 @@ describe("the rules from the submission form", () => {
   });
 });
 
+describe("sign in is required", () => {
+  it("refuses a request without a session cookie with 401 and stores nothing", async () => {
+    const before = { businesses: await prisma.business.count(), objects: storage.objects.size };
+    const photo = await photoJpeg(300, 300);
+    for (const cookie of ["", "bsd_session=junk"]) {
+      const r = await submit(validFields(), [{ field: "photos", filename: "a.jpg", contentType: "image/jpeg", data: photo }], { cookie });
+      expect(r.status).toBe(401);
+      expect(r.json()).toEqual({ error: "Please sign in to submit a listing." });
+    }
+    expect(await prisma.business.count()).toBe(before.businesses);
+    expect(storage.objects.size).toBe(before.objects);
+  });
+
+  it("links the new listing to the member who submitted it", async () => {
+    const cookie = await memberCookie();
+    expect((await submit(validFields({ name: "Owned Kitchen" }), [], { cookie })).status).toBe(201);
+    const b = (await latestBusiness())!;
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: `member${memberCount}@test.example` } });
+    expect(b.ownerUserId).toBe(user.id);
+  });
+
+  it("allows 5 listings per member in 24 hours and then answers 429, other members are not affected", async () => {
+    const cookie = await memberCookie();
+    const codes: number[] = [];
+    // a different address each time, so only the per-member cap is under test
+    for (let i = 0; i < 6; i++) codes.push((await submit(validFields(), [], { cookie, "x-forwarded-for": `192.0.2.${100 + i}` })).status);
+    expect(codes).toEqual([201, 201, 201, 201, 201, 429]);
+    expect((await submit(validFields(), [], { "x-forwarded-for": "192.0.2.200" })).status).toBe(201);
+    // a listing older than a day no longer counts
+    await prisma.business.updateMany({ where: { owner: { email: `member${memberCount - 1}@test.example` } }, data: { submittedAt: new Date(Date.now() - 25 * 3600_000) } });
+    expect((await submit(validFields(), [], { cookie, "x-forwarded-for": "192.0.2.201" })).status).toBe(201);
+  });
+});
+
 describe("protection", () => {
+  it("rejects a request that is not a multipart form", async () => {
+    const r = await app.inject({ method: "POST", url: "/businesses/submit", payload: { name: "x" }, headers: { cookie: await memberCookie() } });
+    expect(r.statusCode, r.body).toBe(415);
+  });
+
   it("accepts but silently drops a submission that fills the hidden honeypot field", async () => {
     const before = await prisma.business.count();
     const r = await submit([...validFields(), ["companyWebsite", "http://spam.example"]]);
@@ -386,8 +439,4 @@ describe("protection", () => {
     }
   });
 
-  it("rejects a request that is not a multipart form", async () => {
-    const r = await app.inject({ method: "POST", url: "/businesses/submit", payload: { name: "x" } });
-    expect(r.statusCode).toBe(415);
-  });
 });

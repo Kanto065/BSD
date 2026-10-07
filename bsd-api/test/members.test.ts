@@ -12,7 +12,7 @@ let prisma: PrismaClient;
 let app: FastifyInstance;
 
 const PASSWORD = "Correct-Horse-Battery-77";
-const signup = { name: "Test Member", email: "member@test.example", password: PASSWORD, postcode: "sa1 4pe" };
+const signup = { name: "Test Member", email: "member@test.example", password: PASSWORD, postcode: "sa1 4pe", accountType: "GENERAL" };
 
 async function call(method: string, url: string, opts: { body?: unknown; cookie?: string } = {}) {
   const res = await app.inject({
@@ -127,5 +127,107 @@ describe("joining a site on purpose", () => {
     expect((await call("POST", "/auth/modules", { body: { module: "BOGUS" }, cookie: login.cookie })).status).toBe(400);
     expect((await call("POST", "/auth/modules", { body: {}, cookie: login.cookie })).status).toBe(400);
     expect(await prisma.userModule.count()).toBe(before);
+  });
+});
+
+describe("profile fields at sign-up", () => {
+  const base = { ...signup, password: PASSWORD };
+
+  it("stores STUDENT as a claim, with an optional phone, and gives no STUDENT badge", async () => {
+    const r = await call("POST", "/auth/register", { body: { ...base, email: "student@test.example", accountType: "STUDENT", phone: "07700 900123" } });
+    expect(r.status).toBe(201);
+    expect(r.body.user).toMatchObject({ accountType: "STUDENT", phone: "07700 900123", studentVerified: false, listingCount: 0, badges: ["MEMBER"] });
+    expect(await prisma.userBadge.count({ where: { badge: "STUDENT", user: { email: "student@test.example" } } })).toBe(0);
+  });
+
+  it("requires a valid account type and checks the phone", async () => {
+    const missing = await call("POST", "/auth/register", { body: { name: "X Y", email: "m1@test.example", password: PASSWORD, postcode: "SA1 4PE" } });
+    expect(missing.status).toBe(400);
+    expect(missing.body.fieldErrors.accountType).toBe("Choose General or Student.");
+    const bad = await call("POST", "/auth/register", { body: { ...base, email: "m2@test.example", accountType: "ADMIN" } });
+    expect(bad.body.fieldErrors.accountType).toBe("Choose General or Student.");
+    const phone = await call("POST", "/auth/register", { body: { ...base, email: "m3@test.example", phone: "abc" } });
+    expect(phone.body.fieldErrors.phone).toBe("Enter a valid phone number.");
+    const empty = await call("POST", "/auth/register", { body: { ...base, email: "m4@test.example", phone: "" } });
+    expect(empty.status).toBe(201);
+    expect(empty.body.user.phone).toBeNull();
+    expect(await prisma.user.count({ where: { email: { in: ["m1@test.example", "m2@test.example", "m3@test.example"] } } })).toBe(0);
+  });
+
+  it("returns listingCount from the listings the member owns", async () => {
+    const r = await call("POST", "/auth/register", { body: { ...base, email: "counter@test.example" } });
+    const zone = await prisma.coverageZone.findFirstOrThrow();
+    const cat = await prisma.category.findFirstOrThrow();
+    await prisma.business.create({ data: { slug: "count-me", name: "Count Me", categoryId: cat.id, description: "d", phone: "1", postcode: "SA1 4PE", postcodeDistrict: "SA1", zoneId: zone.id, ownerUserId: r.body.user.id } });
+    expect((await call("GET", "/auth/me", { cookie: r.cookie })).body.user.listingCount).toBe(1);
+  });
+});
+
+describe("editing the profile", () => {
+  it("needs a session", async () => {
+    expect((await call("PATCH", "/auth/me", { body: { name: "Nope" } })).status).toBe(401);
+  });
+
+  it("updates name, phone, postcode and account type, and ignores the email", async () => {
+    const r = await call("POST", "/auth/register", { body: { ...signup, email: "editor@test.example" } });
+    const e = await call("PATCH", "/auth/me", { cookie: r.cookie, body: { name: "New Name", phone: "01639 123 456", postcode: "sa10 9aa", accountType: "STUDENT", email: "stolen@test.example" } });
+    expect(e.status).toBe(200);
+    expect(e.body.user).toMatchObject({ name: "New Name", phone: "01639 123 456", postcode: "SA10 9AA", accountType: "STUDENT", email: "editor@test.example" });
+    const row = await prisma.user.findUniqueOrThrow({ where: { email: "editor@test.example" } });
+    expect(row.postcodeDistrict).toBe("SA10");
+    // phone can be cleared, and switching back to General is allowed
+    const back = await call("PATCH", "/auth/me", { cookie: r.cookie, body: { phone: null, accountType: "GENERAL" } });
+    expect(back.body.user).toMatchObject({ phone: null, accountType: "GENERAL" });
+  });
+
+  it("rejects an out of coverage postcode, a bad phone and a bad account type, and changes nothing", async () => {
+    const login = await call("POST", "/auth/register", { body: { ...signup, email: "strict@test.example" } });
+    const out = await call("PATCH", "/auth/me", { cookie: login.cookie, body: { name: "Changed", postcode: "SA25 1AA" } });
+    expect(out.status).toBe(400);
+    expect(out.body.fieldErrors.postcode).toMatch(/outside/);
+    expect((await call("PATCH", "/auth/me", { cookie: login.cookie, body: { phone: "x" } })).status).toBe(400);
+    expect((await call("PATCH", "/auth/me", { cookie: login.cookie, body: { accountType: "VIP" } })).status).toBe(400);
+    expect((await call("GET", "/auth/me", { cookie: login.cookie })).body.user.name).toBe(signup.name);
+  });
+});
+
+describe("changing the password", () => {
+  const NEW = "Another-Strong-Passphrase-42";
+
+  it("needs a session", async () => {
+    expect((await call("POST", "/auth/password", { body: { currentPassword: PASSWORD, newPassword: NEW } })).status).toBe(401);
+  });
+
+  it("rejects a wrong current password and a weak new one, then ends old sessions and keeps this one", async () => {
+    const email = "changer@test.example";
+    const reg = await call("POST", "/auth/register", { body: { ...signup, email } });
+    const otherDevice = await call("POST", "/auth/login", { body: { email, password: PASSWORD } });
+
+    const wrong = await call("POST", "/auth/password", { cookie: reg.cookie, body: { currentPassword: "not-it-at-all-1", newPassword: NEW } });
+    expect(wrong.status).toBe(400);
+    expect(wrong.body.fieldErrors.currentPassword).toBeTruthy();
+    expect((await prisma.user.findUniqueOrThrow({ where: { email } })).failedLoginCount).toBe(1);
+
+    const weak = await call("POST", "/auth/password", { cookie: reg.cookie, body: { currentPassword: PASSWORD, newPassword: "short" } });
+    expect(weak.status).toBe(400);
+    expect(weak.body.fieldErrors.newPassword).toBeTruthy();
+
+    const ok = await call("POST", "/auth/password", { cookie: reg.cookie, body: { currentPassword: PASSWORD, newPassword: NEW } });
+    expect(ok.status).toBe(200);
+    expect(ok.cookie).toMatch(/^bsd_session=/);
+    // the cookie from before the change is dead, the new one works
+    expect((await call("GET", "/auth/me", { cookie: reg.cookie })).status).toBe(401);
+    expect((await call("GET", "/auth/me", { cookie: otherDevice.cookie })).status).toBe(401);
+    expect((await call("GET", "/auth/me", { cookie: ok.cookie })).status).toBe(200);
+    // the new password signs in, the old one does not
+    expect((await call("POST", "/auth/login", { body: { email, password: NEW } })).status).toBe(200);
+    expect((await call("POST", "/auth/login", { body: { email, password: PASSWORD } })).status).toBe(401);
+  });
+
+  it("locks after repeated wrong current passwords, like login", async () => {
+    const email = "locker@test.example";
+    const reg = await call("POST", "/auth/register", { body: { ...signup, email } });
+    for (let i = 0; i < 5; i++) await call("POST", "/auth/password", { cookie: reg.cookie, body: { currentPassword: "wrong-password-1", newPassword: NEW } });
+    expect((await call("POST", "/auth/password", { cookie: reg.cookie, body: { currentPassword: PASSWORD, newPassword: NEW } })).status).toBe(429);
   });
 });

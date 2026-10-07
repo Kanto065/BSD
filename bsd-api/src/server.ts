@@ -12,10 +12,13 @@ import adminRoutes from "./modules/admin/admin.routes.js";
 import membersRoutes from "./modules/members/members.routes.js";
 import studentRoutes from "./modules/members/members.student.js";
 import claimsRoutes from "./modules/members/members.claims.js";
+import passRoutes from "./modules/members/members.pass.js";
+import passesAdminRoutes from "./modules/admin/admin.passes.js";
 import { startProofPurge } from "./common/proof-purge.js";
 import contactRoutes from "./modules/contact/contact.routes.js";
 import zonesRoutes from "./modules/zones/zones.routes.js";
 import siteRoutes from "./modules/site/site.routes.js";
+import { passSecretConfigured } from "./common/pass-token.js";
 import { loggerOptions } from "./common/logging.js";
 import { storageFromEnv, type ObjectStorage } from "./common/storage.js";
 import { UPLOAD_LIMITS } from "./modules/businesses/businesses.submit.js";
@@ -70,6 +73,8 @@ export function buildApp(opts: AppOptions = {}) {
   app.register(membersRoutes, { prefix: "/auth" });
   app.register(studentRoutes, { prefix: "/student" });
   app.register(claimsRoutes, { prefix: "/auth" });
+  app.register(passRoutes, { prefix: "/pass" });
+  app.register(passesAdminRoutes, { prefix: "/admin/passes" });
 
   return app;
 }
@@ -84,6 +89,7 @@ async function start() {
     app.log.error(err);
     process.exit(1);
   }
+  if (process.env.NODE_ENV === "production" && !passSecretConfigured()) app.log.warn("PASS_TOKEN_SECRET is missing or shorter than 32 characters. The Privilege Pass is disabled.");
   if (app.storage && process.env.NODE_ENV !== "test") startProofPurge(app.prisma, app.storage, app.log);
 }
 

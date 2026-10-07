@@ -34,7 +34,7 @@ export const publicBusinessListSelect = {
   localities: { select: { locality: nameSlug } },
   photos: { where: { isLogo: true }, select: { url: true, thumbUrl: true }, take: 1 },
   // M11-B. Only an admin approved, unpaused offer is ever public.
-  privilegeOffer: { where: { status: "ACTIVE" }, select: { title: true, percent: true, terms: true } },
+  privilegeOffer: { where: { status: "ACTIVE" }, select: { id: true, title: true, percent: true, terms: true } },
 } satisfies Prisma.BusinessSelect;
 
 export const publicBusinessDetailSelect = {

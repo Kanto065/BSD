@@ -23,6 +23,12 @@ describe("tap targets and input size", () => {
     expect(read("components/BottomNav.tsx")).toMatch(/h-full min-h-11 w-full/);
   });
 
+  it("admin synonym inputs are 16px on phones and its controls 44px", () => {
+    const src = read("app/(bsd)/admin/synonyms/page.tsx");
+    expect(src).toContain('inputClass.replace("text-sm", "text-base sm:text-sm")');
+    expect(src).toContain("min-h-11 min-w-11");
+  });
+
   it("admin site inputs are 16px on phones", () => {
     expect(read("app/(bsd)/admin/site/page.tsx")).toContain('inputClass.replace("text-sm", "text-base sm:text-sm")');
   });

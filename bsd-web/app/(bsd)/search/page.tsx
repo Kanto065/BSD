@@ -5,6 +5,7 @@ import { ListingGrid } from "@/components/BusinessCard";
 import { searchListings } from "@/lib/api";
 import { findZone, zoneLabel } from "@/lib/content";
 import ZoneSelect from "@/components/ZoneSelect";
+import SearchHint from "./SearchHint";
 import { getCategories, type Taxon } from "@/lib/taxonomy";
 
 export const metadata: Metadata = {
@@ -132,6 +133,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           Businesses{pageData && pageData.total > 0 ? ` (${pageData.total})` : ""}
         </h2>
         {/* CLIENT-REVIEW: no copy was supplied for the search results page. */}
+        {pageData && pageData.total > 0 && <SearchHint expandedFrom={pageData.expandedFrom} />}
         <div className="mt-3">
           <ListingGrid
             result={listings}

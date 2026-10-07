@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { BadgeCheck, ClipboardList, GraduationCap, ExternalLink, Globe, FilePen, FolderTree, FileClock, Inbox, KeyRound, LayoutDashboard, LogOut, MessageSquare, Users } from "lucide-react";
+import { BadgeCheck, ClipboardList, GraduationCap, ExternalLink, Globe, FilePen, FolderTree, FileClock, Inbox, Languages, KeyRound, LayoutDashboard, LogOut, MessageSquare, Users } from "lucide-react";
 import { atLeast, useSession, type Role } from "@/lib/admin-session";
 import { Skeleton, useAdminData } from "@/components/admin/ui";
 
@@ -35,6 +35,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
   },
   { group: "Directory", items: [{ href: "/admin/categories", label: "Categories", icon: FolderTree, minimum: "ADMIN" },
       { href: "/admin/site", label: "Site", icon: Globe, minimum: "ADMIN" },
+      { href: "/admin/synonyms", label: "Search synonyms", icon: Languages, minimum: "ADMIN" },
     ] },
   {
     group: "Account",

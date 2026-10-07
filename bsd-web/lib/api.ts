@@ -105,7 +105,7 @@ export function searchListings(params: { q?: string; zone?: string; category?: s
   if (params.page && params.page > 1) qs.set("page", String(params.page));
   qs.set("pageSize", "12");
   // No caching: search text is never stored by the web server.
-  return apiGet<Page<PublicListItem>>(`/businesses/search?${qs.toString()}`);
+  return apiGet<Page<PublicListItem> & { expandedFrom?: { term: string; expansions: string[] }[] }>(`/businesses/search?${qs.toString()}`);
 }
 
 // ---------------------------------------------------------------------------

@@ -213,6 +213,28 @@ describe("email visibility", () => {
   });
 });
 
+describe("hide full address", () => {
+  const stored = async (fields: Field[]) => {
+    expect((await submit(fields)).status).toBe(201);
+    return (await latestBusiness())!;
+  };
+
+  it("is off by default, on only for the string true, and the street is still stored", async () => {
+    expect((await stored(validFields({ address: "1 High Street" }))).hideFullAddress).toBe(false);
+    const on = await stored(validFields({ address: "1 High Street", hideFullAddress: "true" }));
+    expect(on.hideFullAddress).toBe(true);
+    expect(on.address).toBe("1 High Street");
+    expect((await stored(validFields({ hideFullAddress: "false" }))).hideFullAddress).toBe(false);
+    expect((await stored(validFields({ hideFullAddress: "yes" }))).hideFullAddress).toBe(false);
+  });
+
+  it("can be ticked with no street, which keeps the HomeBased fallback", async () => {
+    const b = await stored(validFields({ hideFullAddress: "true" }));
+    expect(b.hideFullAddress).toBe(true);
+    expect(b.address).toBe("HomeBased");
+  });
+});
+
 describe("the rules from the submission form", () => {
   const expectError = async (fields: Field[], field: string, files: FileField[] = [], status = 400) => {
     const before = await prisma.business.count();
@@ -438,5 +460,4 @@ describe("protection", () => {
       await limited.close();
     }
   });
-
 });

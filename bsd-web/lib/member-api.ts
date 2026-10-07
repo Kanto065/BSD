@@ -77,6 +77,7 @@ export type OwnListing = OwnListingSummary & {
   email: string | null;
   websiteOrSocial: string | null;
   address: string | null;
+  hideFullAddress: boolean;
   postcode: string;
   openingHours: string | null;
   specialNotes: string | null;

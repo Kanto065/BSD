@@ -145,6 +145,8 @@ export const submissionSchema = z.object({
   showEmail: z.string().optional().transform((v) => v?.trim().toLowerCase() === "true"),
   websiteOrSocial: optionalText(300),
   address: optionalText(300),
+  // Multipart string "true" or "false". Anything else counts as false.
+  hideFullAddress: z.string().optional().transform((v) => v?.trim().toLowerCase() === "true"),
   postcode: text(12).min(1, "Enter the postcode."),
   serveZones: z.array(slug).max(3),
   localities: z.array(slug).max(60),
@@ -356,6 +358,7 @@ export async function saveSubmission(
         showEmail: Boolean(s.email) && s.showEmail,
         websiteOrSocial: s.websiteOrSocial ? sanitizeText(s.websiteOrSocial) : null,
         address: s.address ? sanitizeText(s.address) : "HomeBased",
+        hideFullAddress: s.hideFullAddress,
         postcode: coverage.postcode,
         postcodeDistrict: coverage.outward,
         zoneId: coverage.zone.id,

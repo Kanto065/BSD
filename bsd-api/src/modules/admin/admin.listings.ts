@@ -41,6 +41,7 @@ const editBody = z
     showEmail: z.boolean(),
     websiteOrSocial: z.union([optionalText(300), z.null()]),
     address: z.union([optionalText(300), z.null()]),
+    hideFullAddress: z.boolean(),
     postcode: text(12),
     serveZones: z.array(slug).max(3),
     localities: z.array(slug).max(60),
@@ -288,6 +289,7 @@ const listingsRoutes: FastifyPluginAsync = async (app) => {
       if (e[key] !== undefined) data[key] = clean(e[key]);
     }
     if (e.address !== undefined) data.address = clean(e.address) ?? "HomeBased";
+    if (e.hideFullAddress !== undefined) data.hideFullAddress = e.hideFullAddress;
 
     const zones = await app.prisma.coverageZone.findMany({ select: { id: true, slug: true, postcodeDistricts: true } });
     if (e.postcode !== undefined) {

@@ -7,6 +7,7 @@ import VerificationBadge from "@/components/VerificationBadge";
 import { businessBySlug, publicApiBase, safeExternalUrl, whatsappLink } from "@/lib/api";
 import ListingRequests from "@/components/ListingRequests";
 import { SITE_URL } from "@/lib/content";
+import { locationView } from "@/lib/business-profile";
 
 // Rendered on every visit with fresh data from the API, so a listing approved, edited or removed in the admin panel
 // shows up straight away (no cached copy on the server or in the browser).
@@ -43,9 +44,8 @@ export default async function BusinessPage({ params }: { params: Params }) {
 
   const website = safeExternalUrl(b.websiteOrSocial);
   const wa = b.whatsapp ? whatsappLink(b.whatsapp) : null;
-  const mapUrl = b.postcode
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([b.name, b.address, b.postcode].filter(Boolean).join(", "))}`
-    : null;
+  const loc = locationView(b);
+  const mapUrl = loc.mapUrl;
   const quickAction =
     "inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold";
 
@@ -60,8 +60,8 @@ export default async function BusinessPage({ params }: { params: Params }) {
     // Home-based listings carry the district only, never a full postcode or street address.
     address: {
       "@type": "PostalAddress",
-      ...(b.postcode && b.address ? { streetAddress: b.address } : {}),
-      postalCode: b.postcode ?? b.postcodeDistrict,
+      ...(loc.streetAddress ? { streetAddress: loc.streetAddress } : {}),
+      postalCode: loc.postalCode,
       addressRegion: "Wales",
       addressCountry: "GB",
     },
@@ -228,8 +228,14 @@ export default async function BusinessPage({ params }: { params: Params }) {
               <MapPin className="h-5 w-5 text-brand-teal" aria-hidden="true" />
               Location
             </h2>
-            <p className="mt-3 text-sm text-slate-600">{b.address ?? "HomeBased"}</p>
-            <p className="mt-1 text-sm font-semibold text-slate-800">{b.postcode ?? b.postcodeDistrict}</p>
+            {loc.hidden ? (
+              <p className="mt-3 text-sm font-semibold text-slate-800">Location: {loc.area}</p>
+            ) : (
+              <>
+                <p className="mt-3 text-sm text-slate-600">{loc.street}</p>
+                <p className="mt-1 text-sm font-semibold text-slate-800">{loc.postcode}</p>
+              </>
+            )}
             {/* Map location (Website Structure doc). A plain link rather than an embedded map, so no third-party map
                 loads on the page; home-based listings have no public postcode and get no map link. */}
             {mapUrl && (

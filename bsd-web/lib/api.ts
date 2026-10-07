@@ -16,6 +16,8 @@ export type PublicListItem = {
   /** Null for home-based listings, which show only the district. */
   postcode: string | null;
   address: string | null;
+  /** "Locality, SA5" or "SA5" for a listing that hides its full address, otherwise null. */
+  areaLabel: string | null;
   phone: string;
   whatsapp: string | null;
   verificationStatus: VerificationStatus;

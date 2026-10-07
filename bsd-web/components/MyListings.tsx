@@ -6,7 +6,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { FieldError, helpClass, inputClass, labelClass } from "@/components/BusinessFields";
 import { ZONES, zoneShortLabel } from "@/lib/content";
 import { descriptionStatus } from "@/lib/description";
-import { serviceList } from "@/lib/business-profile";
+import { HIDE_ADDRESS_LABEL, serviceList } from "@/lib/business-profile";
 import { ApiError } from "@/lib/admin-session";
 import { getOwnListing, getOwnListings, memberCall, patchOwnListing, type OwnListing, type OwnListingSummary } from "@/lib/member-api";
 
@@ -125,6 +125,7 @@ type Draft = {
   showEmail: boolean;
   website: string;
   address: string;
+  hideFullAddress: boolean;
   openingHours: string;
   specialNotes: string;
   serveZones: string[];
@@ -141,6 +142,7 @@ const toDraft = (l: OwnListing): Draft => ({
   showEmail: l.showEmail,
   website: l.websiteOrSocial ?? "",
   address: l.address ?? "",
+  hideFullAddress: l.hideFullAddress,
   openingHours: l.openingHours ?? "",
   specialNotes: l.specialNotes ?? "",
   serveZones: l.serveZones,
@@ -191,6 +193,7 @@ function EditListing({ apiBase, id, onBack }: { apiBase: string; id: string; onB
         showEmail: d.showEmail,
         websiteOrSocial: d.website.trim(),
         address: d.address.trim(),
+        hideFullAddress: d.hideFullAddress,
         openingHours: d.openingHours.trim(),
         specialNotes: d.specialNotes.trim(),
         serveZones: d.serveZones,
@@ -291,6 +294,10 @@ function EditListing({ apiBase, id, onBack }: { apiBase: string; id: string; onB
         <p className={helpClass}>If you have no office, write &quot;HomeBased&quot;.</p>
         <input id="address" autoComplete="street-address" value={d.address} onChange={(e) => set({ address: e.target.value })} maxLength={300} className={inputClass} {...err("address")} />
         <FieldError id="address" message={errors.address} />
+        <label htmlFor="hideFullAddress" className="mt-2 flex min-h-11 cursor-pointer items-start gap-3 py-2 text-sm font-semibold text-brand-navy">
+          <input id="hideFullAddress" type="checkbox" checked={d.hideFullAddress} onChange={(e) => set({ hideFullAddress: e.target.checked })} className="mt-0.5 h-5 w-5 shrink-0 accent-brand-blue" {...err("hideFullAddress")} />
+          {HIDE_ADDRESS_LABEL}
+        </label>
       </div>
 
       <fieldset id="serveZones" tabIndex={-1} {...err("serveZones")}>

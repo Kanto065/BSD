@@ -363,7 +363,8 @@ describe("home-based listings", () => {
     const home = (await get("/businesses/home-chef-kitchen")).json();
     expect(home.postcode).toBeNull();
     expect(home.postcodeDistrict).toBe("SA10");
-    expect(home.address).toBe("HomeBased");
+    expect(home.address).toBeNull();
+    expect(home.areaLabel).toBe("Neath Town Centre, SA10");
     expect(home.localities).toEqual([{ name: "Neath Town Centre", slug: "neath-town-centre" }]);
     const shop = (await get("/businesses/cross-zone-caterers")).json();
     expect(shop.postcode).toBe("SA3 4AA");

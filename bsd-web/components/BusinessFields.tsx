@@ -6,7 +6,7 @@ import { ZONES, zoneLabel, zoneShortLabel } from "@/lib/content";
 import { localitySlug } from "@/lib/slug";
 import { descriptionStatus } from "@/lib/description";
 import { allZonesState, toggleAllZones } from "@/lib/zones";
-import { CUSTOM_CATEGORY_MAX, OTHERS, zoneForPostcode, type Errors, type FormValues } from "@/lib/business-profile";
+import { CUSTOM_CATEGORY_MAX, HIDE_ADDRESS_LABEL, OTHERS, zoneForPostcode, type Errors, type FormValues } from "@/lib/business-profile";
 import type { CategoryOption } from "@/lib/taxonomy";
 
 // The listing form fields from the client's Submission Form doc, one component per step. Used by the Submit stepper and
@@ -254,6 +254,10 @@ export function StepLocation({ v, set, errors }: Omit<StepProps, "categories">) 
           <p className={helpClass}>If you have no office, write &quot;HomeBased&quot;.</p>
           <input id="address" autoComplete="street-address" value={v.address} onChange={(e) => set({ address: e.target.value })} maxLength={300} className={inputClass} {...invalid(errors, "address")} />
           <FieldError id="address" message={errors.address} />
+          <label htmlFor="hideFullAddress" className="mt-2 flex min-h-11 cursor-pointer items-start gap-3 py-2 text-sm font-semibold text-brand-navy">
+            <input id="hideFullAddress" type="checkbox" checked={v.hideFullAddress} onChange={(e) => set({ hideFullAddress: e.target.checked })} className="mt-0.5 h-5 w-5 shrink-0 accent-brand-blue" />
+            {HIDE_ADDRESS_LABEL}
+          </label>
         </div>
         <div>
           <label htmlFor="postcode" className={labelClass}>

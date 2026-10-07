@@ -24,6 +24,7 @@ export const publicBusinessListSelect = {
   address: true,
   postcode: true,
   postcodeDistrict: true,
+  hideFullAddress: true,
   verificationStatus: true,
   verifiedAt: true,
   category: nameSlug,
@@ -54,6 +55,16 @@ export function isHomeBased(address: string | null): boolean {
   return !address || /home[\s-]?based/i.test(address);
 }
 
+/** A listing keeps its street and full postcode private when the owner ticked the box or wrote HomeBased. */
+export function hidesAddress(row: { hideFullAddress: boolean; address: string | null }): boolean {
+  return row.hideFullAddress || isHomeBased(row.address);
+}
+
+/** "Locality, SA5" when exactly one locality is chosen (localities are areas served, so two or more say nothing), else "SA5". Never the street or full postcode. */
+export function areaLabel(row: { postcodeDistrict: string; localities: { locality: { name: string } }[] }): string {
+  return row.localities.length === 1 ? `${row.localities[0]!.locality.name}, ${row.postcodeDistrict}` : row.postcodeDistrict;
+}
+
 /** The only way an email reaches a public response: the owner's choice (showEmail) decides, and showEmail is never sent itself. */
 export function publicEmail(row: { email: string | null; showEmail: boolean }): string | null {
   return row.showEmail && row.email ? row.email : null;
@@ -68,6 +79,7 @@ function shortText(text: string): string {
 }
 
 export function toPublicListItem(row: ListRow) {
+  const hidden = hidesAddress(row);
   return {
     slug: row.slug,
     name: row.name,
@@ -77,8 +89,9 @@ export function toPublicListItem(row: ListRow) {
     zone: row.zone,
     localities: row.localities.map((l) => l.locality),
     postcodeDistrict: row.postcodeDistrict,
-    postcode: isHomeBased(row.address) ? null : row.postcode,
-    address: row.address,
+    postcode: hidden ? null : row.postcode,
+    address: hidden ? null : row.address,
+    areaLabel: hidden ? areaLabel(row) : null,
     phone: row.phone,
     whatsapp: row.whatsapp,
     verificationStatus: row.verificationStatus,

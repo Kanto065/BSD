@@ -185,6 +185,7 @@ model Business {
   updateRequests  ListingUpdateRequest[]
   removalRequests ListingRemovalRequest[]
   claimRequests   ListingClaimRequest[]
+  marketListings  MarketListing[]
 
   @@index([status, verificationStatus])
   @@index([zoneId])
@@ -369,6 +370,10 @@ model User {
   categories           Category[]            @relation("CategorySubmitter")
   studentVerifications StudentVerification[]
   claimRequests        ListingClaimRequest[]
+  marketListings       MarketListing[]
+  marketSaves          MarketSave[]
+  marketReports        MarketReport[]
+  supportTickets       SupportTicket[]
 }
 
 // The saved business details of one member, reused to prefill forms. Json until a field needs to be queried.
@@ -428,4 +433,152 @@ model StudentVerification {
 
   @@index([status, submittedAt])
   @@index([purgeAt])
+}
+
+// M12-A. Marketplace (marketplace.bsd.wales). No views counter on purpose: anonymous view counting needs a privacy
+// sentence that is not approved yet. The SQL also seeds the 11 client categories and the ticket number sequence.
+enum MarketKind {
+  SELL
+  BUY
+  GIVEAWAY
+  SERVICE
+}
+
+enum MarketStatus {
+  PENDING
+  ACTIVE
+  RESERVED
+  SOLD
+  ARCHIVED
+  REMOVED
+}
+
+enum ItemCondition {
+  BRAND_NEW
+  LIKE_NEW
+  USED_GOOD
+  FOR_PARTS
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model MarketCategory {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  slug      String          @unique
+  sortOrder Int             @default(0)
+  staged    Boolean         @default(false) // hidden at launch (Housing, Jobs)
+  listings  MarketListing[]
+}
+
+model SafeSpot {
+  id               String          @id @default(cuid())
+  name             String
+  address          String
+  postcodeDistrict String
+  active           Boolean         @default(true)
+  listings         MarketListing[]
+}
+
+model MarketListing {
+  id                  String          @id @default(cuid())
+  slug                String          @unique
+  ownerUserId         String
+  owner               User            @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  kind                MarketKind
+  isB2B               Boolean         @default(false)
+  title               String
+  description         String
+  pricePence          Int?
+  negotiable          Boolean         @default(false)
+  condition           ItemCondition?
+  categoryId          String
+  category            MarketCategory  @relation(fields: [categoryId], references: [id])
+  postcode            String // full, normalised. Never in a public body when hideFullAddress is true
+  postcodeDistrict    String
+  hideFullAddress     Boolean         @default(true)
+  spotId              String?
+  spot                SafeSpot?       @relation(fields: [spotId], references: [id], onDelete: SetNull)
+  whatsapp            String
+  phone               String?
+  offerPassDiscount   Boolean         @default(false)
+  passDiscountNote    String?
+  vatInvoice          Boolean         @default(false)
+  bulkTerms           String?
+  directoryBusinessId String?
+  directoryBusiness   Business?       @relation(fields: [directoryBusinessId], references: [id], onDelete: SetNull)
+  status              MarketStatus    @default(PENDING)
+  removalReason       String? // shown to the owner on screen
+  reportCount         Int             @default(0)
+  createdAt           DateTime        @default(now())
+  bumpedAt            DateTime        @default(now())
+  expiresAt           DateTime
+  closedAt            DateTime? // when it became ARCHIVED, REMOVED or SOLD, images go 30 days later
+  images              MarketImage[]
+  saves               MarketSave[]
+  reports             MarketReport[]
+  tickets             SupportTicket[]
+
+  @@index([status, categoryId, bumpedAt])
+  @@index([postcodeDistrict])
+  @@index([ownerUserId])
+}
+
+model MarketImage {
+  id        String        @id @default(cuid())
+  listingId String
+  listing   MarketListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  key       String
+  thumbKey  String
+  width     Int
+  height    Int
+  sortOrder Int           @default(0)
+
+  @@index([listingId])
+}
+
+model MarketSave {
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   MarketListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@id([userId, listingId])
+}
+
+model MarketReport {
+  id             String        @id @default(cuid())
+  listingId      String
+  listing        MarketListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reporterUserId String
+  reporter       User          @relation(fields: [reporterUserId], references: [id], onDelete: Cascade)
+  reason         String
+  note           String?
+  createdAt      DateTime      @default(now())
+
+  @@unique([listingId, reporterUserId])
+}
+
+model SupportTicket {
+  id         String         @id @default(cuid())
+  number     String         @unique // "#BC-0001", from the support_ticket_seq sequence
+  userId     String
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   String
+  message    String
+  listingId  String?
+  listing    MarketListing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  status     TicketStatus   @default(OPEN)
+  adminReply String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }

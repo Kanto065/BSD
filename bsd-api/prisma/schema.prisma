@@ -57,6 +57,7 @@ model AdminUser {
   lockedUntil        DateTime? // temporary lock after repeated failed logins
   lastLoginAt        DateTime?
   tokenVersion       Int                     @default(0) // bumped on password change or logout, which ends all sessions
+  decidedStudents    StudentVerification[]
   reviewedListings   Business[]              @relation("ReviewedBy")
   verifiedListings   Business[]              @relation("VerifiedBy")
   claimReviews       ListingClaimRequest[]   @relation("ClaimReviewedBy")
@@ -74,17 +75,17 @@ enum CategoryStatus {
 }
 
 model Category {
-  id                String        @id @default(cuid())
-  name              String        @unique
-  slug              String        @unique
+  id                String         @id @default(cuid())
+  name              String         @unique
+  slug              String         @unique
   description       String?
   icon              String?
-  sortOrder         Int           @default(0)
-  requiresOwnerName Boolean       @default(false)
+  sortOrder         Int            @default(0)
+  requiresOwnerName Boolean        @default(false)
   status            CategoryStatus @default(APPROVED)
   submittedAt       DateTime? // set when the category came from the Others field
   submittedByUserId String? // the member who proposed it, for the per-account cap
-  submittedBy       User?         @relation("CategorySubmitter", fields: [submittedByUserId], references: [id], onDelete: SetNull)
+  submittedBy       User?          @relation("CategorySubmitter", fields: [submittedByUserId], references: [id], onDelete: SetNull)
   subcategories     Subcategory[]
   businesses        Business[]
 }
@@ -327,24 +328,25 @@ enum AccountType {
 }
 
 model User {
-  id               String       @id @default(cuid())
-  name             String
-  email            String       @unique
-  passwordHash     String
-  postcode         String
-  postcodeDistrict String
-  createdAt        DateTime     @default(now())
-  lastLoginAt      DateTime?
-  failedLoginCount Int          @default(0)
-  lockedUntil      DateTime?
-  tokenVersion     Int          @default(0) // bumped on password change, which ends every session
-  accountType      AccountType  @default(GENERAL)
-  phone            String? // optional contact number, never used to sign in
-  modules          UserModule[]
-  badges           UserBadge[]
-  businessProfile  BusinessProfile?
-  businesses       Business[]   @relation("BusinessOwner")
-  categories       Category[]   @relation("CategorySubmitter")
+  id                   String                @id @default(cuid())
+  name                 String
+  email                String                @unique
+  passwordHash         String
+  postcode             String
+  postcodeDistrict     String
+  createdAt            DateTime              @default(now())
+  lastLoginAt          DateTime?
+  failedLoginCount     Int                   @default(0)
+  lockedUntil          DateTime?
+  tokenVersion         Int                   @default(0) // bumped on password change, which ends every session
+  accountType          AccountType           @default(GENERAL)
+  phone                String? // optional contact number, never used to sign in
+  modules              UserModule[]
+  badges               UserBadge[]
+  businessProfile      BusinessProfile?
+  businesses           Business[]            @relation("BusinessOwner")
+  categories           Category[]            @relation("CategorySubmitter")
+  studentVerifications StudentVerification[]
 }
 
 // The saved business details of one member, reused to prefill forms. Json until a field needs to be queried.
@@ -373,4 +375,35 @@ model UserBadge {
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, badge])
+}
+
+// R-11. A member's proof of student status. The file lives under the private storage prefix and is deleted
+// 24 hours after the decision (7 days after upload if nobody decided). The row stays as the record of the decision.
+// The SQL also has a partial unique index (one PENDING row per user) that Prisma cannot express.
+enum StudentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+model StudentVerification {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          StudentStatus @default(PENDING)
+  proofKey        String? // null once the file is purged
+  proofType       String
+  proofBytes      Int
+  note            String?
+  submittedAt     DateTime      @default(now())
+  decidedAt       DateTime?
+  decidedById     String?
+  decidedBy       AdminUser?    @relation(fields: [decidedById], references: [id])
+  rejectionReason String?
+  purgeAt         DateTime
+  purgedAt        DateTime?
+
+  @@index([status, submittedAt])
+  @@index([purgeAt])
 }

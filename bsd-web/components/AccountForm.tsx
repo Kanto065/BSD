@@ -62,6 +62,7 @@ export default function AccountForm({ apiBase, compact = false, onSignedIn }: Pr
         onSignOut={async () => {
           await call(apiBase, "logout", {}).catch(() => undefined);
           setMember(null);
+          window.dispatchEvent(new Event("bsd:member-changed"));
         }}
       />
     );
@@ -94,6 +95,7 @@ export default function AccountForm({ apiBase, compact = false, onSignedIn }: Pr
           setF({ name: "", email: "", password: "", postcode: "", phone: "", accountType: "" });
           if (r.user && onSignedIn) onSignedIn(r.user);
           else setMember(r.user ?? null);
+          window.dispatchEvent(new Event("bsd:member-changed"));
         } catch (err) {
           setError(err);
           setF((s) => ({ ...s, password: "" }));

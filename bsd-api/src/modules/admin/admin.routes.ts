@@ -9,6 +9,7 @@ import usersRoutes from "./admin.users.js";
 import categoriesAdminRoutes from "./admin.categories.js";
 import requestsAdminRoutes from "./admin.requests.js";
 import siteAdminRoutes from "./admin.site.js";
+import studentsAdminRoutes from "./admin.students.js";
 import { audit, idParams, invalid, page, pageQuery, statusCounts } from "./admin.service.js";
 
 // The admin API. Who can do what:
@@ -30,6 +31,7 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
   app.register(categoriesAdminRoutes);
   app.register(requestsAdminRoutes);
   app.register(siteAdminRoutes);
+  app.register(studentsAdminRoutes, { prefix: "/students" });
 
   const anyAdmin = { preHandler: app.requireRole() };
   const moderator = { preHandler: app.requireRole(...rolesFrom("MODERATOR")) };
@@ -37,7 +39,7 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
 
   app.get("/dashboard", anyAdmin, async () => {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const [verificationQueue, approvedThisWeek, pendingClaims, openMessages, pendingUpdates, pendingRemovals, emergencyRemovals] = await app.prisma.$transaction([
+    const [verificationQueue, approvedThisWeek, pendingClaims, openMessages, pendingUpdates, pendingRemovals, emergencyRemovals, pendingStudents] = await app.prisma.$transaction([
       app.prisma.business.count({ where: { status: "APPROVED", verificationStatus: { not: "COMMUNITY_VERIFIED" } } }),
       app.prisma.business.count({ where: { status: "APPROVED", reviewedAt: { gte: weekAgo } } }),
       app.prisma.listingClaimRequest.count({ where: { status: "PENDING" } }),
@@ -45,6 +47,7 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
       app.prisma.listingUpdateRequest.count({ where: { status: "PENDING" } }),
       app.prisma.listingRemovalRequest.count({ where: { status: "PENDING" } }),
       app.prisma.listingRemovalRequest.count({ where: { status: "PENDING", isEmergency: true } }),
+      app.prisma.studentVerification.count({ where: { status: "PENDING" } }),
     ]);
     return {
       listings: await statusCounts(app.prisma),
@@ -55,6 +58,7 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
       pendingUpdates,
       pendingRemovals,
       emergencyRemovals,
+      pendingStudents,
     };
   });
 

@@ -43,6 +43,8 @@ const SECTIONS: DocSection[] = [
         ],
       },
       "We do not collect sensitive personal data.",
+      // New wording for R-11 student verification, needs client sign-off.
+      "If you ask us to verify your student status, we keep the document you upload only until we have checked it and delete it within 24 hours after our decision. We keep a record of the decision and the date.",
     ],
   },
   {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AccountForm from "@/components/AccountForm";
+import StudentPanel from "@/components/StudentPanel";
 import { publicApiBase } from "@/lib/api";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function AccountPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
       <AccountForm apiBase={publicApiBase()} />
+      <StudentPanel apiBase={publicApiBase()} />
     </div>
   );
 }

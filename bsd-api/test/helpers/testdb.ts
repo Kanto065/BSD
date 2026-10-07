@@ -32,7 +32,7 @@ export async function startTestDb(): Promise<TestDb> {
     .readdirSync(MIGRATIONS, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
-    .sort((a, b) => parseInt(a, 10) - parseInt(b, 10)); // numeric, so 10_ runs after 9_
+    .sort((a, b) => parseInt(a, 10) - parseInt(b, 10)); // numeric, so 10_ and 11_ run after 9_
   for (const folder of folders) await db.exec(fs.readFileSync(path.join(MIGRATIONS, folder, "migration.sql"), "utf8"));
 
   const port = await freePort();

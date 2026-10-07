@@ -211,3 +211,21 @@ describe("9_category_others", () => {
     await db.close();
   });
 });
+
+describe("11_student_verification", () => {
+  it("creates the table and allows only one PENDING request per member", async () => {
+    const db = await prodLikeDb();
+    for (const m of ["1_v2_schema", "2_photo_variants", "3_admin_auth", "4_request_contacts", "5_subcategory_order", "6_member_accounts", "7_business_email_visibility", "8_site_settings", "9_category_others"]) await db.exec(sql(m));
+    await db.exec(sql("11_student_verification"));
+    expect(await enumLabels(db, "StudentStatus")).toBe("PENDING,VERIFIED,REJECTED,EXPIRED");
+    await db.exec(`insert into "User"(id,name,email,"passwordHash",postcode,"postcodeDistrict") values ('u1','U','u1@t.example','x','SA1 1AA','SA1')`);
+    const add = (id: string, status: string) =>
+      db.query(`insert into "StudentVerification"(id,"userId",status,"proofType","proofBytes","purgeAt") values ($1,'u1',$2::"StudentStatus",'image/png',1,now())`, [id, status]);
+    await add("a", "PENDING");
+    await expect(add("b", "PENDING")).rejects.toThrow(/StudentVerification_one_pending/);
+    await add("c", "REJECTED");
+    await add("d", "EXPIRED");
+    expect((await db.query<{ n: number }>(`select count(*)::int n from "StudentVerification"`)).rows[0]!.n).toBe(3);
+    await db.close();
+  });
+});

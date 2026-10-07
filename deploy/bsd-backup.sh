@@ -24,13 +24,13 @@ TABLES=$(gunzip -c "$DB" | grep -c '^CREATE TABLE' || true)
 [ "$TABLES" -ge 10 ] || { log "database dump looks incomplete ($TABLES tables)"; exit 1; }
 log "database ok: $DB ($(du -h "$DB" | cut -f1), $TABLES tables)"
 
-# --- photos (bsd-uploads bucket), with the bsd-api user's key from /opt/bsd/.env
+# --- photos (bsd-uploads bucket), never the private/ prefix (student proofs must not outlive their 24 hours), with the bsd-api user's key from /opt/bsd/.env
 SECRET=$(grep '^S3_SECRET_KEY=' /opt/bsd/.env | cut -d= -f2-)
 [ -n "$SECRET" ] || { log "S3_SECRET_KEY missing from /opt/bsd/.env"; exit 1; }
 docker run --rm --network platform_internal \
   -e MC_HOST_bsd="http://bsd-api:${SECRET}@minio:9000" \
   -v "$DEST/uploads-current:/backup" \
-  minio/mc:latest mirror --quiet --overwrite --remove bsd/bsd-uploads /backup >/dev/null
+  minio/mc:latest mirror --quiet --overwrite --remove --exclude "private/*" bsd/bsd-uploads /backup >/dev/null
 UP="$DEST/uploads-$STAMP.tar"
 tar -cf "$UP" -C "$DEST/uploads-current" .
 tar -tf "$UP" >/dev/null

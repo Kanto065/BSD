@@ -60,7 +60,7 @@ const detailInclude = {
   photos: { orderBy: { uploadedAt: "asc" as const } },
   reviewedBy: { select: { name: true } },
   verifiedBy: { select: { name: true } },
-  owner: { select: { id: true, name: true, email: true } },
+  owner: { select: { id: true, name: true, email: true, deletedAt: true } },
 } satisfies Prisma.BusinessInclude;
 
 const listingsRoutes: FastifyPluginAsync = async (app) => {
@@ -135,7 +135,9 @@ const listingsRoutes: FastifyPluginAsync = async (app) => {
       take: 50,
       include: { admin: { select: { name: true } } },
     });
-    return { listing, history };
+    // A deleted member shows as "Deleted account" with no address (the stored one is a placeholder).
+    const owner = listing.owner ? { id: listing.owner.id, name: listing.owner.name, email: listing.owner.deletedAt ? null : listing.owner.email } : null;
+    return { listing: { ...listing, owner }, history };
   });
 
   // Links an existing member account to a listing by exact email, or clears the link. The bridge for older anonymous
@@ -149,7 +151,7 @@ const listingsRoutes: FastifyPluginAsync = async (app) => {
     if (!listing) return reply.code(404).send({ error: "Not found" });
     let ownerId: string | null = null;
     if (body.data.email) {
-      const user = await app.prisma.user.findUnique({ where: { email: body.data.email }, select: { id: true } });
+      const user = await app.prisma.user.findUnique({ where: { email: body.data.email, deletedAt: null }, select: { id: true } });
       if (!user) return reply.code(404).send({ error: "No member account has that email address." });
       ownerId = user.id;
     }

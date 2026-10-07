@@ -36,8 +36,8 @@ export const atLeast = (role: AdminRole, minimum: AdminRole) => RANK[role] >= RA
 const authPlugin: FastifyPluginAsync = async (app) => {
   app.decorate("requireUser", (message = "Please sign in.") => async (req: FastifyRequest, reply: FastifyReply) => {
     const claims = verifyToken(req.cookies[SESSION_COOKIE] ?? "", "session");
-    const user = claims ? await app.prisma.user.findUnique({ where: { id: claims.sub }, select: { id: true, name: true, email: true, tokenVersion: true } }) : null;
-    if (!claims || !user || user.tokenVersion !== claims.tv) return reply.code(401).send({ error: message });
+    const user = claims ? await app.prisma.user.findUnique({ where: { id: claims.sub }, select: { id: true, name: true, email: true, tokenVersion: true, deletedAt: true } }) : null;
+    if (!claims || !user || user.deletedAt || user.tokenVersion !== claims.tv) return reply.code(401).send({ error: message });
     req.user = { id: user.id, name: user.name, email: user.email };
   });
 

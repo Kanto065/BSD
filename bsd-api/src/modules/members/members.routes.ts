@@ -260,6 +260,15 @@ const membersRoutes: FastifyPluginAsync = async (app) => {
     await app.prisma.$transaction([
       app.prisma.studentVerification.updateMany({ where: { userId: user.id, status: "PENDING" }, data: { status: "EXPIRED", note: null } }),
       app.prisma.businessProfile.deleteMany({ where: { userId: user.id } }),
+      // Waiting claims are closed so their document is purged, and every claim loses the personal details copied from the account.
+      app.prisma.listingClaimRequest.updateMany({
+        where: { userId: user.id, status: "PENDING" },
+        data: { status: "REJECTED", decisionNote: "The member deleted the account.", reviewedAt: now, purgeAt: now },
+      }),
+      app.prisma.listingClaimRequest.updateMany({
+        where: { userId: user.id },
+        data: { userId: null, claimantName: DELETED_NAME, claimantEmail: `deleted-${user.id}@deleted.invalid`, claimantPhone: null },
+      }),
       app.prisma.user.update({
         where: { id: user.id },
         data: {

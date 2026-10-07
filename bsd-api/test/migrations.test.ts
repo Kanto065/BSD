@@ -229,3 +229,35 @@ describe("11_student_verification", () => {
     await db.close();
   });
 });
+
+describe("15_owner_claims", () => {
+  it("keeps anonymous claims, adds the member and file columns, and allows one waiting claim per member per listing", async () => {
+    const db = new PGlite();
+    const folders = fs.readdirSync(MIGRATIONS, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+    for (const f of folders.slice(0, folders.indexOf("15_owner_claims"))) await db.exec(sql(f));
+    await db.exec(`insert into "CoverageZone"(id,name,slug,"postcodeDistricts") values ('z1','Zone','zone-1',ARRAY['SA1'])`);
+    await db.exec(`insert into "Category"(id,name,slug) values ('c1','Cat','cat')`);
+    await db.exec(`insert into "User"(id,name,email,"passwordHash",postcode,"postcodeDistrict") values ('u1','U','u1@t.example','x','SA1 1AA','SA1'),('u2','V','u2@t.example','x','SA1 1AA','SA1')`);
+    for (const b of ["b1", "b2"]) {
+      await db.exec(`insert into "Business"(id,slug,name,"categoryId",description,phone,postcode,"postcodeDistrict","zoneId") values ('${b}','${b}','B','c1','d','1','SA1 1AA','SA1','z1')`);
+    }
+    await db.exec(`insert into "ListingClaimRequest"(id,"businessId","claimantName","claimantEmail","proofText") values ('old','b1','Anon','a@example.com','Receipt')`);
+
+    await db.exec(sql("15_owner_claims"));
+
+    expect((await db.query<Record<string, unknown>>(`select "userId","proofKey","purgeAt","linkedOwner" from "ListingClaimRequest" where id='old'`)).rows[0]).toEqual({ userId: null, proofKey: null, purgeAt: null, linkedOwner: false });
+    const add = (id: string, user: string | null, biz: string, status: string) =>
+      db.query(`insert into "ListingClaimRequest"(id,"businessId","userId","claimantName","claimantEmail","proofText",status) values ($1,$2,$3,'N','n@t.example','proof proof proof proof',$4::"ClaimStatus")`, [id, biz, user, status]);
+    await add("a", "u1", "b1", "PENDING");
+    await expect(add("b", "u1", "b1", "PENDING")).rejects.toThrow(/ListingClaimRequest_one_pending/);
+    await add("c", "u1", "b2", "PENDING"); // another listing
+    await add("d", "u2", "b1", "PENDING"); // another member
+    await add("e", "u1", "b1", "REJECTED"); // decided claims do not count
+    await add("f", null, "b1", "PENDING"); // anonymous rows are not limited
+    await add("g", null, "b1", "PENDING");
+    // deleting the member keeps the claim and clears the link
+    await db.exec(`delete from "User" where id='u2'`);
+    expect((await db.query<{ u: string | null }>(`select "userId" u from "ListingClaimRequest" where id='d'`)).rows[0]!.u).toBeNull();
+    await db.close();
+  });
+});

@@ -11,6 +11,7 @@ import businessesRoutes from "./modules/businesses/businesses.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import membersRoutes from "./modules/members/members.routes.js";
 import studentRoutes from "./modules/members/members.student.js";
+import claimsRoutes from "./modules/members/members.claims.js";
 import { startProofPurge } from "./common/proof-purge.js";
 import contactRoutes from "./modules/contact/contact.routes.js";
 import zonesRoutes from "./modules/zones/zones.routes.js";
@@ -68,6 +69,7 @@ export function buildApp(opts: AppOptions = {}) {
   app.register(contactRoutes, { prefix: "/contact" });
   app.register(membersRoutes, { prefix: "/auth" });
   app.register(studentRoutes, { prefix: "/student" });
+  app.register(claimsRoutes, { prefix: "/auth" });
 
   return app;
 }

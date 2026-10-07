@@ -5,12 +5,15 @@ import { apiGet } from "@/lib/api";
 import { getSiteConfig } from "@/lib/site-config";
 import { hiddenPaths } from "@/lib/sections";
 
-export const revalidate = 3600;
+// Built per request so a page hidden in the admin panel leaves the sitemap within about a minute (the site settings
+// fetch is cached for 60 seconds, and a prerendered copy would also serve one stale answer after that). Crawlers
+// ask rarely, so the cost is small.
+export const dynamic = "force-dynamic";
 
 // Placeholder shells (/community-guidelines, /complaints, /financial-transparency) and /search are noindex,
 // so they are left out on purpose.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const hidden = hiddenPaths(await getSiteConfig());
+  const hidden = hiddenPaths(await getSiteConfig(true));
   const staticRoutes = [
     "",
     "/categories",

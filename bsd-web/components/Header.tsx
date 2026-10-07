@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { memberCall } from "@/lib/member-api";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Globe, Handshake, Menu, Plus, X, Zap } from "lucide-react";
@@ -23,10 +24,25 @@ const ALL_NAV = [
   { href: "/contact", label: "Contact" },
 ];
 
-export default function Header({ hidden = [] }: { hidden?: string[] }) {
+export default function Header({ hidden = [], apiBase }: { hidden?: string[]; apiBase?: string }) {
   const NAV = ALL_NAV.filter((i) => !hidden.includes(i.href));
   const UTILITY = ALL_UTILITY.filter((i) => !hidden.includes(i.href));
   const [open, setOpen] = useState(false);
+  // The page is cached and the same for everyone, so "Sign in" is what the server sends. The browser then asks the API
+  // whether a member session exists and swaps the label to "Account" if so.
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    if (!apiBase) return;
+    const check = () =>
+      memberCall(apiBase, "me")
+        .then((r) => setSignedIn(!!r.user))
+        .catch(() => setSignedIn(false));
+    void check();
+    // The account form announces sign in, sign out and account deletion.
+    window.addEventListener("bsd:member-changed", check);
+    return () => window.removeEventListener("bsd:member-changed", check);
+  }, [apiBase]);
+  const accountLabel = signedIn ? "Account" : "Sign in";
   const pathname = usePathname();
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
@@ -50,7 +66,7 @@ export default function Header({ hidden = [] }: { hidden?: string[] }) {
 
       <div className="border-b border-slate-200">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href="/" onClick={() => setOpen(false)} aria-label="BSD home" className="shrink-0">
+          <Link href="/" onClick={() => setOpen(false)} aria-label="BSD home" className="inline-flex min-h-11 shrink-0 items-center">
             <Logo className="h-10 sm:h-12" priority />
           </Link>
 
@@ -70,12 +86,12 @@ export default function Header({ hidden = [] }: { hidden?: string[] }) {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link href="/account" className="hidden px-2 py-2 text-sm font-semibold text-brand-navy transition-colors hover:text-brand-blue active:text-brand-teal-dark sm:inline">
-              Sign in
+            <Link href="/account" className="hidden min-h-11 items-center px-2 text-sm font-semibold text-brand-navy transition-colors hover:text-brand-blue active:text-brand-teal-dark sm:inline-flex">
+              {accountLabel}
             </Link>
             <Link
               href="/submit"
-              className="press inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-brand-blue px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-navy sm:px-4"
+              className="press inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-md bg-brand-blue px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-navy sm:px-4"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               Submit Listing
@@ -112,7 +128,7 @@ export default function Header({ hidden = [] }: { hidden?: string[] }) {
             ))}
             <div className="mt-2 border-t border-slate-200 pt-2">
               <Link href="/account" onClick={() => setOpen(false)} className="block rounded-md px-2 py-3 text-base hover:bg-slate-100">
-                Sign in
+                {accountLabel}
               </Link>
               {UTILITY.map(({ href, label, icon: Icon }) => (
                 <Link

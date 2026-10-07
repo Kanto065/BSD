@@ -9,6 +9,13 @@ const categories: CategoryOption[] = [
 const LONG = "x".repeat(150);
 
 describe("mergeProfile", () => {
+  it("starts from the account phone and lets a saved phone replace it", () => {
+    const start = { ...emptyValues, phone: "07700 900123" };
+    expect(mergeProfile(start, {}).phone).toBe("07700 900123");
+    expect(mergeProfile(start, { name: "Rina" }).phone).toBe("07700 900123");
+    expect(mergeProfile(start, { phone: "01792 000000" }).phone).toBe("01792 000000");
+  });
+
   it("keeps the defaults when nothing is saved", () => {
     expect(mergeProfile(emptyValues, null)).toEqual(emptyValues);
     expect(mergeProfile(emptyValues, {})).toEqual(emptyValues);

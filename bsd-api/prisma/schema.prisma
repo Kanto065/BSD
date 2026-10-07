@@ -341,6 +341,7 @@ model User {
   tokenVersion         Int                   @default(0) // bumped on password change, which ends every session
   accountType          AccountType           @default(GENERAL)
   phone                String? // optional contact number, never used to sign in
+  deletedAt            DateTime? // set when the member deletes the account, see DELETE /auth/me
   modules              UserModule[]
   badges               UserBadge[]
   businessProfile      BusinessProfile?

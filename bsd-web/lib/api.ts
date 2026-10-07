@@ -44,7 +44,7 @@ export type ApiResult<T> =
 
 // Read at runtime through bracket access so the value is not inlined at build time (the compose file sets it on
 // the running container, not on the image build).
-function apiBase(): string {
+export function apiBase(): string {
   const env = process.env;
   const configured = env["API_URL"] ?? env["NEXT_PUBLIC_API_URL"];
   if (configured) return configured.replace(/\/$/, "");

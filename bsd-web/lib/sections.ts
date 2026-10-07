@@ -66,6 +66,26 @@ export function hiddenPaths(config: SiteConfig): string[] {
   return Object.entries(PAGE_PATHS).filter(([key]) => !isVisible(config, key)).map(([, path]) => path);
 }
 
+const ENTITIES: Record<string, string> = { "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "&#x27;": "'", "&nbsp;": " " };
+
+/**
+ * What the API will store for a text field: tags removed (script, style and similar elements with their contents),
+ * common entities decoded, control characters dropped, whitespace tidied. Mirrors sanitizeText in
+ * bsd-api/src/common/sanitize.ts, which stays the authority. Used only to preview the banner before saving.
+ */
+export function plainText(value: string): string {
+  return value
+    .replace(/<(script|style|textarea|option)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "")
+    .replace(/<!--[\s\S]*?-->|<[!?][^>]*>|<\/?[a-zA-Z][^>]*>/g, "")
+    .replace(/&(lt|gt|quot|#39|#x27|nbsp);/g, (m) => ENTITIES[m]!)
+    .replace(/&amp;/g, "&")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 /** The non-empty banner lines, English first. Plain text only: the banner renders them as text nodes. */
 export function bannerLines(m: Maintenance): string[] {
   if (!m.enabled) return [];

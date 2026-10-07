@@ -25,11 +25,16 @@ const studentsAdminRoutes: FastifyPluginAsync = async (app) => {
         ...page(q.data),
         select: {
           id: true, userId: true, status: true, submittedAt: true, decidedAt: true, rejectionReason: true, proofType: true, note: true, proofKey: true,
-          user: { select: { name: true, email: true, postcode: true } },
+          user: { select: { name: true, email: true, postcode: true, deletedAt: true } },
         },
       }),
     ]);
-    const items = rows.map(({ proofKey, ...r }) => ({ ...r, hasProof: proofKey !== null }));
+    const items = rows.map(({ proofKey, user, ...r }) => ({
+      ...r,
+      hasProof: proofKey !== null,
+      // A deleted member is shown by name only, the stored address is a placeholder.
+      user: { name: user.name, email: user.deletedAt ? null : user.email, postcode: user.postcode },
+    }));
     return { items, total, page: q.data.page, pageSize: q.data.pageSize };
   });
 

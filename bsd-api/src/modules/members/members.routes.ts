@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { FastifyPluginAsync, FastifyReply } from "fastify";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
@@ -17,6 +18,7 @@ import ownerListingsRoutes from "./members.listings.js";
 const MAX_FAILED_LOGINS = 5;
 const LOCK_MINUTES = 15;
 const WRONG = "Email or password is incorrect.";
+export const DELETED_NAME = "Deleted account";
 
 const moduleField = z.enum(["DIRECTORY", "CARD", "MARKETPLACE"]);
 
@@ -46,6 +48,8 @@ const passwordBody = z.object({
   currentPassword: z.string().min(1, "Enter your current password.").max(200),
   newPassword: z.string().max(200),
 });
+
+const deleteBody = z.object({ password: z.string().min(1, "Enter your password.").max(200) });
 
 const loginBody = z.object({
   email: z.string().trim().toLowerCase().email("Enter your email address.").max(200),
@@ -141,7 +145,9 @@ const membersRoutes: FastifyPluginAsync = async (app) => {
     if (!body.success) return invalid(reply, body.error);
     const { email, password, module } = body.data;
 
-    const user = await app.prisma.user.findUnique({ where: { email } });
+    const found = await app.prisma.user.findUnique({ where: { email } });
+    // A deleted account never signs in (its email is already replaced, this is a second guard).
+    const user = found?.deletedAt ? null : found;
     const now = new Date();
     if (user?.lockedUntil && user.lockedUntil > now) {
       return reply.code(429).send({ error: `Too many failed attempts. Try again in ${LOCK_MINUTES} minutes.` });
@@ -217,6 +223,61 @@ const membersRoutes: FastifyPluginAsync = async (app) => {
       data: { passwordHash: await hashPassword(body.data.newPassword), tokenVersion: { increment: 1 }, failedLoginCount: 0, lockedUntil: null },
     });
     setSessionCookie(reply, updated.id, updated.tokenVersion); // other sessions end, this browser stays signed in
+    return { ok: true };
+  });
+
+  // Deletes the account after the password is checked again. Personal data is removed or replaced and the row stays, so
+  // the listings, badges and student decision records that point at it keep working. The old email is freed.
+  app.delete("/me", { preHandler: app.requireUser(), config: { rateLimit: { max: 5, timeWindow: "1 hour" } } }, async (req, reply) => {
+    const body = deleteBody.safeParse(req.body);
+    if (!body.success) return invalid(reply, body.error);
+    const user = await app.prisma.user.findUniqueOrThrow({ where: { id: req.user!.id } });
+    const now = new Date();
+    if (user.lockedUntil && user.lockedUntil > now) {
+      return reply.code(429).send({ error: `Too many failed attempts. Try again in ${LOCK_MINUTES} minutes.` });
+    }
+    if (!(await verifyPassword(body.data.password, user.passwordHash))) {
+      const failed = user.failedLoginCount + 1;
+      await app.prisma.user.update({
+        where: { id: user.id },
+        data: failed >= MAX_FAILED_LOGINS ? { failedLoginCount: 0, lockedUntil: new Date(now.getTime() + LOCK_MINUTES * 60_000) } : { failedLoginCount: failed },
+      });
+      return reply.code(400).send({ error: "Please check the highlighted fields.", fieldErrors: { password: "That password is not correct." } });
+    }
+
+    // Student proof files first. A file that cannot be deleted now is left for the purge job, which runs every 15 minutes.
+    const proofs = await app.prisma.studentVerification.findMany({ where: { userId: user.id, proofKey: { not: null } }, select: { id: true, proofKey: true } });
+    for (const row of proofs) {
+      try {
+        if (app.storage) await app.storage.delete(row.proofKey!, { private: true });
+        await app.prisma.studentVerification.update({ where: { id: row.id }, data: { proofKey: null, purgedAt: now } });
+      } catch {
+        await app.prisma.studentVerification.update({ where: { id: row.id }, data: { purgeAt: now } });
+      }
+    }
+
+    const passwordHash = await hashPassword(randomUUID()); // nobody knows it, so the old password is gone too
+    await app.prisma.$transaction([
+      app.prisma.studentVerification.updateMany({ where: { userId: user.id, status: "PENDING" }, data: { status: "EXPIRED", note: null } }),
+      app.prisma.businessProfile.deleteMany({ where: { userId: user.id } }),
+      app.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          deletedAt: now,
+          // .invalid is reserved and never delivers. The id keeps it unique, so the real address can register again.
+          email: `deleted-${user.id}@deleted.invalid`,
+          name: DELETED_NAME,
+          phone: null,
+          postcode: "",
+          postcodeDistrict: "",
+          passwordHash,
+          failedLoginCount: 0,
+          lockedUntil: null,
+          tokenVersion: { increment: 1 }, // ends every session on every device
+        },
+      }),
+    ]);
+    reply.clearCookie(SESSION_COOKIE, { path: "/", domain: cookieDomain() });
     return { ok: true };
   });
 

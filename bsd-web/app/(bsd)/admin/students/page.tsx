@@ -15,7 +15,7 @@ type Item = {
   proofType: string;
   note: string | null;
   hasProof: boolean;
-  user: { name: string; email: string; postcode: string };
+  user: { name: string; email: string | null; postcode: string };
 };
 
 // The proof is fetched with the admin token and shown from an in-memory blob URL, so there is no address to copy
@@ -121,7 +121,7 @@ export default function StudentsPage() {
               <div className="min-w-0">
                 <p className="font-semibold text-brand-navy">{r.user.name}</p>
                 <p className="break-words text-sm text-slate-600">
-                  {r.user.email} · {r.user.postcode}
+                  {r.user.email ? `${r.user.email} · ` : ""}{r.user.postcode || "no postcode"}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">Sent {fmtDate(r.submittedAt)}</p>
               </div>

@@ -33,7 +33,7 @@ export default function BottomNav({ site }: { site: SiteKey }) {
             const { label, Icon } = ITEMS[key];
             const href = navHref(site, key);
             const isActive = key === active;
-            const cls = `relative flex h-full touch-manipulation select-none flex-col items-center justify-center gap-1 text-xs hover:text-bc-bar focus-visible:outline-offset-[-3px] motion-safe:transition-colors active:bg-slate-100 ${
+            const cls = `relative flex h-full min-h-11 w-full touch-manipulation select-none flex-col items-center justify-center gap-1 text-xs hover:text-bc-bar focus-visible:outline-offset-[-3px] motion-safe:transition-colors active:bg-slate-100 ${
               isActive ? "font-semibold text-bc-bar" : "text-slate-600"
             }`;
             const inner = (
@@ -44,7 +44,7 @@ export default function BottomNav({ site }: { site: SiteKey }) {
               </>
             );
             return (
-              <li key={key} className="flex-1">
+              <li key={key} className="flex flex-1">
                 {href.startsWith("/") ? (
                   <Link href={href} aria-current={isActive ? "page" : undefined} className={cls}>
                     {inner}

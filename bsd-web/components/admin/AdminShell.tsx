@@ -119,7 +119,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                       <Link
                         href={item.href}
                         aria-current={on ? "page" : undefined}
-                        className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                        className={`group relative flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                           on ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"
                         }`}
                       >
@@ -150,14 +150,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <button
               type="button"
               onClick={handleSignOut}
-              className="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white active:scale-95"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white active:scale-95"
               title="Sign out"
             >
               <LogOut className="h-4 w-4" aria-hidden="true" />
               <span className="sr-only">Sign out</span>
             </button>
           </div>
-          <a href="/" target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 px-1 text-xs text-slate-300 hover:text-white">
+          <a href="/" target="_blank" rel="noreferrer" className="mt-1 inline-flex min-h-11 items-center gap-1.5 px-1 text-xs text-slate-300 hover:text-white">
             View live site <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </a>
         </div>
@@ -166,7 +166,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       {/* Phone and tablet top bar */}
       <header className="sticky top-0 z-30 bg-brand-navy text-white lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
-          <Link href="/admin" className="flex items-center gap-2">
+          <Link href="/admin" className="flex min-h-11 items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-teal font-heading text-xs font-bold">BSD</span>
             <span className="font-heading text-sm font-bold">Admin</span>
           </Link>
@@ -174,7 +174,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <span className="max-w-[40vw] truncate text-xs text-slate-300">
               {admin.name} ({ROLE_LABEL[admin.role]})
             </span>
-            <button type="button" onClick={handleSignOut} className="rounded-lg p-2 text-slate-200 hover:bg-white/10" title="Sign out">
+            <button type="button" onClick={handleSignOut} className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-200 hover:bg-white/10" title="Sign out">
               <LogOut className="h-4 w-4" aria-hidden="true" />
               <span className="sr-only">Sign out</span>
             </button>
@@ -191,7 +191,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   key={item.href}
                   href={item.href}
                   aria-current={on ? "page" : undefined}
-                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium ${on ? "bg-white text-brand-navy" : "text-slate-200 hover:bg-white/10"}`}
+                  className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium ${on ? "bg-white text-brand-navy" : "text-slate-200 hover:bg-white/10"}`}
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
                   {item.label}

@@ -7,6 +7,7 @@ import SiteChrome from "@/components/SiteChrome";
 import BottomNav from "@/components/BottomNav";
 import MaintenanceBanner from "@/components/MaintenanceBanner";
 import { getSiteConfig } from "@/lib/site-config";
+import { publicApiBase } from "@/lib/api";
 import { bannerLines, hiddenPaths } from "@/lib/sections";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SUPPORT_EMAIL, ZONES } from "@/lib/content";
 
@@ -70,7 +71,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         <SiteChrome>
           <MaintenanceBanner lines={bannerLines(config.maintenance)} />
-          <Header hidden={hidden} />
+          <Header hidden={hidden} apiBase={publicApiBase()} />
         </SiteChrome>
         <main className="flex-1">{children}</main>
         <SiteChrome>

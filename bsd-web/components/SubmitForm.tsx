@@ -79,6 +79,7 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
+  const [showEmail, setShowEmail] = useState(false);
   const [website, setWebsite] = useState("");
   const [address, setAddress] = useState("");
   const [postcode, setPostcode] = useState("");
@@ -179,7 +180,10 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
     if (ownerName.trim()) data.set("ownerName", ownerName.trim());
     data.set("phone", phone.trim());
     if (whatsapp.trim()) data.set("whatsapp", whatsapp.trim());
-    if (email.trim()) data.set("email", email.trim());
+    if (email.trim()) {
+      data.set("email", email.trim());
+      data.set("showEmail", String(showEmail));
+    }
     if (website.trim()) data.set("websiteOrSocial", website.trim());
     if (address.trim()) data.set("address", address.trim());
     data.set("postcode", postcode.trim());
@@ -371,9 +375,13 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
           <label htmlFor="email" className={labelClass}>
             Email Address <span className="font-normal text-slate-500">(optional)</span>
           </label>
-          <p className={helpClass}>Will be publicly displayed.</p>
           <input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={200} className={inputClass} {...invalid("email")} />
           <FieldError id="email" message={errors.email} />
+          <label htmlFor="showEmail" className="mt-2 flex min-h-11 cursor-pointer items-center gap-3 text-sm font-semibold text-brand-navy">
+            <input id="showEmail" type="checkbox" checked={showEmail} onChange={(e) => setShowEmail(e.target.checked)} className="h-5 w-5 shrink-0 accent-brand-blue" />
+            Show my email address on my public listing
+          </label>
+          <p className={helpClass}>Leave this off to keep your email private. We will still use it to contact you.</p>
         </div>
         <div>
           <label htmlFor="websiteOrSocial" className={labelClass}>

@@ -68,3 +68,46 @@ describe("purgeExpiredProofs", () => {
     expect(await purgeExpiredProofs(prisma, storage)).toBe(0);
   });
 });
+
+describe("purgeExpiredProofs for owner claim documents", () => {
+  async function claimRow(status: "PENDING" | "APPROVED" | "REJECTED", purgeInHours: number) {
+    n++;
+    const category = await prisma.category.create({ data: { name: `Cat ${n}`, slug: `cat-claim-${n}` } });
+    const zone = await prisma.coverageZone.create({ data: { name: `Zone ${n}`, slug: `zone-claim-${n}`, postcodeDistricts: ["SA1"] } });
+    const b = await prisma.business.create({
+      data: { slug: `claim-shop-${n}`, name: "S", categoryId: category.id, description: "d", phone: "1", postcode: "SA1 1AA", postcodeDistrict: "SA1", zoneId: zone.id },
+    });
+    const key = `claims/u/${n}.png`;
+    storage.privateObjects.set(key, { body: Buffer.from("x"), contentType: "image/png" });
+    const r = await prisma.listingClaimRequest.create({
+      data: { businessId: b.id, claimantName: "C", claimantEmail: "c@t.example", proofText: "proof", status, proofKey: key, proofType: "image/png", proofBytes: 1, purgeAt: new Date(Date.now() + purgeInHours * H) },
+    });
+    return { r, key };
+  }
+
+  it("deletes the file 24 hours after a decision and keeps the row and the decision", async () => {
+    const due = await claimRow("APPROVED", -1);
+    const later = await claimRow("REJECTED", 5);
+    await purgeExpiredProofs(prisma, storage);
+    expect(storage.privateObjects.has(due.key)).toBe(false);
+    expect(storage.privateObjects.has(later.key)).toBe(true);
+    const d = await prisma.listingClaimRequest.findUniqueOrThrow({ where: { id: due.r.id } });
+    expect(d).toMatchObject({ status: "APPROVED", proofKey: null });
+    expect(d.purgedAt).not.toBeNull();
+    expect((await prisma.listingClaimRequest.findUniqueOrThrow({ where: { id: later.r.id } })).proofKey).toBe(later.key);
+  });
+
+  it("deletes the file of an undecided claim 7 days after upload, leaving the claim waiting, and retries after a storage failure", async () => {
+    const old = await claimRow("PENDING", -2);
+    storage.failDeletes = true;
+    const errors: object[] = [];
+    await purgeExpiredProofs(prisma, storage, new Date(), { error: (o) => errors.push(o) });
+    storage.failDeletes = false;
+    expect(errors).toContainEqual({ claimId: old.r.id });
+    expect(storage.privateObjects.has(old.key)).toBe(true);
+    await purgeExpiredProofs(prisma, storage);
+    expect(storage.privateObjects.has(old.key)).toBe(false);
+    expect(await prisma.listingClaimRequest.findUniqueOrThrow({ where: { id: old.r.id } })).toMatchObject({ status: "PENDING", proofKey: null });
+    expect(await purgeExpiredProofs(prisma, storage)).toBe(0);
+  });
+});

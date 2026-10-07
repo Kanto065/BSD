@@ -278,6 +278,21 @@ model ListingClaimRequest {
   reviewedAt    DateTime?
   reviewedById  String?
   reviewedBy    AdminUser?  @relation("ClaimReviewedBy", fields: [reviewedById], references: [id])
+
+  // M9-D. A claim by a signed-in member, with an optional private document (same rules as StudentVerification).
+  // Anonymous rows from before keep userId null. Hand written in the migration: one PENDING claim per member per listing.
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  proofKey     String? // private storage key, never returned by any route
+  proofType    String?
+  proofBytes   Int?
+  purgeAt      DateTime? // the file is deleted at this time, 24 hours after a decision or 7 days after upload
+  purgedAt     DateTime?
+  decisionNote String? // shown to the member when the claim is not approved
+  linkedOwner  Boolean   @default(false) // approval also made the member the owner
+
+  @@index([userId])
+  @@index([purgeAt])
 }
 
 model ContactMessage {
@@ -353,6 +368,7 @@ model User {
   businesses           Business[]            @relation("BusinessOwner")
   categories           Category[]            @relation("CategorySubmitter")
   studentVerifications StudentVerification[]
+  claimRequests        ListingClaimRequest[]
 }
 
 // The saved business details of one member, reused to prefill forms. Json until a field needs to be queried.

@@ -79,9 +79,10 @@ afterAll(async () => {
 describe("requests from a listing page", () => {
   it("records a claim, an update request and a removal request, with the FAQ's time frames", async () => {
     const b = await listing();
-    const claim = await call("POST", `/businesses/${b.slug}/claim`, { body: { ...person, proof: "I can reply from the email on the listing and send a utility bill." } });
-    expect(claim.status).toBe(201);
-    expect(claim.body.message).toMatch(/3–7 working days/);
+    // A claim needs a signed in member since M9-D (claims.test.ts covers the signed in side).
+    const claim = await call("POST", `/businesses/${b.slug}/claim`, { body: { proofText: "I can send a utility bill for this address." } });
+    expect(claim.status).toBe(401);
+    expect(claim.body.error).toBe("Please sign in to claim a listing.");
     const update = await call("POST", `/businesses/${b.slug}/request-update`, { body: { ...person, message: "Our <b>opening hours</b> changed to 9-6." } });
     expect(update.body.message).toBe("Thank you. Updates are usually processed within 3–7 working days.");
     const removal = await call("POST", `/businesses/${b.slug}/request-removal`, { body: { ...person, reason: "Closed" } });
@@ -92,15 +93,15 @@ describe("requests from a listing page", () => {
     const stored = await prisma.listingUpdateRequest.findFirstOrThrow({ where: { businessId: b.id } });
     expect(stored.requestedChanges).toEqual({ message: "Our opening hours changed to 9-6." });
     expect(stored.requesterEmail).toBe("rahim@example.com");
-    expect(await prisma.listingClaimRequest.count({ where: { businessId: b.id } })).toBe(1);
+    expect(await prisma.listingClaimRequest.count({ where: { businessId: b.id } })).toBe(0);
     expect(await prisma.listingRemovalRequest.count({ where: { businessId: b.id } })).toBe(2);
   });
 
   it("checks the fields", async () => {
     const b = await listing();
-    const bad = await call("POST", `/businesses/${b.slug}/claim`, { body: { name: "x", email: "no", proof: "short" } });
+    const bad = await call("POST", `/businesses/${b.slug}/request-update`, { body: { name: "x", email: "no", message: "short" } });
     expect(bad.status).toBe(400);
-    expect(Object.keys(bad.body.fieldErrors).sort()).toEqual(["email", "name", "proof"]);
+    expect(Object.keys(bad.body.fieldErrors).sort()).toEqual(["email", "message", "name"]);
     expect((await call("POST", `/businesses/${b.slug}/request-update`, { body: { ...person, message: "" } })).body.fieldErrors.message).toBeDefined();
     expect((await call("POST", `/businesses/${b.slug}/request-update`, { body: { ...person, phone: "call me", message: "Please change the hours." } })).body.fieldErrors.phone).toBeDefined();
   });

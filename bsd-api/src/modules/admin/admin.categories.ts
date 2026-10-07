@@ -3,6 +3,7 @@ import { z } from "zod";
 import { rolesFrom } from "../../plugins/auth.js";
 import { CATEGORY_ICONS } from "../../common/category-icons.js";
 import { sanitizeText } from "../../common/sanitize.js";
+import { serviceTagsInput } from "../../common/service-tags.js";
 import { slugify } from "../../common/slug.js";
 import { audit, idParams, invalid } from "./admin.service.js";
 
@@ -22,9 +23,11 @@ const description = z.string().trim().max(300).nullable();
 
 // Subcategories can be added with the category in one go, in the order given.
 const createCategory = z
-  .object({ name, description: description.optional(), icon: icon.optional(), requiresOwnerName: z.boolean().optional(), subcategories: z.array(name).max(40).optional() })
+  .object({ name, description: description.optional(), icon: icon.optional(), requiresOwnerName: z.boolean().optional(), serviceTags: serviceTagsInput.optional(), subcategories: z.array(name).max(40).optional() })
   .strict();
-const updateCategory = z.object({ name, slug, description, icon, requiresOwnerName: z.boolean() }).partial().strict();
+// staged true hides the category from the public lists and from new choices, false unlocks it. Tags come as a list or as
+// one text separated by commas or new lines.
+const updateCategory = z.object({ name, slug, description, icon, requiresOwnerName: z.boolean(), staged: z.boolean(), serviceTags: serviceTagsInput }).partial().strict();
 const reorder = z.object({ ids: z.array(z.string().min(1).max(64)).min(1).max(200) }).strict();
 const approveBody = z.object({ name: name.optional() }).strict();
 const rejectBody = z.object({ reason: z.string().trim().max(300).optional() }).strict();
@@ -58,6 +61,8 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
         icon: c.icon,
         sortOrder: c.sortOrder,
         requiresOwnerName: c.requiresOwnerName,
+        serviceTags: c.serviceTags,
+        staged: c.staged,
         status: c.status,
         submittedAt: c.submittedAt,
         // A few listings that use a category waiting for review, so the admin can judge the suggestion.
@@ -86,6 +91,7 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
           description: body.data.description ? sanitizeText(body.data.description) : null,
           icon: body.data.icon ?? "package",
           requiresOwnerName: body.data.requiresOwnerName ?? false,
+          serviceTags: body.data.serviceTags ?? [],
           sortOrder: (last._max.sortOrder ?? -1) + 1,
         },
       });
@@ -114,6 +120,8 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
     if (body.data.description !== undefined) data.description = body.data.description ? sanitizeText(body.data.description) : null;
     if (body.data.icon !== undefined) data.icon = body.data.icon;
     if (body.data.requiresOwnerName !== undefined) data.requiresOwnerName = body.data.requiresOwnerName;
+    if (body.data.staged !== undefined) data.staged = body.data.staged;
+    if (body.data.serviceTags !== undefined) data.serviceTags = body.data.serviceTags;
 
     const errors: Record<string, string> = {};
     if (data.name && data.name !== current.name && (await app.prisma.category.findUnique({ where: { name: data.name as string } }))) {
@@ -126,7 +134,7 @@ const categoriesAdminRoutes: FastifyPluginAsync = async (app) => {
 
     const changes = Object.fromEntries(
       Object.entries(data)
-        .filter(([k, v]) => (current as Record<string, unknown>)[k] !== v)
+        .filter(([k, v]) => JSON.stringify((current as Record<string, unknown>)[k]) !== JSON.stringify(v))
         .map(([k, v]) => [k, { from: (current as Record<string, unknown>)[k], to: v }])
     );
     if (!Object.keys(changes).length) return { ok: true, changed: [] };

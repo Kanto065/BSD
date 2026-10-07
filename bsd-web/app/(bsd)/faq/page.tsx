@@ -1,3 +1,4 @@
+import { requireVisible } from "@/lib/site-config";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLink } from "@/components/ArrowLink";
@@ -9,7 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  await requireVisible("faq");
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",

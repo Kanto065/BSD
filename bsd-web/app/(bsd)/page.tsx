@@ -1,4 +1,7 @@
+import { Fragment } from "react";
 import Link from "next/link";
+import { getSiteConfig } from "@/lib/site-config";
+import { sectionText } from "@/lib/sections";
 import type { Metadata } from "next";
 import { ChevronDown, Check, MapPin, Plus, Search, ShieldCheck, Smartphone, Target } from "lucide-react";
 import VerificationBadge from "@/components/VerificationBadge";
@@ -68,9 +71,187 @@ function StepList({ title, steps }: { title: string; steps: Step[] }) {
 }
 
 export default async function HomePage() {
-  const [featuredResult, categories] = await Promise.all([featured(8), getCategories()]);
+  const [featuredResult, categories, config] = await Promise.all([featured(8), getCategories(), getSiteConfig()]);
+  const text = (key: string, field: "title" | "body") => sectionText(config, key, field);
   const popular = categories.slice(0, HOMEPAGE_TILES);
   const featuredItems = featuredResult.ok ? featuredResult.data.items : [];
+
+  const blocks: Record<string, React.ReactNode> = {
+    "home-categories": (
+      <>
+      {/* 1. Popular categories */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-brand-navy sm:text-3xl">{text("home-categories", "title")}</h2>
+          <p className="mt-2 text-slate-600">{text("home-categories", "body")}</p>
+        </div>
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+          {popular.map((c) => (
+            <Link
+              key={c.slug}
+              href={`/categories/${c.slug}`}
+              className="card-lift press rounded-xl border border-slate-200 bg-white p-4 text-center text-sm font-semibold text-brand-navy"
+            >
+              <c.icon className="mx-auto h-7 w-7 text-brand-teal" aria-hidden="true" />
+              <span className="mt-2 block">{c.name}</span>
+            </Link>
+          ))}
+        </div>
+        <div className="mt-8 text-center">
+          <Link
+            href="/categories"
+            className="press inline-flex items-center gap-2 rounded-md border-2 border-brand-blue px-6 py-3 font-semibold text-brand-blue hover:bg-brand-blue hover:text-white"
+          >
+            <Search className="h-4 w-4" aria-hidden="true" />
+            View All 20+ Categories
+          </Link>
+        </div>
+      </section>
+
+      </>
+    ),
+    "home-zones": (
+      <>
+      {/* 2. Explore by regional zones */}
+      <section className="bg-slate-50 px-4 py-16 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-brand-navy sm:text-3xl">{text("home-zones", "title")}</h2>
+            <p className="mt-2 text-slate-600">{text("home-zones", "body")}</p>
+          </div>
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {ZONES.map((z) => (
+              <div key={z.slug} className="card-lift flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
+                <h3 className="text-lg font-bold text-brand-navy">
+                  Zone {z.number}: {z.name}
+                </h3>
+                <p className="mt-3 text-sm text-slate-600">
+                  <span className="font-semibold text-slate-800">Postcodes:</span> <span className="tabular-nums">{z.postcodeLabel}</span>
+                </p>
+                <p className="mt-1 text-sm text-slate-600">
+                  <span className="font-semibold text-slate-800">Key Areas:</span> {z.keyAreas}
+                </p>
+                <div className="mt-auto pt-5">
+                  <Link
+                    href={`/${z.slug}`}
+                    className="press inline-flex w-full items-center justify-center rounded-md bg-brand-blue px-4 py-2 text-sm font-semibold text-white hover:bg-brand-navy"
+                  >
+                    Browse Zone {z.number}
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      </>
+    ),
+    "home-featured": (
+      <>
+      {/* 3. Featured and verified (Community Verified listings only, empty until there is data) */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-brand-navy sm:text-3xl">{text("home-featured", "title")}</h2>
+          {/* CLIENT-REVIEW: client copy, left as written. "{text("home-featured", "body")}"
+              sits close to what the Legal Disclaimer disclaims. */}
+          <p className="mt-2 text-slate-600">Hand-verified for operational quality & accuracy</p>
+        </div>
+        {featuredItems.length > 0 ? (
+          <>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {featuredItems.map((b) => (
+                <BusinessCard key={b.slug} business={b} />
+              ))}
+            </div>
+            <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-2">
+              <ArrowLink href="/search">Browse all listings</ArrowLink>
+              <ArrowLink href="/verification-policy">How verification works</ArrowLink>
+            </div>
+          </>
+        ) : (
+          <div className="mx-auto mt-8 max-w-2xl rounded-xl border border-dashed border-slate-300 p-8 text-center">
+            <VerificationBadge status="COMMUNITY_VERIFIED" />
+            <p className="mt-4 text-slate-600">
+              Businesses appear here once our field volunteers have completed their checks.
+            </p>
+            <ArrowLink href="/verification-policy" className="mt-4 justify-center text-sm">
+              How verification works
+            </ArrowLink>
+          </div>
+        )}
+      </section>
+
+      </>
+    ),
+    "home-owner": (
+      <>
+      {/* 4. Business owner */}
+      <section className="on-dark bg-brand-navy px-4 py-16 text-white sm:px-6">
+        <div className="mx-auto max-w-5xl text-center">
+          <h2 className="text-2xl font-bold sm:text-3xl">{text("home-owner", "title")}</h2>
+          <p className="mt-2 text-slate-200">
+            {text("home-owner", "body")}
+          </p>
+          <div className="mt-8 grid gap-6 text-left md:grid-cols-3">
+            {OWNER_BENEFITS.map((b) => (
+              <div key={b.title} className="rounded-2xl bg-white/10 p-6 ring-1 ring-inset ring-white/10">
+                <b.icon className="h-7 w-7 text-brand-teal" aria-hidden="true" />
+                <h3 className="mt-3 text-lg font-bold">{b.title}</h3>
+                <p className="mt-1 text-sm text-slate-200">{b.text}</p>
+              </div>
+            ))}
+          </div>
+          <Link
+            href="/submit"
+            className="press mt-8 inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-brand-navy shadow-sm hover:bg-slate-100"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Register Your Business Now (100% Free)
+          </Link>
+        </div>
+      </section>
+
+      </>
+    ),
+    "home-how": (
+      <>
+      {/* 5. How it works */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-brand-navy sm:text-3xl">{text("home-how", "title")}</h2>
+          <p className="mt-2 text-slate-600">{text("home-how", "body")}</p>
+        </div>
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
+          <StepList title="For Visitors" steps={VISITOR_STEPS} />
+          <StepList title="For Business Owners" steps={OWNER_STEPS} />
+        </div>
+      </section>
+
+      </>
+    ),
+    "home-faq": (
+      <>
+      {/* 6. FAQ accordion */}
+      <section className="bg-slate-50 px-4 py-16 sm:px-6">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="text-center text-2xl font-bold text-brand-navy sm:text-3xl">{text("home-faq", "title")}</h2>
+          <div className="mt-8 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(12,46,66,0.05)]">
+            {HOME_FAQ.map((item) => (
+              <details key={item.question} className="group px-5 py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-brand-navy marker:content-none">
+                  {item.question}
+                  <ChevronDown className="h-5 w-5 shrink-0 text-brand-teal-dark transition-transform duration-200 ease-out group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
+                </summary>
+                <p className="mt-3 text-slate-600">{item.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+      </>
+    ),
+  };
 
   return (
     <>
@@ -154,156 +335,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 1. Popular categories */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-brand-navy sm:text-3xl">Popular Categories</h2>
-          <p className="mt-2 text-slate-600">Find Verified Services Across South West Wales</p>
-        </div>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-          {popular.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/categories/${c.slug}`}
-              className="card-lift press rounded-xl border border-slate-200 bg-white p-4 text-center text-sm font-semibold text-brand-navy"
-            >
-              <c.icon className="mx-auto h-7 w-7 text-brand-teal" aria-hidden="true" />
-              <span className="mt-2 block">{c.name}</span>
-            </Link>
-          ))}
-        </div>
-        <div className="mt-8 text-center">
-          <Link
-            href="/categories"
-            className="press inline-flex items-center gap-2 rounded-md border-2 border-brand-blue px-6 py-3 font-semibold text-brand-blue hover:bg-brand-blue hover:text-white"
-          >
-            <Search className="h-4 w-4" aria-hidden="true" />
-            View All 20+ Categories
-          </Link>
-        </div>
-      </section>
-
-      {/* 2. Explore by regional zones */}
-      <section className="bg-slate-50 px-4 py-16 sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-brand-navy sm:text-3xl">Explore by Regional Zones</h2>
-            <p className="mt-2 text-slate-600">Click a zone to find local businesses near you</p>
-          </div>
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {ZONES.map((z) => (
-              <div key={z.slug} className="card-lift flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 className="text-lg font-bold text-brand-navy">
-                  Zone {z.number}: {z.name}
-                </h3>
-                <p className="mt-3 text-sm text-slate-600">
-                  <span className="font-semibold text-slate-800">Postcodes:</span> <span className="tabular-nums">{z.postcodeLabel}</span>
-                </p>
-                <p className="mt-1 text-sm text-slate-600">
-                  <span className="font-semibold text-slate-800">Key Areas:</span> {z.keyAreas}
-                </p>
-                <div className="mt-auto pt-5">
-                  <Link
-                    href={`/${z.slug}`}
-                    className="press inline-flex w-full items-center justify-center rounded-md bg-brand-blue px-4 py-2 text-sm font-semibold text-white hover:bg-brand-navy"
-                  >
-                    Browse Zone {z.number}
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Featured and verified (Community Verified listings only, empty until there is data) */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-brand-navy sm:text-3xl">Featured & Verified Local Businesses</h2>
-          {/* CLIENT-REVIEW: client copy, left as written. "Hand-verified for operational quality & accuracy"
-              sits close to what the Legal Disclaimer disclaims. */}
-          <p className="mt-2 text-slate-600">Hand-verified for operational quality & accuracy</p>
-        </div>
-        {featuredItems.length > 0 ? (
-          <>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {featuredItems.map((b) => (
-                <BusinessCard key={b.slug} business={b} />
-              ))}
-            </div>
-            <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-2">
-              <ArrowLink href="/search">Browse all listings</ArrowLink>
-              <ArrowLink href="/verification-policy">How verification works</ArrowLink>
-            </div>
-          </>
-        ) : (
-          <div className="mx-auto mt-8 max-w-2xl rounded-xl border border-dashed border-slate-300 p-8 text-center">
-            <VerificationBadge status="COMMUNITY_VERIFIED" />
-            <p className="mt-4 text-slate-600">
-              Businesses appear here once our field volunteers have completed their checks.
-            </p>
-            <ArrowLink href="/verification-policy" className="mt-4 justify-center text-sm">
-              How verification works
-            </ArrowLink>
-          </div>
-        )}
-      </section>
-
-      {/* 4. Business owner */}
-      <section className="on-dark bg-brand-navy px-4 py-16 text-white sm:px-6">
-        <div className="mx-auto max-w-5xl text-center">
-          <h2 className="text-2xl font-bold sm:text-3xl">Are You a Local Business Owner?</h2>
-          <p className="mt-2 text-slate-200">
-            Put your services in front of thousands of local residents and community members.
-          </p>
-          <div className="mt-8 grid gap-6 text-left md:grid-cols-3">
-            {OWNER_BENEFITS.map((b) => (
-              <div key={b.title} className="rounded-2xl bg-white/10 p-6 ring-1 ring-inset ring-white/10">
-                <b.icon className="h-7 w-7 text-brand-teal" aria-hidden="true" />
-                <h3 className="mt-3 text-lg font-bold">{b.title}</h3>
-                <p className="mt-1 text-sm text-slate-200">{b.text}</p>
-              </div>
-            ))}
-          </div>
-          <Link
-            href="/submit"
-            className="press mt-8 inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-brand-navy shadow-sm hover:bg-slate-100"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Register Your Business Now (100% Free)
-          </Link>
-        </div>
-      </section>
-
-      {/* 5. How it works */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-brand-navy sm:text-3xl">How It Works</h2>
-          <p className="mt-2 text-slate-600">3 simple steps</p>
-        </div>
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          <StepList title="For Visitors" steps={VISITOR_STEPS} />
-          <StepList title="For Business Owners" steps={OWNER_STEPS} />
-        </div>
-      </section>
-
-      {/* 6. FAQ accordion */}
-      <section className="bg-slate-50 px-4 py-16 sm:px-6">
-        <div className="mx-auto max-w-3xl">
-          <h2 className="text-center text-2xl font-bold text-brand-navy sm:text-3xl">Frequently Asked Questions</h2>
-          <div className="mt-8 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(12,46,66,0.05)]">
-            {HOME_FAQ.map((item) => (
-              <details key={item.question} className="group px-5 py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-brand-navy marker:content-none">
-                  {item.question}
-                  <ChevronDown className="h-5 w-5 shrink-0 text-brand-teal-dark transition-transform duration-200 ease-out group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
-                </summary>
-                <p className="mt-3 text-slate-600">{item.answer}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
+      {config.homeOrder.filter((k) => config.sections[k]?.visible !== false).map((k) => (
+        <Fragment key={k}>{blocks[k]}</Fragment>
+      ))}
     </>
   );
 }

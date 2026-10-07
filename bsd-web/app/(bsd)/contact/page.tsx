@@ -1,3 +1,4 @@
+import { requireVisible } from "@/lib/site-config";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_CHANNELS, CONTACT_FOOTER_NOTE, OPERATING_HOURS } from "@/lib/content";
@@ -15,7 +16,8 @@ const h2 = "text-xl font-semibold text-brand-navy";
 // Follows the client's "BSD – Contact Page" document section by section. The v1 mailboxes (info@, partnership@,
 // urgent@) are replaced by the v2 set (decision 3), so the mailbox sections are the four v2 channels. The document's
 // "Social Media (Optional)" section is left out until the client supplies the links, as the document itself says.
-export default function ContactPage() {
+export default async function ContactPage() {
+  await requireVisible("contact");
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <h1 className="text-2xl font-bold text-brand-navy sm:text-3xl">Contact BSD – Bangladeshi Business & Service Directory</h1>

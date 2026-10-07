@@ -1,3 +1,4 @@
+import { requireVisible } from "@/lib/site-config";
 import type { Metadata } from "next";
 import { CREATIVE_PARTNER, creativePartnerHref } from "@/lib/content";
 
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
 
 // Copy is verbatim from the client's "Powered by BayConnect Page" doc, including its own typos
 // ("Oversite", "adhering"). CLIENT-REVIEW: list of typos left as written is in the architecture doc.
-export default function BayConnectPage() {
+export default async function BayConnectPage() {
+  await requireVisible("bayconnect");
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">About BayConnect</h1>

@@ -5,11 +5,17 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SiteChrome from "@/components/SiteChrome";
 import BottomNav from "@/components/BottomNav";
+import MaintenanceBanner from "@/components/MaintenanceBanner";
+import { getSiteConfig } from "@/lib/site-config";
+import { bannerLines, hiddenPaths } from "@/lib/sections";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SUPPORT_EMAIL, ZONES } from "@/lib/content";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 // Montserrat is the heading face from the client's brand (see the logo).
 const montserrat = Montserrat({ subsets: ["latin"], display: "swap", variable: "--font-montserrat" });
+
+// The site settings come from the API, so static pages refresh about once a minute.
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -38,7 +44,9 @@ export const metadata: Metadata = {
 // viewportFit cover makes env(safe-area-inset-bottom) real on iPhones, for the bottom nav.
 export const viewport: Viewport = { viewportFit: "cover" };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const config = await getSiteConfig();
+  const hidden = hiddenPaths(config);
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -61,11 +69,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         <SiteChrome>
-          <Header />
+          <MaintenanceBanner lines={bannerLines(config.maintenance)} />
+          <Header hidden={hidden} />
         </SiteChrome>
         <main className="flex-1">{children}</main>
         <SiteChrome>
-          <Footer />
+          <Footer config={config} />
         </SiteChrome>
         <BottomNav site="bsd" />
       </body>

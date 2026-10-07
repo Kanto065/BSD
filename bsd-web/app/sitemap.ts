@@ -2,12 +2,15 @@ import type { MetadataRoute } from "next";
 import { SITE_URL, ZONES } from "@/lib/content";
 import { getCategories } from "@/lib/taxonomy";
 import { apiGet } from "@/lib/api";
+import { getSiteConfig } from "@/lib/site-config";
+import { hiddenPaths } from "@/lib/sections";
 
 export const revalidate = 3600;
 
 // Placeholder shells (/community-guidelines, /complaints, /financial-transparency) and /search are noindex,
 // so they are left out on purpose.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const hidden = hiddenPaths(await getSiteConfig());
   const staticRoutes = [
     "",
     "/categories",
@@ -24,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/contact",
     "/branding",
     "/submit",
-  ].map((path) => ({
+  ].filter((path) => !hidden.includes(path)).map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,

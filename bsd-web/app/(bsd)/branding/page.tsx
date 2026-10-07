@@ -1,3 +1,4 @@
+import { requireVisible } from "@/lib/site-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -6,7 +7,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/branding" },
 };
 
-export default function BrandingPage() {
+export default async function BrandingPage() {
+  await requireVisible("branding");
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">BSD Branding Guide</h1>

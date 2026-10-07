@@ -15,7 +15,6 @@ const DAY = 24 * 60 * 60_000;
 const PAGE_SIZE = 24;
 export const CONTACT_COOLDOWN_MS = 10_000;
 const CONTACT_TOKEN_TTL_MS = 10 * 60_000;
-export const JOIN_MESSAGE = "Join the Marketplace to use this.";
 
 // The contact cooldown needs no stored state: the first call hands out a signed timestamp and the number is released
 // only when that token is at least 10 seconds old. Nothing about the visitor (no IP, no cookie) is kept.
@@ -51,13 +50,7 @@ const marketRoutes: FastifyPluginAsync = async (app) => {
     reply.header("Cache-Control", "no-store");
   });
 
-  const signedIn = app.requireUser("Please sign in to use the Marketplace.");
-  // Minimal module check. Swap for app.requireModule("MARKETPLACE") once the G0 gate is merged.
-  const joined = async (req: FastifyRequest, reply: FastifyReply) => {
-    const row = await app.prisma.userModule.findUnique({ where: { userId_module: { userId: req.user!.id, module: "MARKETPLACE" } }, select: { userId: true } });
-    if (!row) return reply.code(403).send({ error: JOIN_MESSAGE });
-  };
-  const member = [signedIn, joined];
+  const member = app.requireModule("MARKETPLACE");
 
   const fail = (reply: FastifyReply, err: unknown) => {
     if (err instanceof MarketError) return reply.code(err.status).send({ ok: false, error: err.message, fieldErrors: err.fieldErrors });

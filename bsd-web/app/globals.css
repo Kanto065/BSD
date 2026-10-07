@@ -64,3 +64,20 @@ body {
     outline-color: #fff;
   }
 }
+
+/* Maintenance banner (components/MaintenanceBanner.tsx). Static wrapped text by default, a marquee only when motion is allowed. */
+.maint-view { padding: 0.5rem 0; }
+.maint-item { display: block; }
+.maint-pause { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .maint-view { overflow: hidden; white-space: nowrap; }
+  .maint-track { display: inline-flex; gap: 4rem; padding-left: 100%; animation: maint-scroll 25s linear infinite; }
+  .maint-item { display: inline; }
+  .maint-pause { display: inline-flex; }
+  .maint:hover .maint-track,
+  .maint:focus-within .maint-track,
+  .maint-track[data-paused="true"] { animation-play-state: paused; }
+}
+@keyframes maint-scroll {
+  to { transform: translateX(-100%); }
+}

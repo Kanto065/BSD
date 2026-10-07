@@ -7,14 +7,14 @@ import { Globe, Handshake, Menu, Plus, X, Zap } from "lucide-react";
 import Logo from "@/components/Logo";
 
 // Top utility bar (Homepage Header doc, section 1).
-const UTILITY = [
+const ALL_UTILITY = [
   { href: "/free-access", label: "Free Access Policy", icon: Globe },
   { href: "/community-initiative", label: "Community Initiative", icon: Handshake },
   { href: "/bayconnect", label: "Powered by BayConnect", icon: Zap },
 ];
 
 // Header navigation (Homepage Header doc): Home | Directory | Coverage Area | About Us | FAQ | Contact.
-const NAV = [
+const ALL_NAV = [
   { href: "/", label: "Home" },
   { href: "/categories", label: "Directory" },
   { href: "/coverage-area", label: "Coverage Area" },
@@ -23,7 +23,9 @@ const NAV = [
   { href: "/contact", label: "Contact" },
 ];
 
-export default function Header() {
+export default function Header({ hidden = [] }: { hidden?: string[] }) {
+  const NAV = ALL_NAV.filter((i) => !hidden.includes(i.href));
+  const UTILITY = ALL_UTILITY.filter((i) => !hidden.includes(i.href));
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 

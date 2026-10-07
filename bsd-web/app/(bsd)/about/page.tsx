@@ -1,3 +1,4 @@
+import { requireVisible } from "@/lib/site-config";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLink } from "@/components/ArrowLink";
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  await requireVisible("about");
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">About the Directory</h1>

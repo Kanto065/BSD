@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { BadgeCheck, Download, Globe, Lock, Plus } from "lucide-react";
 import Logo from "@/components/Logo";
+import { hiddenPaths, isVisible, sectionText, type SiteConfig } from "@/lib/sections";
 import { CREATIVE_PARTNER, SUPPORT_EMAIL, ZONES, creativePartnerHref, zoneLabel } from "@/lib/content";
 
 // Column 2 to 4 links follow "Website Footer Structural Layout". The Coverage Area link points at
 // /coverage-area directly, which is where /coverage redirects to.
-const QUICK_LINKS = [
+const ALL_QUICK_LINKS = [
   { href: "/", label: "Home" },
   { href: "/categories", label: "Search Directory" },
   { href: "/coverage-area", label: "Coverage Area (SA1 – SA34)" },
@@ -14,7 +15,7 @@ const QUICK_LINKS = [
   { href: "/contact", label: "Contact Support" },
 ];
 
-const LEGAL_LINKS = [
+const ALL_LEGAL_LINKS = [
   { href: "/free-access", label: "Free Access Policy" },
   { href: "/privacy", label: "Privacy Policy & GDPR Terms" },
   { href: "/community-guidelines", label: "Community Guidelines" },
@@ -25,18 +26,21 @@ const LEGAL_LINKS = [
 
 const linkClass = "inline-flex min-h-11 items-center text-slate-600 transition-colors hover:text-brand-blue hover:underline";
 
-export default function Footer() {
+export default function Footer({ config }: { config: SiteConfig }) {
+  const hidden = hiddenPaths(config);
+  const QUICK_LINKS = ALL_QUICK_LINKS.filter((l) => !hidden.includes(l.href));
+  const LEGAL_LINKS = ALL_LEGAL_LINKS.filter((l) => !hidden.includes(l.href));
   const year = new Date().getFullYear();
   const studioHref = creativePartnerHref();
 
   return (
     <footer>
       {/* Pre-footer call-to-action banner */}
-      <section className="on-dark bg-brand-navy px-4 py-12 text-center text-white sm:px-6">
+      {isVisible(config, "footer-cta") && (<section className="on-dark bg-brand-navy px-4 py-12 text-center text-white sm:px-6">
         <div className="mx-auto max-w-3xl">
-          <h2 className="text-2xl font-bold sm:text-3xl">Grow Your Business Across South West Wales</h2>
+          <h2 className="text-2xl font-bold sm:text-3xl">{sectionText(config, "footer-cta", "title")}</h2>
           <p className="mt-3 text-slate-200">
-            Get listed in our community-verified directory or download our regional coverage guide.
+            {sectionText(config, "footer-cta", "body")}
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
@@ -46,16 +50,16 @@ export default function Footer() {
               <Plus className="h-4 w-4" aria-hidden="true" />
               Add Your Business Free
             </Link>
-            <Link
+            {!hidden.includes("/download-pdf") && (<Link
               href="/download-pdf"
               className="press inline-flex items-center gap-2 rounded-md border border-white px-6 py-3 font-semibold text-white hover:bg-white/10"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
               Download Print Guide (PDF)
-            </Link>
+            </Link>)}
           </div>
         </div>
-      </section>
+      </section>)}
 
       <div className="border-t border-slate-200 bg-slate-50">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 lg:grid-cols-4">

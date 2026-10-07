@@ -1,3 +1,4 @@
+import { requireVisible } from "@/lib/site-config";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
@@ -11,7 +12,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/coverage-area" },
 };
 
-export default function CoverageAreaPage() {
+export default async function CoverageAreaPage() {
+  await requireVisible("coverage-area");
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">Coverage Area</h1>

@@ -266,6 +266,17 @@ model ContactMessage {
   status    String      @default("OPEN")
 }
 
+// Site-wide settings the admin edits (R-04, R-05, R-07). One row per key, value is validated JSON.
+//   maintenance  { enabled, textEn, textBn }
+//   sections     { items: { [sectionKey]: { visible, title, body } }, order: string[] }
+// An empty table means the site looks exactly as it did before this table existed.
+model SiteSetting {
+  key         String   @id
+  value       Json
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+}
+
 model AuditLog {
   id         String    @id @default(cuid())
   adminId    String

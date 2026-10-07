@@ -1,3 +1,4 @@
+import { requireVisible } from "@/lib/site-config";
 import type { Metadata } from "next";
 import { FileText } from "lucide-react";
 import { ArrowLink } from "@/components/ArrowLink";
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
 
 // Copy is verbatim from the "Print Guide Link Redirection Strategy" note in the Website Footer Structural
 // Layout doc. The PDF is generated from the Regional Coverage Factsheet (see scripts/build-factsheet-pdf.mjs).
-export default function DownloadPdfPage() {
+export default async function DownloadPdfPage() {
+  await requireVisible("download-pdf");
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">BSD Regional Print Directory (Coming Soon)</h1>

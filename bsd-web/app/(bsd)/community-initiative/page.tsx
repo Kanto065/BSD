@@ -1,3 +1,4 @@
+import { requireVisible } from "@/lib/site-config";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Globe, Mail } from "lucide-react";
@@ -11,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 // Copy is verbatim from the client's "Community Initiative Page" doc.
-export default function CommunityInitiativePage() {
+export default async function CommunityInitiativePage() {
+  await requireVisible("community-initiative");
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold text-brand-navy">Empowering Local Businesses, Connecting Communities</h1>

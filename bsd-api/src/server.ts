@@ -12,6 +12,7 @@ import adminRoutes from "./modules/admin/admin.routes.js";
 import membersRoutes from "./modules/members/members.routes.js";
 import contactRoutes from "./modules/contact/contact.routes.js";
 import zonesRoutes from "./modules/zones/zones.routes.js";
+import siteRoutes from "./modules/site/site.routes.js";
 import { loggerOptions } from "./common/logging.js";
 import { storageFromEnv, type ObjectStorage } from "./common/storage.js";
 import { UPLOAD_LIMITS } from "./modules/businesses/businesses.submit.js";
@@ -42,7 +43,7 @@ export function buildApp(opts: AppOptions = {}) {
   app.register(cors, {
     origin: process.env.CORS_ORIGIN?.split(",") ?? true,
     credentials: true,
-    methods: ["GET", "HEAD", "POST", "PATCH", "DELETE"],
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"],
   });
   app.register(cookie);
   app.register(rateLimit, {
@@ -60,6 +61,7 @@ export function buildApp(opts: AppOptions = {}) {
   app.register(categoriesRoutes, { prefix: "/categories" });
   app.register(businessesRoutes, { prefix: "/businesses" });
   app.register(zonesRoutes, { prefix: "/zones" });
+  app.register(siteRoutes, { prefix: "/site" });
   app.register(adminRoutes, { prefix: "/admin" });
   app.register(contactRoutes, { prefix: "/contact" });
   app.register(membersRoutes, { prefix: "/auth" });

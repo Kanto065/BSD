@@ -117,7 +117,7 @@ function parse(html) {
     if (!INLINE.has(tag)) flush();
     const e = {
       tag,
-      skip: SKIP.has(tag) || attrs["aria-hidden"] === "true",
+      skip: SKIP.has(tag) || attrs["aria-hidden"] === "true" || attrs["data-copy-ignore"] !== undefined,
       region: REGIONS.has(tag) ? tag : (stack.at(-1)?.region ?? "other"),
     };
     if (tag === "a" && attrs.href !== undefined) e.link = { text: "", href: attrs.href };

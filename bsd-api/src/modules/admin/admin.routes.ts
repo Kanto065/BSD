@@ -8,6 +8,7 @@ import listingsRoutes from "./admin.listings.js";
 import usersRoutes from "./admin.users.js";
 import categoriesAdminRoutes from "./admin.categories.js";
 import requestsAdminRoutes from "./admin.requests.js";
+import siteAdminRoutes from "./admin.site.js";
 import { audit, idParams, invalid, page, pageQuery, statusCounts } from "./admin.service.js";
 
 // The admin API. Who can do what:
@@ -28,6 +29,7 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
   app.register(usersRoutes);
   app.register(categoriesAdminRoutes);
   app.register(requestsAdminRoutes);
+  app.register(siteAdminRoutes);
 
   const anyAdmin = { preHandler: app.requireRole() };
   const moderator = { preHandler: app.requireRole(...rolesFrom("MODERATOR")) };

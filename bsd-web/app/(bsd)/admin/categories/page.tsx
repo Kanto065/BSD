@@ -14,6 +14,8 @@ import {
   GripVertical,
   Home,
   Loader2,
+  Eye,
+  EyeOff,
   Lock,
   Pencil,
   Plus,
@@ -36,13 +38,15 @@ type Cat = {
   icon: string | null;
   sortOrder: number;
   requiresOwnerName: boolean;
+  serviceTags: string[];
+  staged: boolean;
   status: "APPROVED" | "PENDING" | "REJECTED";
   submittedAt: string | null;
   sampleListings: { id: string; name: string }[];
   listingCount: number;
   subcategories: Sub[];
 };
-type FormValues = { name: string; slug: string; description: string; icon: string; requiresOwnerName: boolean; subs: string[] };
+type FormValues = { name: string; slug: string; description: string; icon: string; requiresOwnerName: boolean; tags: string; subs: string[] };
 type Panel = { mode: "add" } | { mode: "edit"; cat: Cat } | { mode: "merge"; cat: Cat } | null;
 type Run = (fn: () => Promise<unknown>, done?: string) => Promise<boolean>;
 
@@ -268,6 +272,12 @@ export default function CategoriesPage() {
                     onMove={(dir) => move(i, dir)}
                     onEdit={() => setPanel({ mode: "edit", cat: c })}
                     onMerge={() => setPanel({ mode: "merge", cat: c })}
+                    onToggleStaged={() =>
+                      run(
+                        () => api(`/categories/${c.id}`, { method: "PATCH", body: { staged: !c.staged } }),
+                        c.staged ? `Unlocked ${c.name}, it shows on the site within about a minute` : `Hidden ${c.name}`
+                      )
+                    }
                     onDelete={() => run(() => api(`/categories/${c.id}`, { method: "DELETE" }), `Deleted ${c.name}`)}
                     onDragStart={() => {
                       dragStart.current = order;
@@ -314,13 +324,14 @@ export default function CategoriesPage() {
             mode={panel.mode}
             initial={
               panel.mode === "add"
-                ? { name: "", slug: "", description: "", icon: "package", requiresOwnerName: false, subs: [] }
+                ? { name: "", slug: "", description: "", icon: "package", requiresOwnerName: false, tags: "", subs: [] }
                 : {
                     name: panel.cat.name,
                     slug: panel.cat.slug,
                     description: panel.cat.description ?? "",
                     icon: panel.cat.icon ?? "package",
                     requiresOwnerName: panel.cat.requiresOwnerName,
+                    tags: panel.cat.serviceTags.map((t) => `#${t}`).join("\n"),
                     subs: panel.cat.subcategories.map((s) => s.name),
                   }
             }
@@ -330,12 +341,12 @@ export default function CategoriesPage() {
               if (panel.mode === "add") {
                 await api("/categories", {
                   method: "POST",
-                  body: { name: v.name, description: v.description || null, icon: v.icon, requiresOwnerName: v.requiresOwnerName, ...(v.subs.length ? { subcategories: v.subs } : {}) },
+                  body: { name: v.name, description: v.description || null, icon: v.icon, requiresOwnerName: v.requiresOwnerName, serviceTags: v.tags, ...(v.subs.length ? { subcategories: v.subs } : {}) },
                 });
               } else {
                 await api(`/categories/${panel.cat.id}`, {
                   method: "PATCH",
-                  body: { name: v.name, slug: v.slug, description: v.description || null, icon: v.icon, requiresOwnerName: v.requiresOwnerName },
+                  body: { name: v.name, slug: v.slug, description: v.description || null, icon: v.icon, requiresOwnerName: v.requiresOwnerName, serviceTags: v.tags },
                 });
               }
               setPanel(null);
@@ -599,6 +610,7 @@ function CategoryCard({
   onMove,
   onEdit,
   onMerge,
+  onToggleStaged,
   onDelete,
   onDragStart,
   onDragEnter,
@@ -617,6 +629,7 @@ function CategoryCard({
   onMove: (dir: -1 | 1) => void;
   onEdit: () => void;
   onMerge: () => void;
+  onToggleStaged: () => void;
   onDelete: () => Promise<boolean>;
   onDragStart: () => void;
   onDragEnter: () => void;
@@ -675,6 +688,11 @@ function CategoryCard({
                 <Home className="h-3 w-3" aria-hidden="true" /> Homepage
               </span>
             )}
+            {c.staged && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-amber-200" title="Hidden from the public site and from new choices until unlocked">
+                <EyeOff className="h-3 w-3" aria-hidden="true" /> Hidden
+              </span>
+            )}
             {c.requiresOwnerName && (
               <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200" title="Listings must give the owner or provider name">
                 <UserRound className="h-3 w-3" aria-hidden="true" /> Owner name
@@ -682,7 +700,7 @@ function CategoryCard({
             )}
           </span>
           <span className="block truncate text-xs text-slate-500">
-            {plural(c.subcategories.length, "subcategory", "subcategories")} · {plural(c.listingCount, "listing", "listings")} · /categories/{c.slug}
+            {plural(c.subcategories.length, "subcategory", "subcategories")} · {plural(c.serviceTags.length, "tag", "tags")} · {plural(c.listingCount, "listing", "listings")} · /categories/{c.slug}
           </span>
         </button>
 
@@ -695,6 +713,16 @@ function CategoryCard({
               <ArrowDown className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
+          <button
+            type="button"
+            onClick={onToggleStaged}
+            className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition active:scale-95 ${c.staged ? "bg-brand-blue text-white hover:bg-brand-navy" : "text-slate-600 hover:bg-white hover:text-brand-navy"}`}
+            title={c.staged ? "Show this category on the site" : "Hide this category from the site and from new choices"}
+          >
+            {c.staged ? <Eye className="h-4 w-4" aria-hidden="true" /> : <EyeOff className="h-4 w-4" aria-hidden="true" />}
+            {c.staged ? "Unlock" : "Hide"}
+            <span className="sr-only"> {c.name}</span>
+          </button>
           <button type="button" onClick={onEdit} className="rounded-lg p-2 text-slate-600 transition hover:bg-white hover:text-brand-navy active:scale-95" title="Edit category">
             <Pencil className="h-4 w-4" aria-hidden="true" />
             <span className="sr-only">Edit {c.name}</span>
@@ -1218,6 +1246,22 @@ function CategoryForm({
             {icons.length === 0 && <p className="col-span-full py-4 text-center text-sm text-slate-600">No icon matches that name.</p>}
           </div>
           {errors.icon && <p className="mt-1 text-sm text-red-700">{errors.icon}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="cat-tags" className="text-sm font-semibold text-slate-800">
+            Services Offered tags <span className="font-normal text-slate-500">(optional)</span>
+          </label>
+          <p className="mt-0.5 text-xs text-slate-600">Suggestions shown on the Submit form. One per line or separated by commas, up to 20, 2 to 40 letters or digits each.</p>
+          <textarea
+            id="cat-tags"
+            rows={4}
+            value={v.tags}
+            onChange={(e) => setV({ ...v, tags: e.target.value })}
+            placeholder={"#HomeDelivery\n#BulkBuy"}
+            className={inputClass.replace("text-sm", "text-base sm:text-sm")}
+          />
+          {errors.serviceTags && <p className="mt-1 text-sm text-red-700">{errors.serviceTags}</p>}
         </div>
 
         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-4 text-sm text-slate-700 transition hover:border-slate-300">

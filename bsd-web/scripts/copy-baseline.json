@@ -110,16 +110,16 @@
         "UK GDPR Compliant",
         "Popular Categories",
         "Find Verified Services Across South West Wales",
-        "Restaurants & Takeaways",
-        "Legal & Financial",
-        "Health & Care",
-        "Trades & Contractors",
-        "Groceries & Halal",
-        "Taxi & Private Hire",
-        "Beauty & Lifestyle",
-        "Community & Faith",
-        "Business Consultants",
-        "Mobile & Tech Repair",
+        "Grocery, Halal Meat & Cash Carry",
+        "Restaurants, Takeaways & Street Food",
+        "Sweet Shops, Desserts & Bakeries",
+        "Home-Based Food & Tiffin Services",
+        "Clothing, Cultural & Bridal Shops",
+        "Hair, Beauty & Grooming Services",
+        "Mobile, Tech & Laptop Repairs",
+        "Automotive, Garages & Transport",
+        "Trades, Repairs & Home Maintenance",
+        "Professional, Financial & Remittance - Registered Firms",
         "Explore by Regional Zones",
         "Click a zone to find local businesses near you",
         "Zone 1: Greater Swansea & Gower",
@@ -203,10 +203,10 @@
         "Pass",
         "Market",
         "Profile",
-        "Clothing & Cultural Shops",
-        "Home-Based Food Services",
-        "Electrician / Plumber",
-        "Independent Professionals",
+        "Travel, Umrah & Cargo Services",
+        "Property, Housing & Mortgages",
+        "Education, Tutors & Language Classes",
+        "Health, Fitness & Care Services",
         "View All 20+ Categories"
       ],
       "links": {
@@ -270,44 +270,44 @@
             "href": "/submit"
           },
           {
-            "text": "Restaurants & Takeaways",
-            "href": "/categories/restaurants-and-takeaways"
-          },
-          {
-            "text": "Legal & Financial",
-            "href": "/categories/legal-and-financial"
-          },
-          {
-            "text": "Health & Care",
-            "href": "/categories/health-and-care"
-          },
-          {
-            "text": "Trades & Contractors",
-            "href": "/categories/trades-and-contractors"
-          },
-          {
-            "text": "Groceries & Halal",
+            "text": "Grocery, Halal Meat & Cash Carry",
             "href": "/categories/groceries-and-halal"
           },
           {
-            "text": "Taxi & Private Hire",
-            "href": "/categories/taxi-and-private-hire"
+            "text": "Restaurants, Takeaways & Street Food",
+            "href": "/categories/restaurants-and-takeaways"
           },
           {
-            "text": "Beauty & Lifestyle",
+            "text": "Sweet Shops, Desserts & Bakeries",
+            "href": "/categories/sweet-shops-and-bakeries"
+          },
+          {
+            "text": "Home-Based Food & Tiffin Services",
+            "href": "/categories/home-based-food-services"
+          },
+          {
+            "text": "Clothing, Cultural & Bridal Shops",
+            "href": "/categories/clothing-and-cultural-shops"
+          },
+          {
+            "text": "Hair, Beauty & Grooming Services",
             "href": "/categories/beauty-and-lifestyle"
           },
           {
-            "text": "Community & Faith",
-            "href": "/categories/community-and-faith"
-          },
-          {
-            "text": "Business Consultants",
-            "href": "/categories/business-consultants"
-          },
-          {
-            "text": "Mobile & Tech Repair",
+            "text": "Mobile, Tech & Laptop Repairs",
             "href": "/categories/mobile-and-tech-repair"
+          },
+          {
+            "text": "Automotive, Garages & Transport",
+            "href": "/categories/car-services"
+          },
+          {
+            "text": "Trades, Repairs & Home Maintenance",
+            "href": "/categories/trades-and-contractors"
+          },
+          {
+            "text": "Professional, Financial & Remittance - Registered Firms",
+            "href": "/categories/legal-and-financial"
           },
           {
             "text": "Browse Zone 1",
@@ -478,20 +478,20 @@
             "href": "/account"
           },
           {
-            "text": "Clothing & Cultural Shops",
-            "href": "/categories/clothing-and-cultural-shops"
+            "text": "Travel, Umrah & Cargo Services",
+            "href": "/categories/travel-umrah-and-cargo-services"
           },
           {
-            "text": "Home-Based Food Services",
-            "href": "/categories/home-based-food-services"
+            "text": "Property, Housing & Mortgages",
+            "href": "/categories/property-and-housing-services"
           },
           {
-            "text": "Electrician / Plumber",
-            "href": "/categories/electrician-plumber"
+            "text": "Education, Tutors & Language Classes",
+            "href": "/categories/tutors-and-education"
           },
           {
-            "text": "Independent Professionals",
-            "href": "/categories/independent-professionals"
+            "text": "Health, Fitness & Care Services",
+            "href": "/categories/health-and-care"
           },
           {
             "text": "View All 20+ Categories",
@@ -1653,79 +1653,71 @@
         },
         {
           "level": 2,
-          "text": "Restaurants & Takeaways"
+          "text": "Grocery, Halal Meat & Cash Carry"
         },
         {
           "level": 2,
-          "text": "Legal & Financial"
+          "text": "Restaurants, Takeaways & Street Food"
         },
         {
           "level": 2,
-          "text": "Health & Care"
+          "text": "Sweet Shops, Desserts & Bakeries"
         },
         {
           "level": 2,
-          "text": "Trades & Contractors"
+          "text": "Home-Based Food & Tiffin Services"
         },
         {
           "level": 2,
-          "text": "Groceries & Halal"
+          "text": "Clothing, Cultural & Bridal Shops"
         },
         {
           "level": 2,
-          "text": "Taxi & Private Hire"
+          "text": "Hair, Beauty & Grooming Services"
         },
         {
           "level": 2,
-          "text": "Beauty & Lifestyle"
+          "text": "Mobile, Tech & Laptop Repairs"
         },
         {
           "level": 2,
-          "text": "Community & Faith"
+          "text": "Automotive, Garages & Transport"
         },
         {
           "level": 2,
-          "text": "Business Consultants"
+          "text": "Trades, Repairs & Home Maintenance"
         },
         {
           "level": 2,
-          "text": "Mobile & Tech Repair"
+          "text": "Professional, Financial & Remittance - Registered Firms"
         },
         {
           "level": 2,
-          "text": "Clothing & Cultural Shops"
+          "text": "Travel, Umrah & Cargo Services"
         },
         {
           "level": 2,
-          "text": "Home-Based Food Services"
+          "text": "Property, Housing & Mortgages"
         },
         {
           "level": 2,
-          "text": "Electrician / Plumber"
+          "text": "Education, Tutors & Language Classes"
         },
         {
           "level": 2,
-          "text": "Independent Professionals"
+          "text": "Health, Fitness & Care Services"
         },
         {
           "level": 2,
-          "text": "Sweet Shops & Bakeries"
+          "text": "Media, Events & Creative Services"
         },
         {
           "level": 2,
-          "text": "Car Services"
+          "text": "Community, Religious & Voluntary"
         },
         {
           "level": 2,
-          "text": "Tutors & Education"
-        },
-        {
-          "level": 2,
-          "text": "Property & Housing Services"
-        },
-        {
-          "level": 2,
-          "text": "Fitness & Wellbeing"
+          "text": "Independent Professionals (Office-less Hub)- Individual Freelancers"
         },
         {
           "level": 2,
@@ -5338,7 +5330,7 @@
         "Sign in",
         "Submit Listing",
         "Submit Your Listing",
-        "Add your business or service to the BSD directory, free of charge. Covers all 20 categories, including Independent Professionals who work without a physical office.",
+        "Add your business or service to the BSD directory, free of charge. Covers all 18 categories, including Independent Professionals who work without a physical office.",
         "Every listing is checked by the BSD team before it is published. Questions? Please contact us using the email address shown in the footer.",
         "Grow Your Business Across South West Wales",
         "Get listed in our community-verified directory or download our regional coverage guide.",

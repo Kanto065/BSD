@@ -15,6 +15,8 @@ export type CategoryOption = {
   slug: string;
   description: string | null;
   requiresOwnerName: boolean;
+  /** Suggested "Services Offered" hashtags, without the #. Suggestions only, people can type their own. */
+  serviceTags?: string[];
   subcategories: SubcategoryOption[];
 };
 
@@ -27,15 +29,17 @@ type ApiCategory = {
   description: string | null;
   icon: string | null;
   requiresOwnerName: boolean;
+  serviceTags?: string[];
   subcategories: { name: string; slug: string }[];
 };
 
-const fallback: Taxon[] = CATEGORIES.map((c) => ({
+const fallback: Taxon[] = CATEGORIES.filter((c) => !c.staged).map((c) => ({
   name: c.name,
   slug: c.slug,
   description: null,
   icon: c.icon,
   requiresOwnerName: c.slug === "independent-professionals",
+  serviceTags: c.serviceTags,
   subcategories: c.subcategories.map((s) => ({ name: s, slug: subcategorySlug(c.name, s) })),
 }));
 
@@ -49,6 +53,7 @@ export async function getCategories(): Promise<Taxon[]> {
     // A category without a stored icon keeps its original built-in one, if it has one.
     icon: c.icon ? iconFor(c.icon) : (fallback.find((f) => f.slug === c.slug)?.icon ?? iconFor(null)),
     requiresOwnerName: c.requiresOwnerName,
+    serviceTags: c.serviceTags ?? [],
     subcategories: c.subcategories.map((s) => ({ name: s.name, slug: s.slug })),
   }));
 }

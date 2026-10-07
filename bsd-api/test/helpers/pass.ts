@@ -42,7 +42,7 @@ export async function boot() {
       headers: { ...(o.xff ? { "x-forwarded-for": o.xff } : {}), ...(o.cookie ? { cookie: o.cookie } : {}), ...(o.device ? { "x-device": o.device } : {}), ...(o.admin ? { authorization: `Bearer ${admins[o.admin]}` } : {}) },
       ...(o.body ? { payload: o.body } : {}),
     });
-    return { status: res.statusCode, body: res.body ? JSON.parse(res.body) : null, raw: res.body };
+    return { status: res.statusCode, body: res.body ? JSON.parse(res.body) : null, raw: res.body, headers: res.headers };
   }
 
   async function user(name = "Gwen Jones") {

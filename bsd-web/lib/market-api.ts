@@ -34,6 +34,7 @@ export type MarketListItem = {
 };
 
 export type MarketDetail = Omit<MarketListItem, "image"> & {
+  id: string;
   status: "ACTIVE" | "RESERVED" | "SOLD";
   description: string;
   whatsapp: string;
@@ -300,3 +301,9 @@ export const contactReveal = (apiBase: string, slug: string, token: string) =>
 
 /** Digits only, for a tel: link. */
 export const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+
+export const REPORT_REASONS = ["Scam or fraud", "Prohibited item", "Wrong category", "Offensive content", "Duplicate listing", "Other"] as const;
+export const saveListing = (apiBase: string, id: string) => apiCall<{ saved: boolean }>(apiBase, `market/saves/${encodeURIComponent(id)}`, { method: "PUT" });
+export const unsaveListing = (apiBase: string, id: string) => apiCall<{ saved: boolean }>(apiBase, `market/saves/${encodeURIComponent(id)}`, { method: "DELETE" });
+export const reportListing = (apiBase: string, id: string, reason: string, note?: string) =>
+  apiCall<{ ok: true; already?: boolean; underReview?: boolean }>(apiBase, `market/listings/${encodeURIComponent(id)}/report`, { method: "POST", body: { reason, ...(note?.trim() ? { note: note.trim() } : {}) } });

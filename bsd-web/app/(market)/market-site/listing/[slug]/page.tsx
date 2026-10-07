@@ -82,7 +82,7 @@ export default async function Page({ params }: Props) {
             )}
           </section>
 
-          <ListingActions apiBase={publicApiBase()} slug={l.slug} title={l.title} whatsappHref={whatsappLink(l)} canContact={v.contactOpen} />
+          <ListingActions apiBase={publicApiBase()} id={l.id} slug={l.slug} title={l.title} whatsappHref={whatsappLink(l)} canContact={v.contactOpen} />
 
           <p className="flex gap-2 rounded-xl bg-amber-50 p-4 text-sm text-amber-950 ring-1 ring-amber-200">
             <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />

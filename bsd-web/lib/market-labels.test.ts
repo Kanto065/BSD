@@ -8,7 +8,7 @@ import {
 // pass. A change to client wording needs the PM's approval first.
 
 const detail = (o: Partial<MarketDetail> = {}): MarketDetail => ({
-  slug: "x", title: "Prayer mat", kind: "SELL", isB2B: false, free: false, pricePence: 1250, negotiable: true, condition: "USED_GOOD",
+  id: "l1", slug: "x", title: "Prayer mat", kind: "SELL", isB2B: false, free: false, pricePence: 1250, negotiable: true, condition: "USED_GOOD",
   category: { name: "Buy & Sell", slug: "buy-and-sell" }, postcodeDistrict: "SA5", postcode: "SA5 4AB", areaLabel: null, hideFullAddress: false,
   verifiedBusiness: null, bumpedAt: "", createdAt: "", status: "ACTIVE", description: "d", whatsapp: "07700 900123", offerPassDiscount: false,
   passDiscountNote: null, vatInvoice: false, bulkTerms: null, spot: null, images: [], ...o,

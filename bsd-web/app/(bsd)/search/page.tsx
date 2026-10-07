@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, MapPin, Plus, Search } from "lucide-react";
 import { ListingGrid } from "@/components/BusinessCard";
-import { searchListings } from "@/lib/api";
+import { publicApiBase, searchListings } from "@/lib/api";
+import NearMePanel from "@/components/search/NearMePanel";
 import { findZone, zoneLabel } from "@/lib/content";
 import ZoneSelect from "@/components/ZoneSelect";
 import SearchHint from "./SearchHint";
@@ -114,6 +115,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           Search Directory
         </button>
       </form>
+
+      {/* Client only: renders after hydration, so the server HTML (and the copy snapshot) is unchanged. */}
+      <NearMePanel apiBase={publicApiBase()} filters={{ q, category: category?.slug, zone: zone?.slug }} />
 
       {hasFilter && (
         <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600">

@@ -29,6 +29,12 @@ describe("tap targets and input size", () => {
     expect(src).toContain("min-h-11 min-w-11");
   });
 
+  it("Near Me controls are 44px and the postcode input is 16px on phones", () => {
+    const src = read("components/search/NearMePanel.tsx");
+    expect(src).toContain("min-h-11 items-center");
+    expect(src).toContain("min-h-11 w-40 rounded-md border border-slate-300 px-3 text-base");
+  });
+
   it("admin site inputs are 16px on phones", () => {
     expect(read("app/(bsd)/admin/site/page.tsx")).toContain('inputClass.replace("text-sm", "text-base sm:text-sm")');
   });

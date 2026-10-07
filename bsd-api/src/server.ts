@@ -13,6 +13,8 @@ import membersRoutes from "./modules/members/members.routes.js";
 import studentRoutes from "./modules/members/members.student.js";
 import claimsRoutes from "./modules/members/members.claims.js";
 import { startProofPurge } from "./common/proof-purge.js";
+import { startMarketExpiry } from "./common/market-expiry.js";
+import marketRoutes from "./modules/market/market.routes.js";
 import contactRoutes from "./modules/contact/contact.routes.js";
 import zonesRoutes from "./modules/zones/zones.routes.js";
 import siteRoutes from "./modules/site/site.routes.js";
@@ -70,6 +72,7 @@ export function buildApp(opts: AppOptions = {}) {
   app.register(membersRoutes, { prefix: "/auth" });
   app.register(studentRoutes, { prefix: "/student" });
   app.register(claimsRoutes, { prefix: "/auth" });
+  app.register(marketRoutes, { prefix: "/market" });
 
   return app;
 }
@@ -85,6 +88,7 @@ async function start() {
     process.exit(1);
   }
   if (app.storage && process.env.NODE_ENV !== "test") startProofPurge(app.prisma, app.storage, app.log);
+  if (process.env.NODE_ENV !== "test") startMarketExpiry(app.prisma, app.storage, app.log);
 }
 
 // Start listening only when this file is the entry point (node dist/server.js, tsx src/server.ts), so tests

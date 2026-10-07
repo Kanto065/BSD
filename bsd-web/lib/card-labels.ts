@@ -50,3 +50,57 @@ export const NEW_LABELS = {
   savingsEmpty: "Your savings will show here after a shop confirms a discount.",
   backToPass: "Back to my pass",
 } as const;
+
+// M11-D merchant side. CLIENT strings are from layout 2.3 and the tracker spec and are locked by card-labels.test.ts.
+export const LIVE_CAMERA = "Live Camera";
+export const MANUAL_CODE = "Manual Code";
+export const CONFIRM_DISCOUNT = "Confirm discount and complete";
+export const SCAN_NEXT = "Scan next customer";
+export const ALREADY_SCANNED = "Already scanned recently";
+export const OFFER_CHIPS = { PENDING: "Waiting for approval", ACTIVE: "Live", PAUSED: "Paused", REJECTED: "Not approved" } as const;
+
+// NEW, needs PM sign-off.
+export const MERCHANT_LABELS = {
+  offerTitle: "Privilege Pass offer",
+  offerIntro: "Pass holders see this offer on your listing. The BSD team checks every change before it goes live.",
+  fieldTitle: "Offer title",
+  fieldPercent: "Percent off (optional)",
+  fieldTerms: "Terms",
+  save: "Save offer",
+  saving: "Saving...",
+  saved: "Saved. It is waiting for approval.",
+  pause: "Pause offer",
+  resume: "Resume offer",
+  reasonPrefix: "Reason",
+  saveFailed: "Could not save the offer. Please try again.",
+  openScanner: "Open the scanner",
+  scanSignIn: "Sign in to scan passes",
+  noListing: "You have no approved listing yet.",
+  noLiveOffer: "Your offer must be live before you can scan passes.",
+  listing: "Listing",
+  cameraDenied: "Camera access is blocked. Allow the camera in your browser settings, or use Manual Code.",
+  cameraMissing: "This phone has no camera we can use. Use Manual Code.",
+  startCamera: "Start camera",
+  torch: "Torch",
+  codeLabel: "Customer code",
+  checkCode: "Check code",
+  backspace: "Delete",
+  checking: "Checking...",
+  memberId: "Member ID",
+  billLabel: "Bill amount in pounds",
+  billInvalid: "Enter the bill as pounds, for example 12.50.",
+  offerPercentInvalid: "Enter 0.01 to 100.",
+  discount: "Discount",
+  confirmed: "Discount confirmed",
+  confirmFailed: "Could not confirm. Please try again.",
+  expired: "Pass expired. Ask the customer to refresh it.",
+  invalid: "Pass not valid",
+  duplicateAgo: "Scanned a moment ago",
+  networkError: "No connection. Please try again.",
+  todayTitle: "Today",
+  todayScans: "Scans",
+  todayConfirmed: "Confirmed",
+  todaySaved: "Saved by customers",
+  soundOn: "Sound on",
+  soundOff: "Sound off",
+} as const;

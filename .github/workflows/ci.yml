@@ -45,7 +45,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: bsd-web/package-lock.json
+          cache-dependency-path: "bsd-*/package-lock.json"
       - run: npm ci
+      # A parity test imports the API sanitizer, so the API packages must be present too.
+      - run: npm ci
+        working-directory: bsd-api
       - run: npx tsc --noEmit
       - run: npx vitest run

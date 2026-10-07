@@ -37,10 +37,15 @@ type SaveState = "idle" | "saved" | "failed";
 
 export default function SubmitForm({ apiBase, categories }: { apiBase: string; categories: CategoryOption[] }) {
   const [auth, setAuth] = useState<Auth>("checking");
+  // The account phone is the starting value for the contact step. A saved business phone replaces it.
+  const [accountPhone, setAccountPhone] = useState("");
 
   useEffect(() => {
     memberCall(apiBase, "me")
-      .then((r) => setAuth(r.user ? "in" : "out"))
+      .then((r) => {
+        setAccountPhone(r.user?.phone ?? "");
+        setAuth(r.user ? "in" : "out");
+      })
       .catch(() => setAuth("out"));
   }, [apiBase]);
 
@@ -53,16 +58,19 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
         <h2 className="font-heading text-xl font-bold text-brand-navy">Sign in or create an account to submit your listing</h2>
         <p className="mt-2 text-slate-600">It takes a minute, and your details are saved so you only type them once.</p>
         <div className="mt-6 max-w-md">
-          <AccountForm apiBase={apiBase} compact onSignedIn={() => setAuth("in")} />
+          <AccountForm apiBase={apiBase} compact onSignedIn={(u) => {
+              setAccountPhone(u.phone ?? "");
+              setAuth("in");
+            }} />
         </div>
       </section>
     );
   }
-  return <ListingStepper apiBase={apiBase} categories={categories} onSignedOut={() => setAuth("out")} />;
+  return <ListingStepper apiBase={apiBase} categories={categories} accountPhone={accountPhone} onSignedOut={() => setAuth("out")} />;
 }
 
-function ListingStepper({ apiBase, categories, onSignedOut }: { apiBase: string; categories: CategoryOption[]; onSignedOut: () => void }) {
-  const [values, setValues] = useState<FormValues>(emptyValues);
+function ListingStepper({ apiBase, categories, accountPhone, onSignedOut }: { apiBase: string; categories: CategoryOption[]; accountPhone: string; onSignedOut: () => void }) {
+  const [values, setValues] = useState<FormValues>({ ...emptyValues, phone: accountPhone });
   const [step, setStep] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [restored, setRestored] = useState(false);

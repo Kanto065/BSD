@@ -1,7 +1,22 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { DEFAULT_CONFIG, HOME_KEYS, PAGE_PATHS, SECTION_TEXT, bannerLines, hiddenPaths, normalizeConfig, sectionText } from "./sections";
+import { DEFAULT_CONFIG, HOME_KEYS, PAGE_PATHS, SECTION_TEXT, bannerLines, hiddenPaths, normalizeConfig, plainText, sectionText } from "./sections";
+import { sanitizeText } from "../../bsd-api/src/common/sanitize";
+
+describe("banner preview text", () => {
+  it("shows the same plain text the server will save", () => {
+    const samples = [
+      "Back soon <b>today</b><script>x()</script>",
+      "Fish &amp; Chips &lt;ok&gt; &quot;q&quot; it&#39;s",
+      "<p>Line one</p>\r\n\r\n\r\n\r\nLine two   \n<img src=x onerror=alert(1)>end",
+      "<style>p{}</style>Hello <!-- hidden --> there <a href=\"http://x\">link</a>",
+      "5 < 6 and 7 > 3",
+      "  tab\tsep\u0007bell  ",
+    ];
+    for (const s of samples) expect(plainText(s)).toBe(sanitizeText(s));
+  });
+});
 
 describe("sections registry", () => {
   const api = readFileSync(path.resolve(__dirname, "../../bsd-api/src/modules/site/site.registry.ts"), "utf8");

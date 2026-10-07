@@ -5,7 +5,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { ApiError, useSession } from "@/lib/admin-session";
 import { Card, ErrorNote, PageTitle, Skeleton, buttonClass, inputClass, useAdminData } from "@/components/admin/ui";
 import MaintenanceBanner from "@/components/MaintenanceBanner";
-import { SECTION_TEXT, bannerLines, type Maintenance, type SectionState } from "@/lib/sections";
+import { SECTION_TEXT, bannerLines, plainText, type Maintenance, type SectionState } from "@/lib/sections";
 
 type Def = { key: string; label: string; kind: "page" | "home" | "footer"; locked?: string; text?: { title: number; body?: number } };
 type Config = {
@@ -17,7 +17,7 @@ type Config = {
 };
 
 // 16px on phones (so iOS does not zoom) and 14px from the sm breakpoint, like the rest of the admin.
-const field = `${inputClass} min-h-11 text-base sm:text-sm`;
+const field = `${inputClass.replace("text-sm", "text-base sm:text-sm")} min-h-11`;
 const primary = `${buttonClass} min-h-11 bg-brand-blue text-white hover:bg-brand-navy`;
 const small = `${buttonClass} min-h-11 min-w-11 border border-slate-300 bg-white px-3 text-slate-700 hover:bg-slate-50`;
 
@@ -125,7 +125,7 @@ export default function SitePage() {
             <p className="text-sm font-semibold text-slate-700">Preview</p>
             <div className="mt-1 overflow-hidden rounded-lg border border-slate-200">
               {bannerLines({ ...m, enabled: true }).length ? (
-                <MaintenanceBanner lines={bannerLines({ ...m, enabled: true })} />
+                <MaintenanceBanner lines={bannerLines({ ...m, enabled: true, textEn: plainText(m.textEn), textBn: plainText(m.textBn) })} />
               ) : (
                 <p className="px-3 py-3 text-sm text-slate-600">Type some text to see the banner.</p>
               )}

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { ErrorNote, inputClass } from "@/components/admin/ui";
 import { ApiError } from "@/lib/admin-session";
+import { zoneForPostcode } from "@/lib/business-profile";
 import { changePassword, memberCall as call, updateProfile, type Member } from "@/lib/member-api";
 
 // 16px on phones so iOS does not zoom into the field, back to the compact size from sm up. 44px tall for easy tapping.
@@ -76,6 +77,12 @@ export default function AccountForm({ apiBase, compact = false, onSignedIn }: Pr
         setError(null);
         if (mode === "register" && !f.accountType) {
           setError(new ApiError(400, "Please check the highlighted fields.", { accountType: "Choose General or Student." }));
+          return;
+        }
+        // Same postcode rule as the API (the API still checks it again).
+        const postcodeCheck = mode === "register" ? zoneForPostcode(f.postcode) : null;
+        if (mode === "register" && (!f.postcode.trim() || postcodeCheck?.problem)) {
+          setError(new ApiError(400, "Please check the highlighted fields.", { postcode: postcodeCheck?.problem ?? "Enter your postcode." }));
           return;
         }
         setBusy(true);

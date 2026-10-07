@@ -19,6 +19,23 @@ describe("locked Pass wording", () => {
     expect(L.SUSPENDED).toBe("This pass is suspended. Please contact the BSD team.");
   });
 
+  it("keeps the merchant client strings", () => {
+    expect(L.LIVE_CAMERA).toBe("Live Camera");
+    expect(L.MANUAL_CODE).toBe("Manual Code");
+    expect(L.CONFIRM_DISCOUNT).toBe("Confirm discount and complete");
+    expect(L.SCAN_NEXT).toBe("Scan next customer");
+    expect(L.ALREADY_SCANNED).toBe("Already scanned recently");
+    expect(L.OFFER_CHIPS).toEqual({ PENDING: "Waiting for approval", ACTIVE: "Live", PAUSED: "Paused", REJECTED: "Not approved" });
+  });
+
+  it("has no em dash, en dash or connector colon in the merchant strings", () => {
+    const all = [L.LIVE_CAMERA, L.MANUAL_CODE, L.CONFIRM_DISCOUNT, L.SCAN_NEXT, L.ALREADY_SCANNED, ...Object.values(L.OFFER_CHIPS), ...Object.values(L.MERCHANT_LABELS)];
+    for (const s of all) {
+      expect(s).not.toMatch(/[–—]/);
+      expect(s).not.toContain(":");
+    }
+  });
+
   it("uses the consent line on the claim screen", () => {
     expect(renderToStaticMarkup(createElement(ClaimPanel, { busy: false, error: null, onClaim: () => undefined }))).toContain(L.CONSENT);
   });

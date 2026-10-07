@@ -1,5 +1,7 @@
 // Shown straight away while a page loads its data, so a tap on a link always responds, even on a slow mobile connection.
-export default function Loading() {
+// Only used by pages that can never answer 404 (see the loading.tsx files). A loading boundary sends the response
+// status before the page has run, so a page that calls notFound() must not sit under one or it would answer 200.
+export default function PageLoading() {
   return (
     <div role="status" aria-live="polite" className="mx-auto max-w-6xl animate-pulse px-4 py-12 sm:px-6 sm:py-16">
       <span className="sr-only">Loading…</span>

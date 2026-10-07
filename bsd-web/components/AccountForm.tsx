@@ -247,12 +247,15 @@ function SignedIn({ apiBase, member, setMember, onSignOut, onDeleted }: { apiBas
         )}
       </dl>
 
-      <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <Link href="/account/business" className={quietButton}>
           Your business details
         </Link>
         <Link href="/account/listings" className={quietButton}>
           Your listings{member.listingCount ? ` (${member.listingCount})` : ""}
+        </Link>
+        <Link href="/account/claims" className={quietButton}>
+          Your claims
         </Link>
       </div>
 

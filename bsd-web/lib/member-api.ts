@@ -66,9 +66,14 @@ export type OwnListingSummary = {
   submittedAt: string;
   showEmail: boolean;
   category: { name: string };
+  /** Counts that already exist in the database. No visit statistics are recorded. */
+  _count: { photos: number; updateRequests: number; claimRequests: number };
 };
 
-export type OwnListing = OwnListingSummary & {
+export type OwnPhoto = { id: string; url: string; thumbUrl: string | null; isLogo: boolean };
+
+export type OwnListing = Omit<OwnListingSummary, "_count"> & {
+  photos: OwnPhoto[];
   description: string;
   servicesOffered: string[];
   ownerName: string | null;
@@ -84,10 +89,24 @@ export type OwnListing = OwnListingSummary & {
   otherAreaText: string | null;
   serveZones: string[];
   localities: string[];
-  category: { name: string; status: string; requiresOwnerName: boolean };
+  category: { name: string; status: string; requiresOwnerName: boolean; serviceTags: string[] };
 };
 
 export const getOwnListings = (apiBase: string) => apiCall<{ items: OwnListingSummary[] }>(apiBase, "auth/listings");
 export const getOwnListing = (apiBase: string, id: string) => apiCall<{ listing: OwnListing }>(apiBase, `auth/listings/${encodeURIComponent(id)}`);
 export const patchOwnListing = (apiBase: string, id: string, body: Record<string, unknown>) =>
   apiCall<{ ok: true; listing: OwnListing }>(apiBase, `auth/listings/${encodeURIComponent(id)}`, { method: "PATCH", body });
+
+// Photos. Each call answers with the full photo list of the listing.
+export async function addOwnPhoto(apiBase: string, id: string, file: File): Promise<OwnPhoto[]> {
+  const form = new FormData();
+  form.append("photo", file);
+  const res = await fetch(`${apiBase}/auth/listings/${encodeURIComponent(id)}/photos`, { method: "POST", credentials: "include", body: form });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new ApiError(res.status, data.error ?? "Could not upload that photo. Please try again.", data.fieldErrors ?? {});
+  return data.photos as OwnPhoto[];
+}
+export const removeOwnPhoto = (apiBase: string, id: string, photoId: string) =>
+  apiCall<{ photos: OwnPhoto[] }>(apiBase, `auth/listings/${encodeURIComponent(id)}/photos/${encodeURIComponent(photoId)}`, { method: "DELETE" }).then((r) => r.photos);
+export const setOwnLogo = (apiBase: string, id: string, photoId: string) =>
+  apiCall<{ photos: OwnPhoto[] }>(apiBase, `auth/listings/${encodeURIComponent(id)}/logo/${encodeURIComponent(photoId)}`, { method: "PUT", body: {} }).then((r) => r.photos);

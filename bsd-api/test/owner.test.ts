@@ -3,6 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 import type { FastifyInstance } from "fastify";
 import { startTestDb, type TestDb } from "./helpers/testdb.js";
 import { MemoryStorage } from "../src/common/storage.js";
+import sharp from "sharp";
 import { hashPassword } from "../src/common/passwords.js";
 
 // A member's saved business details, their own listings, owner edits, and the admin link to an owner.
@@ -13,6 +14,7 @@ process.env.JWT_SECRET = "test-secret-that-is-long-enough-for-hs256-signing";
 let t: TestDb;
 let prisma: PrismaClient;
 let app: FastifyInstance;
+let storage: MemoryStorage;
 let adminToken = "";
 let modToken = "";
 
@@ -79,7 +81,8 @@ beforeAll(async () => {
   await prisma.adminUser.create({ data: { name: "Admin", email: "admin@test.example", role: "ADMIN", passwordHash: hash } });
   await prisma.adminUser.create({ data: { name: "Mod", email: "mod@test.example", role: "MODERATOR", passwordHash: hash } });
   const { buildApp } = (await import("../src/server.js")) as { buildApp: (o: { storage: MemoryStorage }) => FastifyInstance };
-  app = buildApp({ storage: new MemoryStorage() });
+  storage = new MemoryStorage();
+  app = buildApp({ storage });
   await app.ready();
   const login = async (email: string) =>
     (JSON.parse((await app.inject({ method: "POST", url: "/admin/login", payload: { email, password: PASSWORD } })).body) as { accessToken: string }).accessToken;
@@ -293,5 +296,87 @@ describe("admin links an owner", () => {
     await call("PATCH", `/auth/listings/${l.id}`, { cookie: m.cookie, body: { phone: "01792 777 666" } });
     const detail = await call("GET", `/admin/listings/${l.id}`, { token: modToken });
     expect(detail.body.listing.ownerEditedAt).toBeTruthy();
+  });
+});
+
+describe("owner photos", () => {
+  const jpeg = (w = 400, h = 300) => {
+    const noise = Buffer.alloc(w * h * 3);
+    for (let i = 0; i < noise.length; i++) noise[i] = (i * 7919) % 251;
+    return sharp(noise, { raw: { width: w, height: h, channels: 3 } }).jpeg({ quality: 90 }).toBuffer();
+  };
+  async function upload(id: string, cookie: string, data: Buffer, filename = "shop.jpg") {
+    const boundary = "----bsdtest" + Math.random().toString(16).slice(2);
+    const payload = Buffer.concat([
+      Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="photo"; filename="${filename}"\r\nContent-Type: image/jpeg\r\n\r\n`),
+      data,
+      Buffer.from(`\r\n--${boundary}--\r\n`),
+    ]);
+    const res = await app.inject({ method: "POST", url: `/auth/listings/${id}/photos`, payload, headers: { "content-type": `multipart/form-data; boundary=${boundary}`, ...(cookie ? { cookie } : {}) } });
+    return { status: res.statusCode, body: JSON.parse(res.body) as { photos?: { id: string; url: string; isLogo: boolean }[]; error?: string; fieldErrors?: Record<string, string> } };
+  }
+  const keyOf = (u: string) => u.replace(/^\/uploads\//, "");
+  type P = { id: string; isLogo: boolean };
+
+  it("adds, sets the logo, removes, stores publicly and sets ownerEditedAt", async () => {
+    const m = await register();
+    const l = await listingFor(m.id);
+    const a = await upload(l.id, m.cookie, await jpeg());
+    expect(a.status).toBe(201);
+    expect(a.body.photos).toHaveLength(1);
+    expect(storage.objects.has(keyOf(a.body.photos![0]!.url))).toBe(true);
+    expect(storage.privateObjects.size).toBe(0);
+    expect((await prisma.business.findUniqueOrThrow({ where: { id: l.id } })).ownerEditedAt).toBeTruthy();
+
+    const b = await upload(l.id, m.cookie, await jpeg(500, 350));
+    const [p1, p2] = b.body.photos!;
+    const logo1 = await call("PUT", `/auth/listings/${l.id}/logo/${p1!.id}`, { cookie: m.cookie });
+    expect(logo1.body.photos.filter((p: P) => p.isLogo).map((p: P) => p.id)).toEqual([p1!.id]);
+    const logo2 = await call("PUT", `/auth/listings/${l.id}/logo/${p2!.id}`, { cookie: m.cookie });
+    expect(logo2.body.photos.filter((p: P) => p.isLogo).map((p: P) => p.id)).toEqual([p2!.id]);
+    expect((await call("GET", `/businesses/${l.slug}`)).body.logoUrl).toBe(p2!.url);
+
+    const del = await call("DELETE", `/auth/listings/${l.id}/photos/${p1!.id}`, { cookie: m.cookie });
+    expect(del.body.photos).toHaveLength(1);
+    expect(storage.objects.has(keyOf(p1!.url))).toBe(false);
+    expect((await call("GET", `/auth/listings/${l.id}`, { cookie: m.cookie })).body.listing.photos).toHaveLength(1);
+  });
+
+  it("caps at a logo plus four photos, rejects bad files, and 404s for other owners and closed listings", async () => {
+    const m = await register();
+    const other = await register();
+    const l = await listingFor(m.id);
+    const img = await jpeg();
+    for (let i = 0; i < 5; i++) expect((await upload(l.id, m.cookie, img)).status).toBe(201);
+    const over = await upload(l.id, m.cookie, img);
+    expect(over.status).toBe(400);
+    expect(over.body.fieldErrors?.photos).toMatch(/up to 4 photos/);
+
+    const fresh = await listingFor(m.id);
+    const bad = await upload(fresh.id, m.cookie, Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'></svg>"), "x.svg");
+    expect(bad.status).toBe(400);
+    expect(bad.body.fieldErrors?.photos).toBeTruthy();
+
+    const photoId = (await prisma.businessPhoto.findFirstOrThrow({ where: { businessId: l.id } })).id;
+    expect((await upload(l.id, other.cookie, img)).status).toBe(404);
+    expect((await call("DELETE", `/auth/listings/${l.id}/photos/${photoId}`, { cookie: other.cookie })).status).toBe(404);
+    expect((await call("PUT", `/auth/listings/${l.id}/logo/${photoId}`, { cookie: other.cookie })).status).toBe(404);
+    // a photo id from another listing is a 404 too
+    expect((await call("DELETE", `/auth/listings/${fresh.id}/photos/${photoId}`, { cookie: m.cookie })).status).toBe(404);
+    expect((await upload(l.id, "", img)).status).toBe(401);
+
+    const removed = await listingFor(m.id, { status: "REMOVED" });
+    expect((await upload(removed.id, m.cookie, img)).status).toBe(404);
+  });
+
+  it("returns photos, tags and the existing counts, and records no statistics", async () => {
+    const m = await register();
+    const l = await listingFor(m.id);
+    await upload(l.id, m.cookie, await jpeg());
+    const list = (await call("GET", "/auth/listings", { cookie: m.cookie })).body.items[0];
+    expect(list._count).toEqual({ photos: 1, updateRequests: 0, claimRequests: 0 });
+    const detail = (await call("GET", `/auth/listings/${l.id}`, { cookie: m.cookie })).body.listing;
+    expect(Array.isArray(detail.category.serviceTags)).toBe(true);
+    expect((await call("POST", `/businesses/${l.slug}/event`, { body: { type: "view" } })).status).toBe(404); // no beacon route exists
   });
 });

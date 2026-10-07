@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { FieldError, helpClass, inputClass, labelClass } from "@/components/BusinessFields";
+import { ArrowLeft, ImagePlus, Loader2 } from "lucide-react";
+import { FieldError, IMAGE_TYPES, MAX_FILE_BYTES, MAX_PHOTOS, helpClass, inputClass, labelClass } from "@/components/BusinessFields";
+import { ServiceTagPicker } from "@/components/ServiceTagPicker";
 import { ZONES, zoneShortLabel } from "@/lib/content";
 import { descriptionStatus } from "@/lib/description";
 import { HIDE_ADDRESS_LABEL, serviceList } from "@/lib/business-profile";
 import { ApiError } from "@/lib/admin-session";
-import { getOwnListing, getOwnListings, memberCall, patchOwnListing, type OwnListing, type OwnListingSummary } from "@/lib/member-api";
+import { addOwnPhoto, getOwnListing, getOwnListings, memberCall, patchOwnListing, removeOwnPhoto, setOwnLogo, type OwnListing, type OwnListingSummary, type OwnPhoto } from "@/lib/member-api";
 
 // The member's own listings, with a form to change the contact and descriptive fields. Name, category, postcode and
 // zone stay with the BSD team (they change moderation or the zone), so the owner is pointed to the update request form.
@@ -84,6 +85,7 @@ export default function MyListings({ apiBase }: { apiBase: string }) {
     );
   }
   return (
+    <div className="space-y-6">
     <ul className="space-y-4">
       {items.map((l) => {
         const status = STATUS_WORDS[l.status];
@@ -95,6 +97,20 @@ export default function MyListings({ apiBase }: { apiBase: string }) {
             </div>
             <p className="mt-1 text-sm text-slate-600">
               {l.category.name}. Submitted {dateText(l.submittedAt)}.
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              {l.verificationStatus === "COMMUNITY_VERIFIED" ? "Community Verified. " : ""}
+              {l._count.photos === 1 ? "1 photo" : `${l._count.photos} photos`}.
+              {l._count.updateRequests > 0 && ` ${l._count.updateRequests} update ${l._count.updateRequests === 1 ? "request" : "requests"} waiting.`}
+              {l._count.claimRequests > 0 && (
+                <>
+                  {" "}
+                  <Link href="/account/claims" className="font-semibold text-brand-teal-dark underline">
+                    {l._count.claimRequests} {l._count.claimRequests === 1 ? "claim" : "claims"} waiting
+                  </Link>
+                  .
+                </>
+              )}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               {l.status === "APPROVED" && (
@@ -112,6 +128,96 @@ export default function MyListings({ apiBase }: { apiBase: string }) {
         );
       })}
     </ul>
+    <OffersPanel />
+    <p className="text-sm text-slate-600">
+      Claiming a listing that is not yet linked to you?{" "}
+      <Link href="/account/claims" className="inline-flex min-h-11 items-center font-semibold text-brand-teal-dark underline">
+        See your claims
+      </Link>
+    </p>
+    </div>
+  );
+}
+
+// A static note. Offers belong to the Privilege Pass, so there is nothing to fill in here yet.
+function OffersPanel() {
+  return (
+    <section aria-labelledby="offers-title" className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
+      <h2 id="offers-title" className="font-heading text-lg font-bold text-brand-navy">
+        Offers
+      </h2>
+      <p className="mt-1 text-sm text-slate-700">Offers are coming with the Privilege Pass. You will be able to add offers for Pass holders here later. There is nothing to set up yet.</p>
+    </section>
+  );
+}
+
+// Photos save straight away, they are not part of the Save changes button. Add, remove and choose the logo.
+function PhotoManager({ apiBase, id, photos, setPhotos }: { apiBase: string; id: string; photos: OwnPhoto[]; setPhotos: (p: OwnPhoto[]) => void }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const full = photos.length >= MAX_PHOTOS + 1;
+
+  async function run(key: string, job: () => Promise<OwnPhoto[]>, done: string) {
+    setBusy(key);
+    setNote(null);
+    try {
+      setPhotos(await job());
+      setNote({ ok: true, text: done });
+    } catch (error) {
+      setNote({ ok: false, text: error instanceof ApiError ? error.message : "Something went wrong. Please try again." });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!IMAGE_TYPES.includes(file.type)) return setNote({ ok: false, text: `${file.name}: only JPEG, PNG and WebP images are accepted.` });
+    if (file.size > MAX_FILE_BYTES) return setNote({ ok: false, text: `${file.name}: each image must be 10 MB or smaller.` });
+    void run("add", () => addOwnPhoto(apiBase, id, file), "Photo added. It appears on your public listing within a minute.");
+  }
+
+  return (
+    <fieldset className="space-y-3" aria-busy={busy !== null}>
+      <legend className={labelClass}>Photos and logo</legend>
+      <p className={helpClass}>Up to a logo and {MAX_PHOTOS} photos. JPEG, PNG or WebP, 10 MB or smaller.</p>
+      {photos.length > 0 && (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {photos.map((p) => (
+            <li key={p.id} className="rounded-xl border border-slate-200 p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.thumbUrl ?? p.url} alt={p.isLogo ? "Your logo" : "A photo of your business"} className="h-32 w-full rounded-lg object-cover" />
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {p.isLogo ? (
+                  <span className="inline-flex min-h-11 items-center text-sm font-semibold text-green-800">Logo</span>
+                ) : (
+                  <button type="button" disabled={busy !== null} onClick={() => run(p.id, () => setOwnLogo(apiBase, id, p.id), "Logo changed.")} className="inline-flex min-h-11 items-center rounded-md border border-slate-300 px-4 text-sm font-semibold text-brand-navy hover:border-brand-blue disabled:opacity-60">
+                    Use as logo
+                  </button>
+                )}
+                <button type="button" disabled={busy !== null} onClick={() => run(p.id, () => removeOwnPhoto(apiBase, id, p.id), "Photo removed.")} className="inline-flex min-h-11 items-center rounded-md border border-red-300 px-4 text-sm font-semibold text-red-800 hover:bg-red-50 disabled:opacity-60">
+                  Remove
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {full ? (
+        <p className="text-sm text-slate-600">You have reached the limit. Remove a photo to add another.</p>
+      ) : (
+        <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-slate-300 px-5 text-sm font-semibold text-brand-navy hover:border-brand-blue focus-within:ring-2 focus-within:ring-brand-blue">
+          {busy === "add" ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <ImagePlus className="h-5 w-5" aria-hidden="true" />}
+          Add a photo
+          <input type="file" accept={IMAGE_TYPES.join(",")} onChange={onPick} disabled={busy !== null} className="sr-only" />
+        </label>
+      )}
+      <p role="status" aria-live="polite" className={`min-h-5 text-sm font-medium ${note?.ok === false ? "text-red-700" : "text-green-800"}`}>
+        {note?.text}
+      </p>
+    </fieldset>
   );
 }
 
@@ -155,11 +261,13 @@ function EditListing({ apiBase, id, onBack }: { apiBase: string; id: string; onB
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [photos, setPhotos] = useState<OwnPhoto[]>([]);
 
   useEffect(() => {
     getOwnListing(apiBase, id)
       .then((r) => {
         setListing(r.listing);
+        setPhotos(r.listing.photos);
         setD(toDraft(r.listing));
       })
       .catch(() => setMessage({ ok: false, text: "We could not load this listing." }));
@@ -239,6 +347,7 @@ function EditListing({ apiBase, id, onBack }: { apiBase: string; id: string; onB
         </label>
         <p className={helpClass}>One service per line.</p>
         <textarea id="servicesOffered" rows={4} value={d.services} onChange={(e) => set({ services: e.target.value })} className={inputClass} {...err("servicesOffered")} />
+        <ServiceTagPicker tags={listing.category.serviceTags ?? []} value={d.services} onChange={(services) => set({ services })} />
         <FieldError id="servicesOffered" message={errors.servicesOffered} />
       </div>
       <div>
@@ -336,6 +445,8 @@ function EditListing({ apiBase, id, onBack }: { apiBase: string; id: string; onB
         </label>
         <textarea id="specialNotes" rows={3} value={d.specialNotes} onChange={(e) => set({ specialNotes: e.target.value })} maxLength={500} className={inputClass} />
       </div>
+
+      <PhotoManager apiBase={apiBase} id={id} photos={photos} setPhotos={setPhotos} />
 
       <div className="space-y-3">
         <button type="submit" disabled={busy} className="press inline-flex min-h-11 items-center gap-2 rounded-md bg-brand-navy px-8 text-base font-semibold text-white hover:bg-brand-blue disabled:opacity-70">

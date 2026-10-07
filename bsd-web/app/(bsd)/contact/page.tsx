@@ -93,7 +93,7 @@ export default function ContactPage() {
       <section className="mt-12">
         <h2 className={h2}>Powered By BayConnect</h2>
         <p className="mt-3 max-w-prose leading-relaxed text-slate-600">BSD is operated under the BayConnect community ecosystem.</p>
-        <p className="mt-2 font-medium text-slate-800">BayConnect — Connect. Celebrate. Empower.</p>
+        <p className="mt-2 font-medium text-slate-800">BayConnect. Connect. Celebrate. Empower.</p>
       </section>
     </div>
   );

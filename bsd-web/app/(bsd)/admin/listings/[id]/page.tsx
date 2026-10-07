@@ -424,7 +424,7 @@ function EditForm({ listing: l, onSaved }: { listing: Listing; onSaved: () => vo
             {errors.subcategory && <p className="mt-1 text-sm font-medium text-red-700">{errors.subcategory}</p>}
           </div>
         </div>
-        <div className="sm:col-span-2">{text("description", "Short Description (50–150 words)", 5)}</div>
+        <div className="sm:col-span-2">{text("description", "Short Description (at least 150 characters)", 5)}</div>
         {text("services", "Services Offered (one per line)", 4)}
         {text("specialNotes", "Special Notes", 4)}
         {text("ownerName", "Owner / Service Provider Name")}

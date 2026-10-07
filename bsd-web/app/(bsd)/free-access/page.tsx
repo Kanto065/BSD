@@ -61,8 +61,8 @@ export default function FreeAccessPage() {
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-brand-navy">How We Sustain This Platform</h2>
         <p className="mt-3 max-w-prose leading-relaxed text-slate-600">
-          BSD is an open-access community resource. Operational costs—such as web hosting, server security, domain
-          maintenance, and print production—are covered through voluntary micro-contributions, regional business
+          BSD is an open-access community resource. Operational costs, such as web hosting, server security, domain
+          maintenance, and print production, are covered through voluntary micro-contributions, regional business
           sponsorships, and community fundraising initiatives managed under the BayConnect umbrella.
         </p>
       </section>

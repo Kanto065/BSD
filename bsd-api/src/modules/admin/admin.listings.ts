@@ -4,7 +4,7 @@ import { z } from "zod";
 import { rolesFrom } from "../../plugins/auth.js";
 import { sanitizeText, sanitizeTextArray } from "../../common/sanitize.js";
 import { checkCoverage } from "../../common/postcode.js";
-import { countWords, fieldRules } from "../businesses/businesses.submit.js";
+import { descriptionProblem, fieldRules } from "../businesses/businesses.submit.js";
 import { audit, diff, idParams, invalid, page, pageQuery, statusCounts } from "./admin.service.js";
 
 // Moderation (MODERATOR and above) and community verification (VOLUNTEER and above).
@@ -30,9 +30,7 @@ const editBody = z
     name: text(120).min(2, "Enter the business or service name."),
     category: slug,
     subcategory: z.union([slug, z.literal(""), z.null()]),
-    description: text(2000).refine((v) => countWords(v) >= 50 && countWords(v) <= 150, {
-      message: "The short description must be between 50 and 150 words.",
-    }),
+    description: text(2000), // checked in the handler, and only when it changes, so old short listings stay editable
     servicesOffered: z.array(text(100)).min(1, "List at least one service.").max(15),
     ownerName: z.union([optionalText(120), z.null()]),
     phone,
@@ -234,8 +232,11 @@ const listingsRoutes: FastifyPluginAsync = async (app) => {
     }
     if (e.description !== undefined) {
       const description = sanitizeText(e.description);
-      if (countWords(description) < 50 || countWords(description) > 150) errors.description = "The short description must be between 50 and 150 words.";
-      data.description = description;
+      if (description !== current.description) {
+        const problem = descriptionProblem(description);
+        if (problem) errors.description = problem;
+        data.description = description;
+      }
     }
     if (e.servicesOffered !== undefined) {
       const services = sanitizeTextArray(e.servicesOffered);

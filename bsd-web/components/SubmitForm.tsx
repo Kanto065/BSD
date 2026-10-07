@@ -2,8 +2,10 @@
 
 import { useMemo, useRef, useState } from "react";
 import { CheckCircle2, ImagePlus, Loader2, MapPin, X } from "lucide-react";
-import { ZONES, zoneLabel } from "@/lib/content";
+import { ZONES, zoneLabel, zoneShortLabel } from "@/lib/content";
 import { localitySlug } from "@/lib/slug";
+import { descriptionStatus } from "@/lib/description";
+import { allZonesState, toggleAllZones } from "@/lib/zones";
 import type { CategoryOption } from "@/lib/taxonomy";
 
 // The listing form, built from the client's Submission Form doc: every field, the six consent boxes worded exactly,
@@ -29,8 +31,6 @@ const CONSENTS = [...TERMS, ...GDPR];
 
 export const CONFIRMATION_MESSAGE =
   "Thank you! Your listing has been submitted for review. BSD Team will verify and publish it within 3–7 days.";
-
-const countWords = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 
 /** Mirrors the API's postcode rule: a full UK postcode whose outward code is in one of the three zones. */
 function zoneForPostcode(input: string): { zone?: (typeof ZONES)[number]; problem?: string } | null {
@@ -101,7 +101,8 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
   const category = categories.find((c) => c.slug === categorySlug);
   // Which categories need an owner name is set per category in the admin panel.
   const ownerRequired = category?.requiresOwnerName ?? false;
-  const words = countWords(description);
+  const desc = descriptionStatus(description);
+  const allZones = allZonesState(serveZones);
   const postcodeCheck = useMemo(() => zoneForPostcode(postcode), [postcode]);
   const serviceList = services
     .split("\n")
@@ -138,7 +139,7 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
     const e: Errors = {};
     if (name.trim().length < 2) e.name = "Enter the business or service name.";
     if (!category) e.category = "Choose a category.";
-    if (words < 50 || words > 150) e.description = "The short description must be between 50 and 150 words.";
+    if (!desc.ok) e.description = desc.message;
     if (!serviceList.length) e.servicesOffered = "List at least one service.";
     if (serviceList.length > 15) e.servicesOffered = "List up to 15 services.";
     if (ownerRequired && !ownerName.trim()) e.ownerName = "This category needs the owner or service provider name.";
@@ -302,7 +303,7 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
 
         <div>
           <label htmlFor="description" className={labelClass}>
-            Short Description (50–150 words)
+            Short Description (at least 150 characters)
           </label>
           <p className={helpClass}>A short introduction to your business or service.</p>
           <textarea
@@ -314,10 +315,8 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
             className={inputClass}
             {...invalid("description")}
           />
-          <p className={`mt-1 text-xs font-medium ${words === 0 || (words >= 50 && words <= 150) ? "text-slate-500" : "text-red-700"}`} aria-live="polite">
-            {words} {words === 1 ? "word" : "words"}
-            {words > 0 && words < 50 ? `, at least ${50 - words} more needed` : ""}
-            {words > 150 ? `, ${words - 150} over the limit` : ""}
+          <p className={`mt-1 text-xs font-medium ${desc.chars === 0 || desc.ok ? "text-slate-500" : "text-red-700"}`} aria-live="polite">
+            {desc.counter}
           </p>
           <FieldError id="description" message={errors.description} />
         </div>
@@ -426,6 +425,20 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
           </p>
           <p className={helpClass}>Choose whole zones, specific areas, or both.</p>
           <div className="mt-3 space-y-3" role="group" aria-labelledby="areas-label" {...invalid("serveZones")}>
+            <div className="rounded-lg border border-slate-200 p-3">
+              <label className="flex items-center gap-2 text-sm font-semibold text-brand-navy">
+                <input
+                  type="checkbox"
+                  checked={allZones === "all"}
+                  ref={(el) => {
+                    if (el) el.indeterminate = allZones === "some";
+                  }}
+                  onChange={() => setServeZones(toggleAllZones(serveZones))}
+                  className="h-5 w-5 shrink-0 accent-brand-blue"
+                />
+                All Zones
+              </label>
+            </div>
             {ZONES.map((z) => (
               <div key={z.slug} className="rounded-lg border border-slate-200 p-3">
                 <label className="flex items-start gap-2 text-sm font-semibold text-brand-navy">
@@ -435,11 +448,11 @@ export default function SubmitForm({ apiBase, categories }: { apiBase: string; c
                     onChange={() => toggle(serveZones, z.slug, setServeZones)}
                     className="mt-0.5 h-5 w-5 shrink-0 accent-brand-blue"
                   />
-                  All of {zoneLabel(z)}
+                  {zoneShortLabel(z)}
                 </label>
                 <details className="mt-2">
                   <summary className="cursor-pointer py-2 text-sm font-semibold text-brand-teal-dark">
-                    Or choose areas in Zone {z.number}
+                    Choose areas in Zone {z.number}
                     {localities.some((l) => z.localities.map(localitySlug).includes(l))
                       ? ` (${localities.filter((l) => z.localities.map(localitySlug).includes(l)).length} chosen)`
                       : ""}

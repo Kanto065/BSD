@@ -156,7 +156,11 @@ export const ZONES: Zone[] = [
   },
 ];
 
-export const ALL_ZONES_LABEL = "All Zones (SA1 - SA34)";
+export const ALL_ZONES_LABEL = "All Zones";
+
+export function zoneShortLabel(z: Zone): string {
+  return `Zone ${z.number}`;
+}
 
 export function zoneLabel(z: Zone): string {
   return `Zone ${z.number}: ${z.name} (${z.postcodeLabel})`;
@@ -503,7 +507,7 @@ export const FAQ_ITEMS: { question: string; answer: FaqBlock[] }[] = [
   {
     question: "Will BSD introduce premium services?",
     answer: [
-      "Possibly — but not before 30 June 2027. Premium listings, featured businesses, and sponsored categories may be introduced after essential preparations and formalities.",
+      "Possibly, but not before 30 June 2027. Premium listings, featured businesses, and sponsored categories may be introduced after essential preparations and formalities.",
     ],
   },
   {

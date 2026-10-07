@@ -1,26 +1,35 @@
-import { DeleteObjectCommand, HeadBucketCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, HeadBucketCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 // Where uploaded images are kept. Production uses a bucket on the MinIO server that is shared with another project on
 // the same VPS (bucket "bsd-uploads", with a BSD-only access key that can reach nothing else). Objects are written
 // under the "public/" prefix, which anonymous users may read but never list. bsd.wales serves them at /uploads/...
 // through the Caddy site file (deploy/bsd.caddy), so image URLs are same-origin paths like /uploads/businesses/x.webp.
+//
+// Student proof documents go under the "private/" prefix instead. It has no public URL, is never cached, and is read
+// back only through get(), by the admin API.
 
-export type PutInput = { key: string; body: Buffer; contentType: string };
+// private: true stores under "private/" (student proofs).
+export type PutInput = { key: string; body: Buffer; contentType: string; private?: boolean };
+export type PrivateOpt = { private?: boolean };
 
 export interface ObjectStorage {
   readonly kind: "s3" | "memory";
   put(input: PutInput): Promise<void>;
-  delete(key: string): Promise<void>;
+  delete(key: string, opts?: PrivateOpt): Promise<void>;
+  /** Reads an object back. Null when it does not exist. */
+  get(key: string, opts?: PrivateOpt): Promise<{ body: Buffer; contentType: string } | null>;
   /** Throws if the storage cannot be reached. Used by the readiness check. */
   check(): Promise<void>;
 }
 
-/** The site-relative URL a stored key is served at. */
+/** The site-relative URL a stored key is served at. Only for public keys, private objects never have one. */
 export function publicUrl(key: string): string {
   return `/uploads/${key}`;
 }
 
 const PREFIX = "public/";
+export const PRIVATE_PREFIX = "private/";
+const prefixOf = (o?: PrivateOpt) => (o?.private ? PRIVATE_PREFIX : PREFIX);
 
 class S3Storage implements ObjectStorage {
   readonly kind = "s3" as const;
@@ -37,21 +46,32 @@ class S3Storage implements ObjectStorage {
     this.client = new S3Client({ endpoint, region, forcePathStyle: true, credentials: { accessKeyId, secretAccessKey } });
   }
 
-  async put({ key, body, contentType }: PutInput) {
+  async put({ key, body, contentType, private: isPrivate }: PutInput) {
     await this.client.send(
       new PutObjectCommand({
         Bucket: this.bucket,
-        Key: PREFIX + key,
+        Key: prefixOf({ private: isPrivate }) + key,
         Body: body,
         ContentType: contentType,
-        // Keys are random and never reused, so a stored image never changes.
-        CacheControl: "public, max-age=31536000, immutable",
+        // Public keys are random and never reused, so a stored image never changes. Private files are never cached.
+        CacheControl: isPrivate ? "no-store" : "public, max-age=31536000, immutable",
       })
     );
   }
 
-  async delete(key: string) {
-    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: PREFIX + key }));
+  async delete(key: string, opts?: PrivateOpt) {
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: prefixOf(opts) + key }));
+  }
+
+  async get(key: string, opts?: PrivateOpt) {
+    try {
+      const out = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: prefixOf(opts) + key }));
+      if (!out.Body) return null;
+      return { body: Buffer.from(await out.Body.transformToByteArray()), contentType: out.ContentType ?? "application/octet-stream" };
+    } catch (err) {
+      if ((err as { name?: string }).name === "NoSuchKey") return null;
+      throw err;
+    }
   }
 
   async check() {
@@ -63,15 +83,27 @@ class S3Storage implements ObjectStorage {
 export class MemoryStorage implements ObjectStorage {
   readonly kind = "memory" as const;
   readonly objects = new Map<string, { body: Buffer; contentType: string }>();
+  /** Private objects are kept apart, so a test can prove a proof never lands in the public area. */
+  readonly privateObjects = new Map<string, { body: Buffer; contentType: string }>();
   failPuts = false;
+  failDeletes = false;
 
-  async put({ key, body, contentType }: PutInput) {
-    if (this.failPuts) throw new Error("storage unavailable");
-    this.objects.set(key, { body, contentType });
+  private area(o?: PrivateOpt) {
+    return o?.private ? this.privateObjects : this.objects;
   }
 
-  async delete(key: string) {
-    this.objects.delete(key);
+  async put({ key, body, contentType, private: isPrivate }: PutInput) {
+    if (this.failPuts) throw new Error("storage unavailable");
+    this.area({ private: isPrivate }).set(key, { body, contentType });
+  }
+
+  async delete(key: string, opts?: PrivateOpt) {
+    if (this.failDeletes) throw new Error("storage unavailable");
+    this.area(opts).delete(key);
+  }
+
+  async get(key: string, opts?: PrivateOpt) {
+    return this.area(opts).get(key) ?? null;
   }
 
   async check() {
@@ -90,3 +122,4 @@ export function storageFromEnv(env: NodeJS.ProcessEnv = process.env): ObjectStor
   }
   return env.NODE_ENV === "production" ? null : new MemoryStorage();
 }
+

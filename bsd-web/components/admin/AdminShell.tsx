@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { BadgeCheck, ClipboardList, ExternalLink, Globe, FilePen, FolderTree, FileClock, Inbox, KeyRound, LayoutDashboard, LogOut, MessageSquare, Users } from "lucide-react";
+import { BadgeCheck, ClipboardList, GraduationCap, ExternalLink, Globe, FilePen, FolderTree, FileClock, Inbox, KeyRound, LayoutDashboard, LogOut, MessageSquare, Users } from "lucide-react";
 import { atLeast, useSession, type Role } from "@/lib/admin-session";
 import { Skeleton, useAdminData } from "@/components/admin/ui";
 
@@ -14,6 +14,7 @@ type Counts = {
   openMessages: number;
   pendingUpdates: number;
   pendingRemovals: number;
+  pendingStudents: number;
 };
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; minimum: Role; count?: (c: Counts) => number };
@@ -28,6 +29,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { href: "/admin/verification", label: "Verification", icon: BadgeCheck, minimum: "VOLUNTEER", count: (c) => c.verificationQueue },
       { href: "/admin/requests", label: "Update & removal", icon: FilePen, minimum: "MODERATOR", count: (c) => c.pendingUpdates + c.pendingRemovals },
       { href: "/admin/claims", label: "Claims", icon: Inbox, minimum: "MODERATOR", count: (c) => c.pendingClaims },
+      { href: "/admin/students", label: "Students", icon: GraduationCap, minimum: "MODERATOR", count: (c) => c.pendingStudents },
       { href: "/admin/messages", label: "Messages", icon: MessageSquare, minimum: "MODERATOR", count: (c) => c.openMessages },
     ],
   },

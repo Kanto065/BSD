@@ -31,7 +31,7 @@ type Session = {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   /** Calls the admin API with the current token, renewing it once if it has expired. */
-  api: <T = unknown>(path: string, init?: { method?: string; body?: unknown }) => Promise<T>;
+  api: <T = unknown>(path: string, init?: { method?: string; body?: unknown; blob?: boolean }) => Promise<T>;
   /** After a password change the API returns a fresh session. */
   adopt: (result: { accessToken: string; admin: SessionAdmin }) => void;
 };
@@ -91,7 +91,7 @@ export function SessionProvider({ apiBase, children }: { apiBase: string; childr
   }, [renew]);
 
   const api = useCallback(
-    async <T,>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> => {
+    async <T,>(path: string, init: { method?: string; body?: unknown; blob?: boolean } = {}): Promise<T> => {
       const send = () =>
         fetch(`${apiBase}/admin${path}`, {
           method: init.method ?? "GET",
@@ -106,6 +106,7 @@ export function SessionProvider({ apiBase, children }: { apiBase: string; childr
       let res = await send();
       if (res.status === 401 && (await renew())) res = await send();
       if (res.status === 401) endLocally();
+      if (init.blob && res.ok) return (await res.blob()) as T; // a file, such as a student proof, kept in memory only
       return parse(res) as Promise<T>;
     },
     [apiBase, renew, endLocally]

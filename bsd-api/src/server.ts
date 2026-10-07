@@ -13,6 +13,9 @@ import membersRoutes from "./modules/members/members.routes.js";
 import studentRoutes from "./modules/members/members.student.js";
 import claimsRoutes from "./modules/members/members.claims.js";
 import passRoutes from "./modules/members/members.pass.js";
+import passMerchantRoutes from "./modules/members/pass.merchant.js";
+import passVerifyRoutes from "./modules/members/pass.verify.js";
+import offersAdminRoutes from "./modules/admin/admin.offers.js";
 import passesAdminRoutes from "./modules/admin/admin.passes.js";
 import { startProofPurge } from "./common/proof-purge.js";
 import { startMarketExpiry } from "./common/market-expiry.js";
@@ -76,7 +79,10 @@ export function buildApp(opts: AppOptions = {}) {
   app.register(studentRoutes, { prefix: "/student" });
   app.register(claimsRoutes, { prefix: "/auth" });
   app.register(passRoutes, { prefix: "/pass" });
+  app.register(passVerifyRoutes, { prefix: "/pass" });
+  app.register(passMerchantRoutes, { prefix: "/auth" });
   app.register(passesAdminRoutes, { prefix: "/admin/passes" });
+  app.register(offersAdminRoutes, { prefix: "/admin/offers" });
   app.register(marketRoutes, { prefix: "/market" });
 
   return app;

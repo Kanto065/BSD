@@ -33,6 +33,8 @@ export const publicBusinessListSelect = {
   zone: nameSlug,
   localities: { select: { locality: nameSlug } },
   photos: { where: { isLogo: true }, select: { url: true, thumbUrl: true }, take: 1 },
+  // M11-B. Only an admin approved, unpaused offer is ever public.
+  privilegeOffer: { where: { status: "ACTIVE" }, select: { title: true, percent: true, terms: true } },
 } satisfies Prisma.BusinessSelect;
 
 export const publicBusinessDetailSelect = {
@@ -97,6 +99,7 @@ export function toPublicListItem(row: ListRow) {
     whatsapp: row.whatsapp,
     verificationStatus: row.verificationStatus,
     verifiedAt: row.verifiedAt,
+    offer: row.privilegeOffer ? { ...row.privilegeOffer, percent: row.privilegeOffer.percent === null ? null : Number(row.privilegeOffer.percent) } : null,
     // Cards show the small version when there is one.
     logoUrl: row.photos[0] ? (row.photos[0].thumbUrl ?? row.photos[0].url) : null,
   };

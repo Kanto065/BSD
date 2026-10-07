@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { ErrorNote, inputClass } from "@/components/admin/ui";
 import { ApiError } from "@/lib/admin-session";
 import { zoneForPostcode } from "@/lib/business-profile";
-import { changePassword, memberCall as call, updateProfile, type Member } from "@/lib/member-api";
+import { changePassword, deleteAccount, memberCall as call, updateProfile, type Member } from "@/lib/member-api";
 
 // 16px on phones so iOS does not zoom into the field, back to the compact size from sm up. 44px tall for easy tapping.
 const fieldClass = `${inputClass.replace("text-sm", "text-base sm:text-sm")} min-h-11`;
@@ -60,6 +60,10 @@ export default function AccountForm({ apiBase, compact = false, onSignedIn }: Pr
         apiBase={apiBase}
         member={member}
         setMember={setMember}
+        onDeleted={() => {
+          setMember(null);
+          window.dispatchEvent(new Event("bsd:member-changed"));
+        }}
         onSignOut={async () => {
           await call(apiBase, "logout", {}).catch(() => undefined);
           setMember(null);
@@ -213,7 +217,7 @@ function AccountTypeChoice({ value, onChange, error }: { value: string; onChange
   );
 }
 
-function SignedIn({ apiBase, member, setMember, onSignOut }: { apiBase: string; member: Member; setMember: (m: Member) => void; onSignOut: () => void }) {
+function SignedIn({ apiBase, member, setMember, onSignOut, onDeleted }: { apiBase: string; member: Member; setMember: (m: Member) => void; onSignOut: () => void; onDeleted: () => void }) {
   return (
     <div>
       <h1 className="text-2xl font-bold text-brand-navy">Hello, {member.name}</h1>
@@ -260,6 +264,10 @@ function SignedIn({ apiBase, member, setMember, onSignOut }: { apiBase: string; 
         <details className="rounded-lg border border-slate-200 px-4">
           <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-brand-navy">Change password</summary>
           <ChangePassword apiBase={apiBase} />
+        </details>
+        <details className="rounded-lg border border-slate-200 px-4">
+          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-red-800">Delete my account</summary>
+          <DeleteAccount apiBase={apiBase} onDeleted={onDeleted} />
         </details>
       </div>
 
@@ -329,6 +337,74 @@ function EditProfile({ apiBase, member, setMember }: { apiBase: string; member: 
         {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
         Save profile
       </button>
+    </form>
+  );
+}
+
+function DeleteAccount({ apiBase, onDeleted }: { apiBase: string; onDeleted: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<unknown>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <form
+      noValidate
+      className="space-y-4 pb-4"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!confirming) {
+          setConfirming(true);
+          return;
+        }
+        setBusy(true);
+        setError(null);
+        try {
+          await deleteAccount(apiBase, password);
+          onDeleted();
+        } catch (err) {
+          setError(err);
+          setPassword("");
+          setBusy(false);
+        }
+      }}
+    >
+      <p className="text-sm text-slate-700">
+        This removes your name, email address, phone number, postcode and saved business details, and signs you out everywhere. Your listings stay on the
+        directory, with no link to you. You cannot undo this. You can sign up again with the same email address later.
+      </p>
+      {confirming && (
+        <div>
+          <label htmlFor="delete-password" className={label}>
+            Enter your password to confirm
+          </label>
+          <input id="delete-password" autoFocus type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className={fieldClass} />
+          {fieldError(error, "password") && <p className="mt-1 text-sm text-red-700">{fieldError(error, "password")}</p>}
+        </div>
+      )}
+      <ErrorNote error={error} />
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <button
+          type="submit"
+          disabled={busy || (confirming && !password)}
+          className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-red-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-800 active:scale-[0.98] disabled:opacity-60"
+        >
+          {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {confirming ? "Yes, delete my account" : "Delete my account"}
+        </button>
+        {confirming && (
+          <button
+            type="button"
+            onClick={() => {
+              setConfirming(false);
+              setPassword("");
+              setError(null);
+            }}
+            className={`${quietButton} w-full sm:w-auto`}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   );
 }

@@ -42,6 +42,9 @@ export const joinModule = (apiBase: string, module: "DIRECTORY" | "CARD" | "MARK
 export const updateProfile = (apiBase: string, body: Partial<Pick<Member, "name" | "phone" | "postcode" | "accountType">>) =>
   apiCall<{ user: Member }>(apiBase, "auth/me", { method: "PATCH", body });
 
+/** Deletes the signed in account after the password is checked again. The API clears the session cookie. */
+export const deleteAccount = (apiBase: string, password: string) => apiCall<{ ok: true }>(apiBase, "auth/me", { method: "DELETE", body: { password } });
+
 export const changePassword = (apiBase: string, body: { currentPassword: string; newPassword: string }) =>
   apiCall<{ ok: true }>(apiBase, "auth/password", { method: "POST", body });
 

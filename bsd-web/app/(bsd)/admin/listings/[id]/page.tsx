@@ -33,7 +33,7 @@ type Listing = {
   specialNotes: string | null;
   rejectionReason: string | null;
   submittedAt: string;
-  owner: { id: string; name: string; email: string } | null;
+  owner: { id: string; name: string; email: string | null } | null;
   ownerEditedAt: string | null;
   reviewedAt: string | null;
   verifiedAt: string | null;
@@ -186,7 +186,7 @@ export default function ListingDetailPage() {
       </Card>
 
       <Card title="Owner">
-        <p className="text-sm text-slate-800">{l.owner ? `Owner: ${l.owner.name} (${l.owner.email})` : "No account linked"}</p>
+        <p className="text-sm text-slate-800">{l.owner ? `Owner: ${l.owner.name}${l.owner.email ? ` (${l.owner.email})` : ""}` : "No account linked"}</p>
         {l.ownerEditedAt && <p className="mt-1 text-sm text-amber-800">Edited by owner on {fmtDate(l.ownerEditedAt)}</p>}
         {atLeast(admin?.role, "ADMIN") && (
           <form

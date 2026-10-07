@@ -5,6 +5,7 @@ import type { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { sanitizeText, sanitizeTextArray } from "../../common/sanitize.js";
 import { checkCoverage } from "../../common/postcode.js";
+import { refreshListingGeo } from "../../common/geocode.js";
 import { ImageRejected, processImage, type ProcessedImage } from "../../common/images.js";
 import { publicUrl, type ObjectStorage } from "../../common/storage.js";
 import { slugify } from "../../common/slug.js";
@@ -352,7 +353,8 @@ export async function saveSubmission(
       createdCategoryId = made.id;
     }
     const slugValue = await uniqueSlug(prisma, name, coverage.outward);
-    await prisma.business.create({
+    const created = await prisma.business.create({
+      select: { id: true },
       data: {
         slug: slugValue,
         name,
@@ -388,6 +390,8 @@ export async function saveSubmission(
         photos: { create: photoRows },
       },
     });
+    // Coordinates for Near Me, looked up in the background. The result is ignored so a service outage never blocks a submit.
+    void refreshListingGeo(prisma, created.id).catch(() => undefined);
     return { slug: slugValue, photos: photoRows.length };
   } catch (err) {
     await Promise.allSettled(stored.map((key) => storage!.delete(key)));

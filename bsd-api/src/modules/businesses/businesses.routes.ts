@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { badQuery, publicWhere } from "../../common/public.js";
 import { featuredQuery, searchQuery, slugParams } from "./businesses.schema.js";
+import { NEAR_OUTSIDE_MESSAGE, mapPins, nearBusinesses, nearQuery, pinsQuery } from "./businesses.near.js";
 import { featuredBusinesses, getPublicBusiness, searchBusinesses } from "./businesses.service.js";
 import { HONEYPOT_FIELD, MAX_LISTINGS_PER_DAY, SubmissionError, readSubmission, saveSubmission } from "./businesses.submit.js";
 import requestsRoutes from "./businesses.requests.js";
@@ -26,6 +27,21 @@ const businessesRoutes: FastifyPluginAsync = async (app) => {
     const q = searchQuery.safeParse(req.query);
     if (!q.success) return reply.code(400).send(badQuery(q.error));
     return searchBusinesses(app.prisma, q.data);
+  });
+
+  // Near Me and map data. Neither stores or logs the visitor point (the request logger drops query strings) or sets a cookie.
+  app.get("/near", async (req, reply) => {
+    const q = nearQuery.safeParse(req.query);
+    if (!q.success) return reply.code(400).send(badQuery(q.error));
+    const result = await nearBusinesses(app.prisma, q.data);
+    if (!result) return reply.code(400).send({ error: NEAR_OUTSIDE_MESSAGE });
+    return reply.header("cache-control", "no-store").send(result);
+  });
+
+  app.get("/map-pins", async (req, reply) => {
+    const q = pinsQuery.safeParse(req.query);
+    if (!q.success) return reply.code(400).send(badQuery(q.error));
+    return reply.header("cache-control", "public, max-age=60").send(await mapPins(app.prisma, q.data));
   });
 
   // Signing in is required, so every listing has an owner. The error text is the one the form shows.

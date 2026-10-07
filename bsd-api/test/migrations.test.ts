@@ -257,6 +257,26 @@ describe("13_hide_full_address", () => {
   });
 });
 
+describe("17_listing_coordinates", () => {
+  it("adds nullable lat, lng and geoSource, leaves existing rows null, and indexes the pair", async () => {
+    const db = new PGlite();
+    const folders = fs.readdirSync(MIGRATIONS, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+    for (const f of folders.slice(0, folders.indexOf("17_listing_coordinates"))) await db.exec(sql(f));
+    await db.exec(`insert into "CoverageZone"(id,name,slug,"postcodeDistricts") values ('z1','Zone','zone-1',ARRAY['SA1'])`);
+    await db.exec(`insert into "Category"(id,name,slug) values ('c1','Cat','cat')`);
+    await db.exec(`insert into "Business"(id,slug,name,"categoryId",description,phone,postcode,"postcodeDistrict","zoneId") values ('b1','b1','B','c1','d','1','SA1 1AA','SA1','z1')`);
+    const before = await columns(db);
+
+    await db.exec(sql("17_listing_coordinates"));
+
+    const added = (await columns(db)).filter((l) => !before.includes(l));
+    expect(added).toEqual(["Business|geoSource|text|text|YES|", "Business|lat|double precision|float8|YES|", "Business|lng|double precision|float8|YES|"]);
+    expect((await db.query(`select lat, lng, "geoSource" from "Business" where id='b1'`)).rows[0]).toEqual({ lat: null, lng: null, geoSource: null });
+    expect((await db.query(`select indexname from pg_indexes where indexname='Business_lat_lng_idx'`)).rows).toHaveLength(1);
+    await db.close();
+  });
+});
+
 describe("15_owner_claims", () => {
   it("keeps anonymous claims, adds the member and file columns, and allows one waiting claim per member per listing", async () => {
     const db = new PGlite();

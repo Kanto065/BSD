@@ -153,7 +153,10 @@ model Business {
   postcodeDistrict   String // outward code, e.g. "SA1". Public pages show this for HomeBased listings.
   zoneId             String // derived from the postcode, never typed by the submitter
   zone               CoverageZone         @relation(fields: [zoneId], references: [id])
-  servedZones        BusinessServedZone[]
+  lat                Float? // looked up from the full postcode, null when unknown. Always null for listings that hide their address.
+  lng                Float?
+  geoSource          String? // "POSTCODE" when lat and lng came from a postcode lookup
+  servedZones       BusinessServedZone[]
   localities         BusinessLocality[]
   otherAreaText      String?
   openingHours       String?
@@ -192,6 +195,7 @@ model Business {
   @@index([postcodeDistrict])
   @@index([categoryId])
   @@index([ownerUserId])
+  @@index([lat, lng])
 }
 
 // Replaces BusinessCoverageArea.

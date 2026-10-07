@@ -4,6 +4,7 @@ import { z } from "zod";
 import { rolesFrom } from "../../plugins/auth.js";
 import { sanitizeText, sanitizeTextArray } from "../../common/sanitize.js";
 import { checkCoverage } from "../../common/postcode.js";
+import { refreshListingGeoSoon } from "../../common/geocode.js";
 import { descriptionProblem, fieldRules } from "../businesses/businesses.submit.js";
 import { audit, diff, idParams, invalid, page, pageQuery, statusCounts } from "./admin.service.js";
 
@@ -340,6 +341,10 @@ const listingsRoutes: FastifyPluginAsync = async (app) => {
       }
       await audit(tx, req.admin!.id, "EDIT_LISTING", "Business", current.id, changes as Prisma.InputJsonValue);
     });
+    // Coordinates are derived data, so they are not in the audit diff. They are re-decided whenever the place changes.
+    if (data.postcode !== undefined || data.address !== undefined || data.hideFullAddress !== undefined) {
+      await refreshListingGeoSoon(app.prisma, current.id);
+    }
     return { ok: true, changed: Object.keys(changes) };
   });
 

@@ -1,33 +1,78 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import { CATEGORIES, CATEGORY_RENAMES, ZONES, categorySlug, localitySlug, subcategorySlug } from "../prisma/seed-data.js";
+import { CATEGORIES, ZONES, categorySlug, localitySlug, subcategorySlug } from "../prisma/seed-data.js";
+import { MAX_SERVICE_TAGS, cleanTag } from "../src/common/service-tags.js";
 import * as webSlug from "../../bsd-web/lib/slug.js";
 
 describe("category taxonomy", () => {
-  it("has the 20 approved categories with unique names and slugs", () => {
-    expect(CATEGORIES).toHaveLength(20);
-    expect(new Set(CATEGORIES.map((c) => c.name)).size).toBe(20);
-    expect(new Set(CATEGORIES.map((c) => categorySlug(c.name))).size).toBe(20);
+  it("has the client's 24 categories plus Others, with unique names and slugs", () => {
+    expect(CATEGORIES).toHaveLength(25);
+    expect(new Set(CATEGORIES.map((c) => c.name)).size).toBe(25);
+    expect(new Set(CATEGORIES.map((c) => c.slug)).size).toBe(25);
+    expect(CATEGORIES[24]!.name).toBe("Others / Miscellaneous");
   });
 
-  it("orders the first 14 as the v2 homepage tiles", () => {
-    expect(CATEGORIES.slice(0, 14).map((c) => c.name)).toEqual([
-      "Restaurants & Takeaways",
-      "Legal & Financial",
-      "Health & Care",
-      "Trades & Contractors",
-      "Groceries & Halal",
-      "Taxi & Private Hire",
-      "Beauty & Lifestyle",
-      "Community & Faith",
-      "Business Consultants",
-      "Mobile & Tech Repair",
-      "Clothing & Cultural Shops",
-      "Home-Based Food Services",
-      "Electrician / Plumber",
-      "Independent Professionals",
+  it("makes categories 1 to 17 visible and 18 to 24 staged, Others visible", () => {
+    expect(CATEGORIES.slice(0, 17).every((c) => !c.staged)).toBe(true);
+    expect(CATEGORIES.slice(17, 24).map((c) => c.name)).toEqual([
+      "Digital Services & IT Solutions",
+      "Insurance & Financial Protection",
+      "Health & Medical Professionals",
+      "Faith, Education & Cultural Schools",
+      "Event Management, Decor & Media",
+      "Automobile, Transport & Logistics",
+      "Legal, Visa & Family Advisory",
     ]);
+    expect(CATEGORIES.slice(17, 24).every((c) => c.staged)).toBe(true);
+    expect(CATEGORIES[24]!.staged).toBeFalsy();
+  });
+
+  it("uses the client's names in the client's order", () => {
+    expect(CATEGORIES.slice(0, 17).map((c) => c.name)).toEqual([
+      "Grocery, Halal Meat & Cash Carry",
+      "Restaurants, Takeaways & Street Food",
+      "Sweet Shops, Desserts & Bakeries",
+      "Home-Based Food & Tiffin Services",
+      "Clothing, Cultural & Bridal Shops",
+      "Hair, Beauty & Grooming Services",
+      "Mobile, Tech & Laptop Repairs",
+      "Automotive, Garages & Transport",
+      "Trades, Repairs & Home Maintenance",
+      "Professional, Financial & Remittance - Registered Firms",
+      "Travel, Umrah & Cargo Services",
+      "Property, Housing & Mortgages",
+      "Education, Tutors & Language Classes",
+      "Health, Fitness & Care Services",
+      "Media, Events & Creative Services",
+      "Community, Religious & Voluntary",
+      "Independent Professionals (Office-less Hub)- Individual Freelancers",
+    ]);
+  });
+
+  it("keeps the web address of every category that already existed", () => {
+    const kept = [
+      "groceries-and-halal", "restaurants-and-takeaways", "sweet-shops-and-bakeries", "home-based-food-services",
+      "clothing-and-cultural-shops", "beauty-and-lifestyle", "mobile-and-tech-repair", "car-services", "trades-and-contractors",
+      "legal-and-financial", "property-and-housing-services", "tutors-and-education", "health-and-care", "community-and-faith",
+      "independent-professionals", "others-miscellaneous",
+    ];
+    expect(CATEGORIES.map((c) => c.slug)).toEqual(expect.arrayContaining(kept));
+    // A new category's slug is what the name gives.
+    for (const c of CATEGORIES) if (!kept.includes(c.slug)) expect(c.slug).toBe(categorySlug(c.name));
+  });
+
+  it("gives every directory category at least 4 tags, valid and without duplicates", () => {
+    for (const c of CATEGORIES.slice(0, 24)) {
+      expect(c.serviceTags.length, c.name).toBeGreaterThanOrEqual(4);
+      expect(c.serviceTags.length, c.name).toBeLessThanOrEqual(MAX_SERVICE_TAGS);
+      expect(new Set(c.serviceTags.map((t) => t.toLowerCase())).size, `duplicate tag in ${c.name}`).toBe(c.serviceTags.length);
+      for (const t of c.serviceTags) expect(cleanTag(t), `${c.name} ${t}`).toBe(t);
+    }
+  });
+
+  it("uses a valid, known icon on every category", () => {
+    for (const c of CATEGORIES) expect(c.icon, c.name).toBeTruthy();
   });
 
   it("gives every subcategory a globally unique slug and never repeats a name within a category", () => {
@@ -40,8 +85,8 @@ describe("category taxonomy", () => {
   });
 
   it("flags only Independent Professionals as requiring an owner name", () => {
-    expect(CATEGORIES.filter((c) => c.requiresOwnerName).map((c) => c.name)).toEqual(["Independent Professionals"]);
-    expect(CATEGORIES.find((c) => c.name === "Independent Professionals")?.subcategories).toHaveLength(16);
+    expect(CATEGORIES.filter((c) => c.requiresOwnerName).map((c) => c.slug)).toEqual(["independent-professionals"]);
+    expect(CATEGORIES.find((c) => c.slug === "independent-professionals")?.subcategories).toHaveLength(4);
   });
 
   it("does not list a subcategory twice across categories (no duplicate concepts)", () => {
@@ -49,16 +94,12 @@ describe("category taxonomy", () => {
     expect(new Set(all).size).toBe(all.length);
   });
 
-  it("renames only to approved names, from names that are no longer approved", () => {
-    const approved = new Set(CATEGORIES.map((c) => c.name));
-    for (const [from, to] of Object.entries(CATEGORY_RENAMES)) {
-      expect(approved.has(to), `${to} must be approved`).toBe(true);
-      expect(approved.has(from), `${from} must be retired`).toBe(false);
-    }
-  });
-
-  it("the Others rename changes the name but not the slug, which is why it must rename in place", () => {
-    expect(categorySlug("Others/Miscellaneous")).toBe(categorySlug("Others / Miscellaneous"));
+  it("keeps the sub-categories in the client's document order", () => {
+    expect(CATEGORIES[0]!.subcategories).toEqual(["Asian Grocery", "Halal Meat Shops", "Cash & Carry Stores", "Specialty Spices & Essentials"]);
+    expect(CATEGORIES[7]!.subcategories).toEqual(["Car Repair Garages", "MOT Centres", "Car Wash & Valeting", "Tyre Shops", "Taxi & Airport Transfers"]);
+    expect(CATEGORIES[17]!.subcategories).toEqual([
+      "Web & App Development", "Digital Marketing & SEO", "Hardware & IT Support", "AI & Cloud Services", "Graphic & Brand Design",
+    ]);
   });
 });
 
@@ -101,8 +142,9 @@ describe("bsd-web copy stays in sync", () => {
     for (const c of CATEGORIES) {
       expect(web).toContain(`name: "${c.name}"`);
       // The web links filter the API by this slug, so it must be the slug the seed generates.
-      expect(web, `slug for ${c.name}`).toContain(`slug: "${categorySlug(c.name)}"`);
+      expect(web, `slug for ${c.name}`).toContain(`slug: "${c.slug}"`);
       for (const s of c.subcategories) expect(web, `subcategory ${s}`).toContain(`"${s}"`);
+      for (const t of c.serviceTags) expect(web, `tag ${t}`).toContain(`"${t}"`);
     }
     for (const z of ZONES) {
       expect(web).toContain(`name: "${z.name}"`);

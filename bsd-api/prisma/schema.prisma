@@ -83,6 +83,10 @@ model Category {
   sortOrder         Int            @default(0)
   requiresOwnerName Boolean        @default(false)
   status            CategoryStatus @default(APPROVED)
+  // Suggested "Services Offered" hashtags, stored without the leading #. Suggestions on forms, never a closed list.
+  serviceTags       String[]       @default([])
+  // Hidden from every public list and from new choices until an admin unlocks it. Listings already in it stay visible.
+  staged            Boolean        @default(false)
   submittedAt       DateTime? // set when the category came from the Others field
   submittedByUserId String? // the member who proposed it, for the per-account cap
   submittedBy       User?          @relation("CategorySubmitter", fields: [submittedByUserId], references: [id], onDelete: SetNull)

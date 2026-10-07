@@ -7,79 +7,233 @@
 
 import { slugify } from "../src/common/slug.js";
 
-export type SeedCategory = { name: string; icon?: string; subcategories: string[]; requiresOwnerName?: boolean };
+// Source: the client's "BSD Wales Master Category Directory" (decision D1: it replaces the older names). Names,
+// sub-category order and tags follow the document word for word. The only edits are the ones storage needs: the
+// leading # of a tag is removed (screens add it back), a stray comma after a tag and a full stop at the end of a
+// sub-category list are dropped. The slug is fixed here, not derived from the name, so a renamed category keeps the
+// web address it already has. Categories 18 to 24 are staged (hidden) until an admin unlocks them.
+export type SeedCategory = {
+  name: string;
+  slug: string;
+  icon?: string;
+  subcategories: string[];
+  serviceTags: string[];
+  requiresOwnerName?: boolean;
+  staged?: boolean;
+};
 
 export const CATEGORIES: SeedCategory[] = [
-  { name: "Restaurants & Takeaways", icon: "utensils-crossed", subcategories: ["Bangladeshi Restaurants", "Curry Houses", "Bengali/Indian Takeaways"] },
-  { name: "Legal & Financial", icon: "scale", subcategories: ["Accountants", "Legal Support", "Immigration Advisors", "Mortgage Advisors"] },
-  { name: "Health & Care", icon: "stethoscope", subcategories: ["Physiotherapists", "Mental Wellbeing Support"] },
-  { name: "Trades & Contractors", icon: "hammer", subcategories: ["Handyman Services", "Home Maintenance"] },
   {
-    name: "Groceries & Halal",
+    name: "Grocery, Halal Meat & Cash Carry",
+    slug: "groceries-and-halal",
     icon: "shopping-cart",
-    subcategories: ["Asian Grocery", "Halal Meat Shops", "Bangladeshi Spices & Essentials", "Cash & Carry Stores"],
-  },
-  { name: "Taxi & Private Hire", icon: "car-front", subcategories: ["Private Hire Drivers", "Taxi Companies", "Airport Transfer Services"] },
-  { name: "Beauty & Lifestyle", icon: "sparkles", subcategories: ["Makeup Artists", "Henna Artists", "Bridal Services", "Beauty Consultants"] },
-  { name: "Community & Faith", icon: "landmark", subcategories: ["Mosques", "Community Groups", "Cultural Organisations"] },
-  { name: "Business Consultants", icon: "building-2", subcategories: [] },
-  {
-    name: "Mobile & Tech Repair",
-    icon: "smartphone",
-    subcategories: ["Mobile Repair", "Laptop Repair", "Accessories Shops", "Tech Support Services"],
+    subcategories: ["Asian Grocery", "Halal Meat Shops", "Cash & Carry Stores", "Specialty Spices & Essentials"],
+    serviceTags: ["FreshHalalMeat", "AsianSpices", "FrozenFish", "BangladeshiGrocery", "HomeDelivery", "BulkBuy"],
   },
   {
-    name: "Clothing & Cultural Shops",
+    name: "Restaurants, Takeaways & Street Food",
+    slug: "restaurants-and-takeaways",
+    icon: "utensils-crossed",
+    subcategories: ["Bangladeshi Restaurants", "Curry Houses", "Bengali & Indian Takeaways", "Street Food Vendors"],
+    serviceTags: ["DineIn", "Takeaway", "TraditionalCurry", "KacchiBiriyani", "HalalCertified", "PartyOrders", "FreeDelivery"],
+  },
+  {
+    name: "Sweet Shops, Desserts & Bakeries",
+    slug: "sweet-shops-and-bakeries",
+    icon: "cookie",
+    subcategories: ["Bangladeshi Sweets (মিষ্টি)", "Cakes & Pastries", "Dessert Parlours", "Event Sweet Supplies"],
+    serviceTags: ["Rosogolla", "MishtiDahi", "CustomCakes", "WeddingSweets", "SnacksAndSingara", "BakeryItems"],
+  },
+  {
+    name: "Home-Based Food & Tiffin Services",
+    slug: "home-based-food-services",
+    icon: "chef-hat",
+    subcategories: ["Home Chefs", "Daily Tiffin Services", "Event Catering (Home-cooked)", "Custom Biriyani Cooks"],
+    serviceTags: ["HomeCookedFood", "DailyTiffin", "StudentMealPlans", "BiriyaniSpecialist", "DessertMaker", "FrozenSnacks", "HomeCatering"],
+  },
+  {
+    name: "Clothing, Cultural & Bridal Shops",
+    slug: "clothing-and-cultural-shops",
     icon: "shirt",
-    subcategories: ["Asian Clothing", "Saree & Panjabi Stores", "Wedding Outfits", "Cultural Accessories"],
+    subcategories: ["Asian Clothing", "Saree & Panjabi Stores", "Wedding & Festive Outfits", "Cultural Accessories"],
+    serviceTags: ["BespokeSaree", "PanjabiCollection", "BridalWear", "KatanSaree", "TailoringAlterations", "CulturalJewellery"],
   },
-  { name: "Home-Based Food Services", icon: "chef-hat", subcategories: ["Home Chefs", "Catering Services", "Tiffin Services", "Event Food Supply"] },
-  { name: "Electrician / Plumber", icon: "zap", subcategories: ["Electricians", "Plumbers"] },
   {
-    name: "Independent Professionals",
+    name: "Hair, Beauty & Grooming Services",
+    slug: "beauty-and-lifestyle",
+    icon: "sparkles",
+    subcategories: ["Men’s Barbers", "Ladies Salons & Parlours", "Makeup & Henna Artists", "Home-based Beauticians"],
+    serviceTags: ["HairCutGrooming", "BridalMakeup", "HennaDesign", "FacialSkinCare", "HomeServiceBeautician", "BeardTrim"],
+  },
+  {
+    name: "Mobile, Tech & Laptop Repairs",
+    slug: "mobile-and-tech-repair",
+    icon: "smartphone",
+    subcategories: ["Mobile Repair Shops", "Laptop & Computer Repair", "Tech Support & Accessories", "Unlocking Services"],
+    serviceTags: ["ScreenReplacement", "LaptopServicing", "DataRecovery", "MobileUnlocking", "TechAccessories", "HomeTechSupport"],
+  },
+  {
+    name: "Automotive, Garages & Transport",
+    slug: "car-services",
+    icon: "wrench",
+    subcategories: ["Car Repair Garages", "MOT Centres", "Car Wash & Valeting", "Tyre Shops", "Taxi & Airport Transfers"],
+    serviceTags: ["MOTTesting", "CarServicing", "EngineDiagnostics", "TyreReplacement", "AirportTransfer", "PrivateHire", "HomeMechanic"],
+  },
+  {
+    name: "Trades, Repairs & Home Maintenance",
+    slug: "trades-and-contractors",
+    icon: "hammer",
+    subcategories: ["Electricians", "Plumbers", "Handyman & Painting", "Building & Construction"],
+    serviceTags: ["BoilerRepair", "HouseRewiring", "LeakingTap", "PaintingDecorating", "FurnitureAssembly", "EmergencyPlumbing", "PropertyMaintenance"],
+  },
+  {
+    name: "Professional, Financial & Remittance - Registered Firms",
+    slug: "legal-and-financial",
+    icon: "scale",
+    subcategories: ["Accountants & Tax Advisors", "Money Transfer Agents", "Legal & Immigration Helpers", "Business Consultants"],
+    serviceTags: ["TaxReturn", "SelfAssessment", "MoneyTransferBD", "VisaImmigrationSupport", "CompanyRegistration", "LegalAdvice"],
+  },
+  {
+    name: "Travel, Umrah & Cargo Services",
+    slug: "travel-umrah-and-cargo-services",
+    icon: "plane",
+    subcategories: ["Travel Agencies", "Umrah & Hajj Packages", "Cargo & Courier to BD", "Parcel Services"],
+    serviceTags: ["FlightBooking", "UmrahPackages", "BDCargoParcel", "DoorToDoorCargo", "TravelInsurance"],
+  },
+  {
+    name: "Property, Housing & Mortgages",
+    slug: "property-and-housing-services",
+    icon: "house",
+    subcategories: ["Estate & Letting Agents", "Mortgage Advisors", "Property Management", "Housing Assistance"],
+    serviceTags: ["StudentAccommodation", "PropertyRentals", "FirstTimeBuyer", "MortgageAdvice", "HouseWanted", "RoomAvailable"],
+  },
+  {
+    name: "Education, Tutors & Language Classes",
+    slug: "tutors-and-education",
+    icon: "graduation-cap",
+    subcategories: ["Private Tutors (GCSE/A-Level)", "Quran & Arabic Teachers", "Language Classes", "Academic Coaching"],
+    serviceTags: ["MathsTutor", "ScienceTutor", "QuranTutor", "BanglaLanguageClass", "ESOLLearning", "OnlineTuition"],
+  },
+  {
+    name: "Health, Fitness & Care Services",
+    slug: "health-and-care",
+    icon: "stethoscope",
+    subcategories: ["Physiotherapy & Massage", "Nutrition & Fitness Trainers", "Mental Wellbeing", "Childminders & Care Workers"],
+    serviceTags: ["Physiotherapy", "PersonalTrainer", "MentalHealthSupport", "Childminding", "ElderlyCare", "HomeCareWorker"],
+  },
+  {
+    name: "Media, Events & Creative Services",
+    slug: "media-events-and-creative-services",
+    icon: "camera",
+    subcategories: ["Photographers & Videographers", "Event Decorators", "Graphic & Web Designers", "Signage & Printing"],
+    serviceTags: ["WeddingPhotography", "EventDecoration", "LogoDesign", "BannerPrinting", "VideoEditing", "WebDevelopment"],
+  },
+  {
+    name: "Community, Religious & Voluntary",
+    slug: "community-and-faith",
+    icon: "landmark",
+    subcategories: ["Mosques & Islamic Centres", "Community Associations & CICs", "Cultural Organisations", "Youth Hubs"],
+    serviceTags: ["PrayerServices", "CommunityAdvice", "YouthActivities", "CulturalEvents", "Volunteering", "DropInSupport"],
+  },
+  {
+    name: "Independent Professionals (Office-less Hub)- Individual Freelancers",
+    slug: "independent-professionals",
     icon: "briefcase",
     requiresOwnerName: true,
-    subcategories: [
-      "Freelance Electricians",
-      "Freelance Plumbers",
-      "Home-based Beauticians",
-      "Home-based Barbers",
-      "Freelance Photographers",
-      "Event Decorators",
-      "Driving Instructors",
-      "Immigration Helpers",
-      "Translators",
-      "Community Advisors",
-      "Car Mechanics (home-based)",
-      "Tailors (home-based)",
-      "Freelance IT Support",
-      "Freelance Tutors",
-      "Freelance Designers",
-      "Any skilled individual without a physical office",
+    subcategories: ["Freelance Tradespeople", "Driving Instructors", "Translators & Interpreters", "Home Cleaners & Delivery"],
+    serviceTags: ["DrivingLessons", "BanglaTranslation", "HouseCleaning", "DeliveryDriver", "FreelanceSkill", "NoPhysicalOffice"],
+  },
+  // 18 to 24: ready in the backend, hidden until an admin unlocks them.
+  {
+    name: "Digital Services & IT Solutions",
+    slug: "digital-services-and-it-solutions",
+    icon: "computer",
+    staged: true,
+    subcategories: ["Web & App Development", "Digital Marketing & SEO", "Hardware & IT Support", "AI & Cloud Services", "Graphic & Brand Design"],
+    serviceTags: [
+      "WebsiteDesign", "ECommerceWebsite", "SEO", "SEOStrategy", "SocialMediaMarketing", "SocialMediaManagement", "AppDevelopment",
+      "MobileAppDev", "PCBuildAndRepair", "CloudHosting", "AIAssistantSetup", "LogoAndBranding", "ITConsulting", "CyberSecurity",
+      "GoogleAdsManagement", "GraphicDesign", "DigitalMarketing",
     ],
   },
   {
-    name: "Sweet Shops & Bakeries",
-    icon: "cookie",
-    subcategories: ["Bangladeshi Sweets", "Cakes & Bakery Items", "Event Sweets & Catering", "Sweet Shops & Dessert Places"],
+    name: "Insurance & Financial Protection",
+    slug: "insurance-and-financial-protection",
+    icon: "shield",
+    staged: true,
+    subcategories: ["Personal Insurance", "Commercial/Business Insurance", "Life & Health Protection", "Mortgage & Protection Advisory", "Insurance Brokers"],
+    serviceTags: [
+      "LifeInsurance", "BusinessLiability", "HomeInsurance", "VehicleInsurance", "MortgageProtection", "IncomeProtection",
+      "CommercialProperty", "PublicLiability", "KeymanInsurance", "CritialIllnessCover", "FuneralInsurance", "LandlordInsurance",
+    ],
   },
-  { name: "Car Services", icon: "wrench", subcategories: ["Car Repair", "MOT Centres", "Car Wash", "Tyre Shops"] },
-  { name: "Tutors & Education", icon: "graduation-cap", subcategories: ["Private Tutors", "Academic Coaching", "Quran/Arabic Teachers", "Language Classes"] },
-  { name: "Property & Housing Services", icon: "house", subcategories: ["Estate Agents", "Letting Services", "Housing Support"] },
-  { name: "Fitness & Wellbeing", icon: "dumbbell", subcategories: ["Massage Therapists", "Fitness Trainers"] },
-  { name: "Others / Miscellaneous", icon: "package", subcategories: ["Any service not listed above"] },
+  {
+    name: "Health & Medical Professionals",
+    slug: "health-and-medical-professionals",
+    icon: "heart-pulse",
+    staged: true,
+    subcategories: ["Private GP & Clinics", "Dental Care", "Pharmacy & Prescription", "Opticians & Eye Care", "Allied Health (Physio, Hijama, Nutrition)"],
+    serviceTags: [
+      "PrivateGP", "NHSPharmacy", "DentalCheckup", "TeethWhitening", "EyeTestAndGlasses", "Physiotherapy", "CuppingTherapyHijama",
+      "NutritionAndDiet", "MentalHealthCounseling", "PrescriptionDelivery", "HearingTest", "PodiatryCare",
+    ],
+  },
+  {
+    name: "Faith, Education & Cultural Schools",
+    slug: "faith-education-and-cultural-schools",
+    icon: "book-open",
+    staged: true,
+    subcategories: ["Islamic & Quranic Studies", "Heritage & Bangla Language Schools", "Academic Tuition (GCSE/A-Level)", "Cultural & Performing Arts"],
+    serviceTags: [
+      "WeekendMadrasa", "QuranHifzClass", "TajweedTraining", "BanglaLanguageClass", "GCSEMathsTuition", "PrimarySchoolTuition",
+      "CulturalArts", "IslamicCalligraphy", "AdultQuranLearning", "ScienceTuition", "ArabicLanguage", "IslamicHistory",
+    ],
+  },
+  {
+    name: "Event Management, Decor & Media",
+    slug: "event-management-decor-and-media",
+    icon: "ticket",
+    staged: true,
+    subcategories: [
+      "Wedding & Event Planning",
+      "Venue Decor & Stage Styling",
+      "Event Catering & Food Setup",
+      "Photography, Videography & Media",
+      "Sound, Lighting & Entertainment Services",
+    ],
+    serviceTags: ["WeddingPlanner", "StageDecoration", "EventCatering", "SoundAndLighting", "Videography", "PhotoboothRental"],
+  },
+  {
+    name: "Automobile, Transport & Logistics",
+    slug: "automobile-transport-and-logistics",
+    icon: "truck",
+    staged: true,
+    subcategories: [
+      "Vehicle Repair, MOT & Servicing",
+      "Private Hire & Executive Taxi",
+      "Logistics, Removal & Freight (Man & Van)",
+      "Breakdown & Vehicle Recovery",
+      "Used Car Sales & Dealerships",
+    ],
+    serviceTags: ["MOTAndServicing", "CarRepairs", "UsedCarSales", "TaxiAndPrivateHire", "ManAndVan", "BreakdownRecovery"],
+  },
+  {
+    name: "Legal, Visa & Family Advisory",
+    slug: "legal-visa-and-family-advisory",
+    icon: "key",
+    staged: true,
+    subcategories: [
+      "Immigration & Visa Advisory",
+      "Conveyancing & Property Law",
+      "Family & Matrimonial Advisory",
+      "Wills, Estate Planning & Probate",
+      "Civil & Commercial Legal Support",
+    ],
+    serviceTags: ["ImmigrationLawyer", "SpouseVisa", "StudentVisaSupport", "WillWriting", "PowerOfAttorney", "Attestation"],
+  },
+  // Stays as it is. It feeds the admin taxonomy growth flow (the Others field on Submit).
+  { name: "Others / Miscellaneous", slug: "others-miscellaneous", icon: "package", subcategories: ["Any service not listed above"], serviceTags: [] },
 ];
-
-// Categories that were only renamed in v2. The seed renames the existing row in place, so any listings
-// attached to it keep their link. Categories that were split (Professional Services,
-// Electrician/Plumber/Handyman, Health & Wellbeing) are not listed here on purpose: if a split category
-// has listings the seed stops and asks for a human decision.
-export const CATEGORY_RENAMES: Record<string, string> = {
-  "Grocery & Cash & Carry": "Groceries & Halal",
-  "Beauty & Henna Services": "Beauty & Lifestyle",
-  "Community & Religious Services": "Community & Faith",
-  "Others/Miscellaneous": "Others / Miscellaneous",
-};
 
 export type SeedZone = {
   slug: string;

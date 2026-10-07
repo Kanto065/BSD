@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { BadgeCheck, ClipboardList, GraduationCap, ExternalLink, Globe, FilePen, FolderTree, FileClock, Inbox, Languages, KeyRound, LayoutDashboard, LogOut, MessageSquare, Users } from "lucide-react";
+import { BadgeCheck, ClipboardList, GraduationCap, ExternalLink, Globe, FilePen, FolderTree, FileClock, Inbox, Languages, KeyRound, LayoutDashboard, LogOut, MessageSquare, Store, Users } from "lucide-react";
 import { atLeast, useSession, type Role } from "@/lib/admin-session";
 import { Skeleton, useAdminData } from "@/components/admin/ui";
 
@@ -15,6 +15,7 @@ type Counts = {
   pendingUpdates: number;
   pendingRemovals: number;
   pendingStudents: number;
+  market: number;
 };
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; minimum: Role; count?: (c: Counts) => number };
@@ -31,6 +32,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { href: "/admin/claims", label: "Claims", icon: Inbox, minimum: "MODERATOR", count: (c) => c.pendingClaims },
       { href: "/admin/students", label: "Students", icon: GraduationCap, minimum: "MODERATOR", count: (c) => c.pendingStudents },
       { href: "/admin/messages", label: "Messages", icon: MessageSquare, minimum: "MODERATOR", count: (c) => c.openMessages },
+      { href: "/admin/market", label: "Market", icon: Store, minimum: "MODERATOR", count: (c) => c.market },
     ],
   },
   { group: "Directory", items: [{ href: "/admin/categories", label: "Categories", icon: FolderTree, minimum: "ADMIN" },
@@ -73,13 +75,21 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   // Queue sizes for the sidebar. Refreshed on every page change so a cleared queue drops its number.
   const ready = status === "signed-in" && !!admin && !admin.mustChangePassword && !onLogin;
-  const { data: counts, reload } = useAdminData<Counts>(ready ? "/dashboard" : null);
+  const { data: dash, reload } = useAdminData<Omit<Counts, "market">>(ready ? "/dashboard" : null);
+  const { data: mk, reload: reloadMk } = useAdminData<{ pending: number; reported: number; openTickets: number }>(ready && atLeast(admin?.role, "MODERATOR") ? "/market/counts" : null);
+  const counts: Counts | null = dash ? { ...dash, market: mk ? mk.pending + mk.reported + mk.openTickets : 0 } : null;
+  useEffect(() => {
+    const f = () => void reloadMk();
+    window.addEventListener("market-counts-changed", f);
+    return () => window.removeEventListener("market-counts-changed", f);
+  }, [reloadMk]);
   const lastPath = useRef(pathname);
   useEffect(() => {
     if (!ready || lastPath.current === pathname) return;
     lastPath.current = pathname;
     void reload();
-  }, [pathname, ready, reload]);
+    void reloadMk();
+  }, [pathname, ready, reload, reloadMk]);
 
   if (onLogin) return <div className="min-h-screen bg-slate-50">{children}</div>;
   if (status !== "signed-in" || !admin) return <ShellSkeleton />;

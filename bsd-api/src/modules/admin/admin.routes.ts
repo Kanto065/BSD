@@ -10,6 +10,7 @@ import categoriesAdminRoutes from "./admin.categories.js";
 import requestsAdminRoutes from "./admin.requests.js";
 import siteAdminRoutes from "./admin.site.js";
 import studentsAdminRoutes from "./admin.students.js";
+import exportRoutes from "./admin.export.js";
 import synonymsAdminRoutes from "./admin.synonyms.js";
 import { audit, idParams, invalid, page, pageQuery, statusCounts } from "./admin.service.js";
 
@@ -36,6 +37,7 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
   app.register(siteAdminRoutes);
   app.register(studentsAdminRoutes, { prefix: "/students" });
   app.register(synonymsAdminRoutes);
+  app.register(exportRoutes, { prefix: "/export" });
 
   const anyAdmin = { preHandler: app.requireRole() };
   const moderator = { preHandler: app.requireRole(...rolesFrom("MODERATOR")) };

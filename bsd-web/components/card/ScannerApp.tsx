@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ALREADY_SCANNED, CONFIRM_DISCOUNT, LIVE_CAMERA, MANUAL_CODE, MERCHANT_LABELS as T, NEW_LABELS, SCAN_NEXT } from "@/lib/card-labels";
+import { LIVE_CAMERA, MANUAL_CODE, MERCHANT_LABELS as T, NEW_LABELS } from "@/lib/card-labels";
 import { ApiError } from "@/lib/admin-session";
 import { confirmRedemption, getOffer, getToday, messageOf, verifyScan, type Today } from "@/lib/merchant-api";
 import { getOwnListings, memberCall, type OwnListingSummary } from "@/lib/member-api";
 import { formatPence } from "@/lib/pass-client";
-import { BILL_PRESETS, MUTE_KEY, billToPence, formatCode, overlayFor, parseScanned, savingFor, type VerifyReply } from "@/lib/scan";
+import { DISTRICTS, MUTE_KEY, billToPence, formatCode, overlayFor, parseScanned, withDistrict, type VerifyReply } from "@/lib/scan";
 import ScannerCamera, { type CameraProblem } from "./ScannerCamera";
+import ScanResult from "./ScanResult";
 import { Panel, solidBtn } from "./PassPanels";
 
 const ACCOUNT = "https://bsd.wales/account";
@@ -58,6 +59,7 @@ export default function ScannerApp({ apiBase }: { apiBase: string }) {
   const [problem, setProblem] = useState<CameraProblem | null>(null);
   const [cameraOn, setCameraOn] = useState(false);
   const [code, setCode] = useState("");
+  const [moreDistricts, setMoreDistricts] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -238,6 +240,14 @@ export default function ScannerApp({ apiBase }: { apiBase: string }) {
                 <button type="button" onClick={() => setCode(formatCode(code + "0"))} className="min-h-[60px] rounded-xl bg-white/10 text-2xl font-semibold text-white active:bg-white/20">0</button>
                 <button type="button" aria-label={T.backspace} onClick={() => setCode(formatCode(code.replace(/[^A-Za-z0-9]/g, "").slice(0, -1)))} className="min-h-[60px] rounded-xl bg-white/10 text-lg font-semibold text-white active:bg-white/20">&larr;</button>
               </div>
+              {code.replace(/[^A-Z0-9]/g, "").length >= 6 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {DISTRICTS.slice(0, moreDistricts ? 34 : 7).map((d) => (
+                    <button key={d} type="button" onClick={() => setCode(withDistrict(code, d))} className={`min-h-[44px] rounded-xl text-base font-semibold text-white active:bg-white/20 ${code.endsWith("-" + d) ? "bg-teal-700" : "bg-white/10"}`}>{d}</button>
+                  ))}
+                  <button type="button" onClick={() => setMoreDistricts(!moreDistricts)} className="min-h-[44px] rounded-xl text-sm font-semibold text-white ring-1 ring-white/30">{moreDistricts ? T.fewerDistricts : T.moreDistricts}</button>
+                </div>
+              )}
               <button type="submit" disabled={busy} className={`${solidBtn} w-full`}>{busy ? T.checking : T.checkCode}</button>
             </form>
           )}
@@ -253,45 +263,8 @@ export default function ScannerApp({ apiBase }: { apiBase: string }) {
         </dl>
       )}
 
-      {result && overlay && (
-        <div role="alertdialog" aria-modal="true" aria-label={overlay} className={`fixed inset-0 z-50 flex flex-col justify-center gap-4 overflow-y-auto p-6 text-white ${overlay === "valid" ? "bg-green-700" : overlay === "duplicate" ? "bg-yellow-500 text-slate-900" : "bg-red-700"}`}>
-          {result.valid && "member" in result && (
-            <>
-              <p className="text-sm font-semibold uppercase tracking-wide">{done ? T.confirmed : T.memberId}</p>
-              <p className="font-heading text-3xl font-bold">{result.member.name}</p>
-              <p>{result.member.memberId} &middot; {result.member.postcodeDistrict}</p>
-              <p className="text-lg">{result.offer.title}{result.offer.percent !== null && ` (${result.offer.percent}%)`}</p>
-              {done ? (
-                <p className="text-2xl font-bold">{done.saving !== null ? `${T.discount} ${formatPence(done.saving)}` : T.confirmed}</p>
-              ) : (
-                <>
-                  <label className="block text-sm">
-                    {T.billLabel}
-                    <input value={bill} onChange={(e) => setBill(e.target.value)} inputMode="decimal" className="mt-1 block min-h-[56px] w-full rounded-xl px-4 text-2xl text-slate-900" />
-                  </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {BILL_PRESETS.map((p) => (
-                      <button key={p} type="button" onClick={() => setBill(String(p / 100))} className="min-h-[48px] rounded-xl bg-white/20 text-lg font-semibold">&pound;{p / 100}</button>
-                    ))}
-                  </div>
-                  {pence !== null && percent !== null && <p className="text-lg">{T.discount} {formatPence(savingFor(pence, percent))}</p>}
-                  <button type="button" disabled={busy} onClick={() => void confirm()} className="min-h-[56px] rounded-full bg-white px-6 text-lg font-bold text-green-800 disabled:opacity-60">{CONFIRM_DISCOUNT}</button>
-                </>
-              )}
-              {error && <p role="alert" className="font-semibold">{error}</p>}
-              <button type="button" onClick={reset} className="min-h-[56px] rounded-full px-6 text-lg font-bold ring-2 ring-white">{SCAN_NEXT}</button>
-            </>
-          )}
-          {overlay === "duplicate" && <p className="font-heading text-3xl font-bold">{ALREADY_SCANNED}</p>}
-          {overlay === "expired" && <p className="font-heading text-3xl font-bold">{T.expired}</p>}
-          {overlay === "invalid" && <p className="font-heading text-3xl font-bold">{T.invalid}</p>}
-          {overlay !== "valid" && (
-            <div aria-hidden="true" className="h-1 overflow-hidden rounded bg-black/20">
-              <div className="h-full origin-left bg-white motion-safe:animate-dismiss" />
-            </div>
-          )}
-        </div>
-      )}
+      {result && overlay && <ScanResult result={result} bill={bill} setBill={setBill} done={done} busy={busy} error={error} onConfirm={() => void confirm()} onNext={reset} />}
+
     </div>
   );
 }

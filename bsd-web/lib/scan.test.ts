@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { billToPence, formatCode, overlayFor, parseScanned, savingFor } from "./scan";
+import { billToPence, formatCode, overlayFor, parseScanned, savingFor, withDistrict } from "./scan";
 
 describe("parseScanned", () => {
   it("reads a pass token", () => {
@@ -53,5 +53,19 @@ describe("billToPence", () => {
   });
   it("rejects bad amounts", () => {
     for (const s of ["", "abc", "1001", "-1", "1.234", "12,50"]) expect(billToPence(s)).toBeNull();
+  });
+});
+
+describe("district taps", () => {
+  it("appends the district after the four digits and replaces an earlier tap", () => {
+    expect(withDistrict("BC-9821", "SA1")).toBe("BC-9821-SA1");
+    expect(withDistrict("BC-9821-SA1", "SA11")).toBe("BC-9821-SA11");
+    expect(withDistrict("BC-98", "SA1")).toBe("BC-98");
+    expect(parseScanned(withDistrict("9821", "SA34"))).toEqual({ type: "code", code: "BC-9821-SA34" });
+  });
+  it("backspace on the stripped code walks back through the district", () => {
+    const back = (c: string) => formatCode(c.replace(/[^A-Za-z0-9]/g, "").slice(0, -1));
+    expect(back("BC-9821-SA11")).toBe("BC-9821-SA1");
+    expect(back(back("BC-9821-SA1"))).toBe("BC-9821-S");
   });
 });

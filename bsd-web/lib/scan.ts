@@ -49,3 +49,12 @@ export const BILL_PRESETS = [500, 1000, 2000, 5000] as const;
 
 /** Mute choice is kept per phone. */
 export const MUTE_KEY = "bsd-scan-muted";
+
+/** Districts offered as tap buttons on the keypad: SA1 to SA34. */
+export const DISTRICTS = Array.from({ length: 34 }, (_, i) => `SA${i + 1}`);
+
+/** The code with its district part set to the tapped one (replacing any district already there). Needs the 4 digits first. */
+export function withDistrict(code: string, district: string): string {
+  const head = formatCode(code).replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  return head.length < 6 ? formatCode(code) : formatCode(head + district);
+}

@@ -7,6 +7,7 @@ import { ErrorNote, inputClass } from "@/components/admin/ui";
 import { ApiError } from "@/lib/admin-session";
 import { zoneForPostcode } from "@/lib/business-profile";
 import { changePassword, deleteAccount, memberCall as call, updateProfile, type Member } from "@/lib/member-api";
+import PasswordInput from "@/components/PasswordInput";
 
 // 16px on phones so iOS does not zoom into the field, back to the compact size from sm up. 44px tall for easy tapping.
 const fieldClass = `${inputClass.replace("text-sm", "text-base sm:text-sm")} min-h-11`;
@@ -138,16 +139,15 @@ export default function AccountForm({ apiBase, compact = false, onSignedIn }: Pr
           <label htmlFor="password" className={label}>
             Password
           </label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
             required
             value={f.password}
             onChange={set("password")}
             className={fieldClass}
           />
-          {mode === "register" && <p className="mt-1 text-xs text-slate-600">At least 12 characters. Avoid easy words and sequences.</p>}
+          {mode === "register" && <p className="mt-1 text-xs text-slate-600">At least 8 characters. Avoid easy words and sequences.</p>}
           {fieldError(error, "password") && <p className="mt-1 text-sm text-red-700">{fieldError(error, "password")}</p>}
         </div>
         {mode === "register" && (
@@ -380,7 +380,7 @@ function DeleteAccount({ apiBase, onDeleted }: { apiBase: string; onDeleted: () 
           <label htmlFor="delete-password" className={label}>
             Enter your password to confirm
           </label>
-          <input id="delete-password" autoFocus type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className={fieldClass} />
+          <PasswordInput id="delete-password" autoFocus autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className={fieldClass} />
           {fieldError(error, "password") && <p className="mt-1 text-sm text-red-700">{fieldError(error, "password")}</p>}
         </div>
       )}
@@ -441,15 +441,15 @@ function ChangePassword({ apiBase }: { apiBase: string }) {
         <label htmlFor="current-password" className={label}>
           Current password
         </label>
-        <input id="current-password" type="password" autoComplete="current-password" value={f.currentPassword} onChange={(e) => setF({ ...f, currentPassword: e.target.value })} className={fieldClass} />
+        <PasswordInput id="current-password" autoComplete="current-password" value={f.currentPassword} onChange={(e) => setF({ ...f, currentPassword: e.target.value })} className={fieldClass} />
         {fieldError(error, "currentPassword") && <p className="mt-1 text-sm text-red-700">{fieldError(error, "currentPassword")}</p>}
       </div>
       <div>
         <label htmlFor="new-password" className={label}>
           New password
         </label>
-        <input id="new-password" type="password" autoComplete="new-password" value={f.newPassword} onChange={(e) => setF({ ...f, newPassword: e.target.value })} className={fieldClass} />
-        <p className="mt-1 text-xs text-slate-600">At least 12 characters. Avoid easy words and sequences.</p>
+        <PasswordInput id="new-password" autoComplete="new-password" value={f.newPassword} onChange={(e) => setF({ ...f, newPassword: e.target.value })} className={fieldClass} />
+        <p className="mt-1 text-xs text-slate-600">At least 8 characters. Avoid easy words and sequences.</p>
         {fieldError(error, "newPassword") && <p className="mt-1 text-sm text-red-700">{fieldError(error, "newPassword")}</p>}
       </div>
       <ErrorNote error={error} />

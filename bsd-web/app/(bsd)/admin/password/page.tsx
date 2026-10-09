@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, useSession, type SessionAdmin } from "@/lib/admin-session";
 import { Card, ErrorNote, PageTitle, buttonClass, inputClass } from "@/components/admin/ui";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function ChangePasswordPage() {
   const { api, adopt, admin } = useSession();
@@ -54,12 +55,12 @@ export default function ChangePasswordPage() {
                 <label htmlFor={f.id} className="text-sm font-semibold text-brand-navy">
                   {f.label}
                 </label>
-                <input id={f.id} type="password" autoComplete={f.auto} required value={f.value} onChange={(e) => f.set(e.target.value)} className={inputClass} />
+                <PasswordInput id={f.id} autoComplete={f.auto} required value={f.value} onChange={(e) => f.set(e.target.value)} className={inputClass} />
                 {errors[f.id] && <p className="mt-1 text-sm font-medium text-red-700">{errors[f.id]}</p>}
               </div>
             ))}
             <p className="text-xs text-slate-500">
-              At least 12 characters. Avoid the site or region name, common words and your email. A few unrelated words joined together work well.
+              At least 8 characters. Avoid the site or region name, common words and your email. A few unrelated words joined together work well.
             </p>
             <ErrorNote error={error} />
             <button type="submit" className={`${buttonClass} bg-brand-blue text-white hover:bg-brand-navy`}>

@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useSession } from "@/lib/admin-session";
 import { ErrorNote, inputClass } from "@/components/admin/ui";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function AdminLoginPage() {
   const { signIn } = useSession();
@@ -55,9 +56,8 @@ export default function AdminLoginPage() {
               <label htmlFor="password" className="text-sm font-semibold text-slate-800">
                 Password
               </label>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="current-password"
                 required
                 value={password}

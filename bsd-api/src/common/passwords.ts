@@ -19,11 +19,11 @@ export async function verifyPassword(password: string, hash: string | null | und
 // Words that make a password easy to guess for this site in particular.
 const GUESSABLE = ["password", "passw0rd", "bangladesh", "swansea", "wales", "bsd", "admin", "bayconnect", "qwerty", "letmein", "welcome", "directory"];
 
-export const PASSWORD_RULES = "Use at least 12 characters. Avoid names of the site, the region or common words, and do not reuse your email.";
+export const PASSWORD_RULES = "Use at least 8 characters. Avoid names of the site, the region or common words, and do not reuse your email.";
 
 /** Returns a message explaining what is wrong, or null when the password is acceptable. */
 export function passwordProblem(password: string, email: string): string | null {
-  if (password.length < 12) return "Use at least 12 characters.";
+  if (password.length < 8) return "Use at least 8 characters.";
   if (password.length > 200) return "Use at most 200 characters.";
   const lower = password.toLowerCase();
   const local = email.split("@")[0]?.toLowerCase() ?? "";
